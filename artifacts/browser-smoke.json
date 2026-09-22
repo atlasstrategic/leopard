@@ -1,0 +1,17 @@
+{
+  "browser": "Chrome/150.0.7871.186",
+  "viewport": "1440x1000",
+  "keyboardLevers": "pass",
+  "clickableLevers": "pass",
+  "persistentWheelAndCenter": "pass",
+  "neutralCoasting": {
+    "movingSpeed": "0.53 kn",
+    "coastingSpeed": "0.65 kn"
+  },
+  "cameras": "3 rendered",
+  "blurPauseClear": "pass",
+  "tuning": "pass",
+  "instruments": "apparent/true selection, knots, wind-from conversion, larger helm layout and 1100x760 clearance passed",
+  "retry": "pass",
+  "consoleErrors": []
+}

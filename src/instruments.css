@@ -1,0 +1,259 @@
+.instruments {
+  position: absolute;
+  right: 26px;
+  top: 126px;
+  width: 430px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  pointer-events: auto;
+  font-variant-numeric: tabular-nums;
+}
+.instrument {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #586b77;
+  border-radius: 13px;
+  background: #101b26;
+  box-shadow:
+    0 8px 24px #04162255,
+    inset 0 0 0 4px #182733;
+  color: #eff8fc;
+}
+.instrument-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  color: #e3edf3;
+}
+.instrument-title > :last-child {
+  font-size: 8px;
+  letter-spacing: 0.3px;
+  color: #abc2d0;
+}
+.instrument-title .manual-mode {
+  color: #ffd180;
+}
+.rudder-display,
+.wind-selector {
+  height: 34px;
+}
+.rudder-labels {
+  display: flex;
+  justify-content: space-between;
+  color: #9cb4c5;
+  font-size: 9px;
+}
+#rudder {
+  color: #eef8fc;
+}
+.port-color {
+  color: #ff8a88;
+}
+.starboard-color {
+  color: #69e3ac;
+}
+.rudder-track {
+  position: relative;
+  margin-top: 7px;
+  height: 5px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    #e17d7e55 0 49.5%,
+    #7597ab 49.5% 50.5%,
+    #70dbaa55 50.5%
+  );
+}
+.rudder-track i {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(25% - 1px),
+    #afc7d288 calc(25% - 1px) 25%
+  );
+}
+#rudder-marker {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 11px;
+  background: #fff5be;
+  transform: translateX(-50%);
+}
+.wind-selector {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 8px;
+}
+.wind-selector button {
+  flex: 1;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  border-radius: 3px;
+  padding: 4px 2px;
+  background: #203342;
+  color: #abc2d0;
+}
+.wind-selector button[aria-pressed="true"] {
+  background: #d7e8f1;
+  color: #142c3d;
+  border-color: #eff7fb;
+}
+.dial-wrap {
+  position: relative;
+}
+.instrument-dial {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+.dial-face {
+  fill: #173247;
+  stroke: #50738c;
+  stroke-width: 1;
+}
+.dial-tick {
+  stroke: #8aaec5;
+  stroke-width: 1;
+}
+.dial-tick.major {
+  stroke: #e0edf5;
+  stroke-width: 1.6;
+}
+.dial-number {
+  fill: #abc7d8;
+  font-size: 9px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.dial-number.cardinal {
+  fill: #eff8fc;
+  font-size: 12px;
+  font-weight: 650;
+}
+.bow-index {
+  fill: #f9f0d1;
+}
+.berth-index {
+  fill: #7de4ef;
+  stroke: #112734;
+  stroke-width: 1;
+}
+.wind-sector {
+  fill: none;
+  stroke-width: 3;
+}
+.port-sector {
+  stroke: #f08286;
+}
+.starboard-sector {
+  stroke: #70dba6;
+}
+.wind-pointer {
+  fill: #fff2ba;
+  stroke: #0e2637;
+  stroke-width: 0.8;
+}
+.dial-readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  pointer-events: none;
+}
+.dial-readout small {
+  font-size: 8px;
+  letter-spacing: 0.7px;
+  color: #b4cfdf;
+  margin-bottom: 3px;
+}
+.dial-readout strong {
+  font-size: 24px;
+  font-weight: 550;
+  letter-spacing: -0.5px;
+}
+.instrument-data {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 9px 0 8px;
+  border-top: 1px solid #43596c;
+}
+.instrument-data > div + div {
+  border-left: 1px solid #43596c;
+  padding-left: 8px;
+}
+.instrument-data small {
+  display: block;
+  font-size: 8px;
+  color: #a7c1d3;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+.instrument-data strong {
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.instrument-caption {
+  border-top: 1px solid #43596c;
+  padding-top: 8px;
+  min-height: 22px;
+  font-size: 8px;
+  color: #adc4d2;
+}
+.berth-caption {
+  color: #7de4ef;
+}
+.berth-caption span {
+  float: right;
+}
+.helm-instruments {
+  width: 480px;
+}
+.helm-instruments .dial-readout strong {
+  font-size: 27px;
+}
+/* Keep instrumentation above controls at the supported desktop minimum size. */
+@media (max-width: 1200px), (max-height: 800px) {
+  .instruments,
+  .helm-instruments {
+    width: 400px;
+    right: 18px;
+    top: 120px;
+  }
+  .instrument {
+    padding: 10px;
+  }
+  .instrument-data strong {
+    font-size: 14px;
+  }
+  .dial-readout strong,
+  .helm-instruments .dial-readout strong {
+    font-size: 22px;
+  }
+}
+@media (max-width: 900px) {
+  .instruments,
+  .helm-instruments {
+    width: 360px;
+    right: 10px;
+    top: 126px;
+  }
+  .instrument-title {
+    letter-spacing: 0.4px;
+  }
+  .instrument-title > :last-child {
+    font-size: 7px;
+  }
+  .instrument-caption {
+    font-size: 7px;
+  }
+}

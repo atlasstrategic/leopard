@@ -1,0 +1,5 @@
+{
+  "result": "Berth held! 49.1 s + 0 s penalties = 49.1 s. Retry to improve.",
+  "collisions": "CONTACTS 0 / +0 s",
+  "method": "Browser DOM controls only; calm-water approach using HUD speed/time integration, no simulation pose mutation"
+}
