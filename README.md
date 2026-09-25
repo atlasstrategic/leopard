@@ -1,5 +1,7 @@
 # Leopard / Handling Lab
 
+**Version 0.1.0 (public preview).** [Changelog](CHANGELOG.md) · [MIT license](LICENSE).
+
 A local, single-player catamaran handling prototype with milestone-B handling and milestone-C contact recording, fenders, adjustable mooring lines and a guided demonstration based on [`Catamaran_Game_Implementation_Plan.md`](Catamaran_Game_Implementation_Plan.md). **Fictional training water, not a navigation aid or certified skipper trainer.** No maps, network assets, backend or accounts.
 
 ## Run
@@ -135,6 +137,10 @@ Engine thrust is applied separately at configurable aft port/starboard positions
 All force/drag coefficients, inertia, thrust conversion from nominal horsepower, loading, engine locations, rudder geometry, reverse effectiveness, friction and wind area are **unverified tuning assumptions**. No calibrated RPM or propeller model is claimed; the UI honestly shows thrust response instead. No prop wash, prop walk, gear interlock, shallow-water effects, wakes, wave dynamics, damage or moving boats yet. Fender stiffness/damping, coverage and compression are also unvalidated game parameters.
 
 Hull collision geometry is two rows of overlapping circles, slightly scalloped rather than a high-fidelity mesh. Contacts use eight sequential inelastic impulse/projection passes with rotational effective mass and mild friction, no restitution. Boundaries are visible amber training barriers with matching solids. This is a low-speed discrete solver, **not continuous collision detection for arbitrary externally injected high speeds**. Defaults and tuning ranges target harbour speeds. Contact projection only resolves overlap; it never moves the boat toward the objective.
+
+## License
+
+Original code and other original material in this repository are provided under the [MIT License](LICENSE), © 2026 atlasstrategic. Third-party dependencies retain their own licenses. The license does not grant rights to third-party trademarks or imply endorsement by Leopard Catamarans, Raymarine or any manufacturer. Vessel specifications are illustrative baseline data; this game is not certified training.
 
 ## GitHub Pages deployment
 
