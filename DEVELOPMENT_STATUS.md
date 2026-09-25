@@ -17,7 +17,7 @@ Milestone-B local Three.js twin-engine handling, wind/handling tuning and scenar
 
 ## Hosting
 
-GitHub Pages Action configured for the project path `/leopard/`, with tests and build gating deployment of `dist/`. This is **not published yet**: no Git remote/repository or Pages setting has been established here. Local preview returned JS/CSS at `/leopard/assets/` with correct MIME types; that does not prove a public Pages URL works.
+Public GitHub repository `atlasstrategic/leopard`, deployed at **https://atlasstrategic.github.io/leopard/**. The Pages Action gates deployment of `dist/` on tests, typecheck and build. First run completed successfully; the public index and hashed JS/CSS returned HTTP 200 with correct types. Live Chrome 150 loaded the game, opened Show me, and paused the lesson without captured console/page errors. This verifies a deployment smoke test, **not** a complete browser playthrough on Pages.
 
 ## Assumptions and next work
 
