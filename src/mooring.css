@@ -1,0 +1,64 @@
+.objective-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+.objective-tabs button {
+  flex: 1;
+  padding: 7px 4px;
+  font-size: 11px;
+}
+.objective-tabs button[aria-pressed="true"] {
+  color: #102d3a;
+  background: #a8ddcd;
+}
+#objective-page[hidden],
+#crew-page[hidden] {
+  display: none;
+}
+.mooring-controls {
+  padding-top: 12px;
+}
+.mooring-controls .eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.9px;
+}
+.mooring-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid #72929b40;
+}
+.mooring-row strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.mooring-row small {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+  color: #afcfce;
+}
+.mooring-row button {
+  font-size: 10px;
+  padding: 8px 6px;
+  min-width: 76px;
+}
+.mooring-row button[aria-pressed="true"] {
+  border-color: #91d6b6;
+}
+.mooring-row .line-warning {
+  color: #ffb198;
+}
+#line-feedback {
+  color: #e1ecc2;
+  font-size: 11px;
+}
+.line-help {
+  font-size: 10px;
+}
+.objective {
+  scrollbar-color: #537b84 #102d3a;
+}

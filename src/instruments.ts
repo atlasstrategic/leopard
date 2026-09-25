@@ -1,4 +1,5 @@
-import { degrees, scenario } from "./config";
+import { degrees } from "./config";
+import { positioningTarget } from "./scenario";
 import { bearingText, instrumentData, type WindMode } from "./instrument-data";
 import type { Session } from "./session";
 import type { CameraMode } from "./rendering";
@@ -76,7 +77,11 @@ export class Instruments {
     return this.elements.get(id)!;
   }
   update(game: Session, camera: CameraMode) {
-    const data = instrumentData(game.state, game.weather, scenario.target),
+    const data = instrumentData(
+        game.state,
+        game.weather,
+        positioningTarget(game.progress.positionTarget),
+      ),
       wind = data[this.mode];
     this.root
       .querySelector(".instruments")!

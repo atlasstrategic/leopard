@@ -9,8 +9,10 @@ export class Input {
       retry: () => void;
       pause: () => void;
     },
+    private readOnly: () => boolean = () => false,
   ) {
     window.addEventListener("keydown", (e) => {
+      const game = this.game;
       const target = e.target as HTMLElement;
       if (
         target.matches("input, select, textarea") ||
@@ -47,7 +49,7 @@ export class Input {
         actions.camera();
         return;
       }
-      if (game.paused || game.progress.success) return;
+      if (game.paused || this.readOnly()) return;
       this.held.add(e.code);
       const c = game.controls;
       if (e.code === "Space") {
@@ -67,10 +69,16 @@ export class Input {
           -1,
           1,
         );
+      game.observe(); // Capture every lever command, even multiple taps in one frame.
     });
     window.addEventListener("keyup", (e) => this.held.delete(e.code));
   }
+  setSession(game: Session) {
+    this.clear();
+    this.game = game;
+  }
   tick(dt: number) {
+    if (this.readOnly()) return;
     const direction =
       Number(this.held.has("ArrowRight")) - Number(this.held.has("ArrowLeft"));
     this.game.controls.rudder = clamp(

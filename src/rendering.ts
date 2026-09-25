@@ -1,6 +1,9 @@
 import * as THREE from "three";
-import { boat, scenario } from "./config";
+import { boat, scenario, fenderConfig, mooringConfig } from "./config";
+import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
+import { initialFenders, type Fenders } from "./fenders";
 import type { State } from "./simulation";
+import { positioningTarget, type PositionTarget } from "./scenario";
 export type CameraMode = "chase" | "overhead" | "helm";
 export function hasWebGL2() {
   try {
@@ -14,6 +17,13 @@ export class View {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(48, 1, 0.1, 600);
   vessel = new THREE.Group();
+  fenderMeshes = { port: new THREE.Group(), starboard: new THREE.Group() };
+  mooringMeshes = new Map<
+    string,
+    THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>
+  >();
+  targetGroup = new THREE.Group();
+  targetOutline = new THREE.LineBasicMaterial({ color: 0x94ffce });
   mode: CameraMode = "chase";
   waterTime = { value: 0 };
   targetMaterial = new THREE.MeshBasicMaterial({
@@ -159,8 +169,8 @@ export class View {
       this.targetMaterial,
     );
     pad.rotation.x = -Math.PI / 2;
-    pad.position.set(t.x, 0.015, -t.y);
-    this.scene.add(pad);
+    pad.position.set(0, 0.015, 0);
+    this.targetGroup.add(pad);
     const outline = new THREE.LineLoop(
       new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(-t.width / 2, 0.03, -t.length / 2),
@@ -168,20 +178,50 @@ export class View {
         new THREE.Vector3(t.width / 2, 0.03, t.length / 2),
         new THREE.Vector3(-t.width / 2, 0.03, t.length / 2),
       ]),
-      new THREE.LineBasicMaterial({ color: 0x94ffce }),
+      this.targetOutline,
     );
-    outline.position.set(t.x, 0, -t.y);
-    this.scene.add(outline);
-    this.scene.add(
+    this.targetGroup.add(outline);
+    this.targetGroup.add(
       new THREE.ArrowHelper(
         new THREE.Vector3(0, 0, -1),
-        new THREE.Vector3(0, 0.12, -t.y + 3),
+        new THREE.Vector3(0, 0.12, 3),
         5,
         0x94ffce,
         1.6,
         1.2,
       ),
     );
+    this.scene.add(this.targetGroup);
+    for (const id of lineIds) {
+      const def = mooringConfig.lines[id];
+      const bollard = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.32, 0.5, 12),
+        mat(0xd7af60),
+      );
+      bollard.position.set(def.anchor.x, 1.25, -def.anchor.y);
+      bollard.castShadow = true;
+      this.scene.add(bollard);
+      this.label(
+        `${def.bollard} / ${def.name.toUpperCase()}`,
+        def.anchor.x + 1.5,
+        2.4,
+        -def.anchor.y,
+        4.8,
+      );
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(new Float32Array(17 * 3), 3),
+      );
+      const line = new THREE.Line(
+        geometry,
+        new THREE.LineBasicMaterial({ color: 0xe9dbad }),
+      );
+      line.visible = false;
+      line.frustumCulled = false;
+      this.scene.add(line);
+      this.mooringMeshes.set(id, line);
+    }
     this.label("01  /  NORTH QUAY", 0, 3, -26, 11);
     this.label("FICTIONAL TRAINING AREA", -17, 2, -39, 19);
     for (const x of [
@@ -220,6 +260,25 @@ export class View {
       for (const z of [-5.5, -2, 2, 5])
         box(this.vessel, x, 1.65, z, 0.04, 0.7, 0.04, white);
     }
+    for (const side of ["port", "starboard"] as const) {
+      const group = this.fenderMeshes[side];
+      for (const y of fenderConfig.positions) {
+        const fender = new THREE.Mesh(
+          new THREE.CapsuleGeometry(fenderConfig.thickness / 2, 0.65, 4, 10),
+          mat(0xf5ae63),
+        );
+        fender.position.set(
+          (side === "port" ? -1 : 1) *
+            (boat.beam / 2 + fenderConfig.thickness / 2),
+          0.7,
+          -y,
+        );
+        fender.castShadow = true;
+        group.add(fender);
+      }
+      group.visible = false;
+      this.vessel.add(group);
+    }
     this.scene.add(this.vessel);
     this.resize();
     window.addEventListener("resize", () => this.resize());
@@ -250,7 +309,54 @@ export class View {
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
   }
-  render(s: State, time: number, dwell: number) {
+  render(
+    s: State,
+    time: number,
+    dwell: number,
+    fenders: Fenders = initialFenders(),
+    mooring: Mooring = initialMooring(),
+    positionTarget: PositionTarget = "approach",
+  ) {
+    const target = positioningTarget(positionTarget);
+    this.targetGroup.position.set(target.x, 0, -target.y);
+    this.targetGroup.scale.set(
+      target.width / scenario.target.width,
+      1,
+      target.length / scenario.target.length,
+    );
+    this.targetMaterial.color.setHex(
+      positionTarget === "alongside" ? 0xffcc77 : 0x6fffc4,
+    );
+    this.targetOutline.color.setHex(
+      positionTarget === "alongside" ? 0xffcc77 : 0x94ffce,
+    );
+    for (const id of lineIds) {
+      const mesh = this.mooringMeshes.get(id)!,
+        line = mooring[id];
+      mesh.visible = line.attached;
+      if (!line.attached) continue;
+      const g = lineGeometry(s, id),
+        positions = mesh.geometry.getAttribute("position");
+      const sag = Math.min(
+        0.8,
+        Math.max(0, line.restLength - g.distance) + 0.08,
+      );
+      for (let i = 0; i <= 16; i++) {
+        const t = i / 16;
+        positions.setXYZ(
+          i,
+          g.point.x + (g.anchor.x - g.point.x) * t,
+          1.35 - 0.1 * t - 4 * sag * t * (1 - t),
+          -(g.point.y + (g.anchor.y - g.point.y) * t),
+        );
+      }
+      positions.needsUpdate = true;
+      mesh.material.color.setHex(
+        line.warning ? 0xff8a70 : line.tension > 20 ? 0x9ff6ce : 0xe9dbad,
+      );
+    }
+    for (const side of ["port", "starboard"] as const)
+      this.fenderMeshes[side].visible = fenders[side].deployed;
     this.waterTime.value = time;
     this.targetMaterial.opacity = 0.13 + dwell * 0.05;
     this.vessel.position.set(s.x, Math.sin(time * 1.3) * 0.025, -s.y);

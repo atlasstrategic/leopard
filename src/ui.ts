@@ -1,25 +1,40 @@
-import { boat, degrees, scenario } from "./config";
+import { boat, degrees, scenario, mooringConfig } from "./config";
+import { MooringUI, mooringMarkup } from "./mooring-ui";
 import { Instruments, instrumentsMarkup } from "./instruments";
 import { wrap } from "./instrument-data";
+import { LogUI, crewMarkup, logMarkup } from "./log-ui";
 import { requirements } from "./scenario";
+import { DemoUI, demoMarkup, type DemoActions } from "./demo-ui";
+import type { PracticeLab } from "./demonstration";
 import { clamp } from "./simulation";
 import type { Session } from "./session";
 import type { View } from "./rendering";
 export class UI {
   root = document.querySelector<HTMLDivElement>("#ui")!;
   instruments: Instruments;
+  logUI: LogUI;
+  mooringUI: MooringUI;
+  demoUI: DemoUI;
   constructor(
     private game: Session,
     private view: View,
-    actions: { retry: () => void; pause: () => void; camera: () => void },
+    private actions: {
+      retry: () => void;
+      pause: () => void;
+      camera: () => void;
+      readOnly: () => boolean;
+    } & DemoActions,
+    private lab: PracticeLab,
   ) {
     this.root.innerHTML = `
-      <header><div class="eyebrow">LEOPARD / HANDLING LAB</div><h1>A little power. A lot of patience.</h1><p>42-foot twin-hull · Fictional training area · Prototype B</p></header>
-      <section class="panel objective"><div class="eyebrow">01 / APPROACH & HOLD</div><h2>Find your place at North quay.</h2><p>Enter the mint rectangle, bow north. Brake early with reverse, then hold still for 3 seconds.</p>
-      <div id="requirements"></div><div class="progress"><div id="dwell"></div></div><div id="result" aria-live="polite"></div>
-      <div class="stats"><span id="time"></span><span id="penalties"></span></div></section>
+      <header><div class="eyebrow">LEOPARD / HANDLING LAB</div><h1>A little power. A lot of patience.</h1><p>42-foot twin-hull · Fictional training area · Mooring prototype</p></header>
+      <section class="panel objective"><div class="eyebrow" id="mission-phase">01 / APPROACH</div><h2 id="mission-title">Approach North quay.</h2><p id="mission-hint">Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines.</p>
+      <div class="objective-tabs" role="group" aria-label="Objective panel section"><button id="objective-tab" aria-pressed="true">Objective</button><button id="crew-tab" aria-pressed="false">Crew & lines</button></div>
+      <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div></div>
+      <div id="result" aria-live="polite"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div>
+      <div id="crew-page" hidden>${mooringMarkup}${crewMarkup}</div></section>
       ${instrumentsMarkup}
-      <aside class="tools"><div class="toolbar"><button id="camera">Camera</button><button id="pause">Pause · P</button><button id="retry">Retry · R</button></div>
+      <aside class="tools"><div class="toolbar"><button id="camera">Camera</button><button id="pause">Pause · P</button><button id="retry">Retry · R</button><button id="show-me">Show me</button></div>
       <details class="panel"><summary>Handling & weather <span>↗</span></summary><p>Experimental coefficients, not certified training.</p>
       <label>Wind strength <output id="windSpeedValue"></output><input id="windSpeed" type="range" min="0" max="12" step="0.5"></label>
       <label>Wind from (° true) <output id="windDirectionValue"></output><input id="windDirection" type="range" min="0" max="360" step="5"></label>
@@ -32,24 +47,42 @@ export class UI {
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
       <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
-      <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button></div></div>`;
+      <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}`;
+    for (const section of ["objective", "crew"] as const) {
+      this.el(`${section}-tab`).onclick = () => {
+        for (const page of ["objective", "crew"]) {
+          this.el(`${page}-page`).hidden = page !== section;
+          this.el(`${page}-tab`).setAttribute(
+            "aria-pressed",
+            String(page === section),
+          );
+        }
+      };
+    }
     this.instruments = new Instruments(this.root);
+    this.mooringUI = new MooringUI(this.root, game, actions.readOnly);
+    this.logUI = new LogUI(this.root, game, actions.pause, actions.readOnly);
+    this.demoUI = new DemoUI(this.root, lab, actions);
     this.el("retry").onclick = actions.retry;
     this.el("pause").onclick = actions.pause;
     this.el("resume").onclick = actions.pause;
+    this.el("paused-show-me").onclick = actions.showDemo;
     this.el("camera").onclick = actions.camera;
-    const allowed = () => !game.paused && !game.progress.success;
+    const allowed = () => !game.paused && !actions.readOnly();
     this.el("neutral").onclick = () => {
       if (allowed()) game.controls.port = game.controls.starboard = 0;
+      game.observe();
     };
     this.el("center").onclick = () => {
       if (allowed()) game.controls.rudder = 0;
+      game.observe();
     };
     for (const engine of ["port", "starboard"] as const) {
       (this.el(engine) as HTMLInputElement).oninput = (e) => {
         if (allowed())
           game.controls[engine] =
             Number((e.target as HTMLInputElement).value) / 100;
+        game.observe();
       };
     }
     this.root.querySelectorAll<HTMLButtonElement>("[data-value]").forEach(
@@ -60,12 +93,14 @@ export class UI {
             v = Number(b.dataset.value);
           game.controls[key] =
             v === 0 ? 0 : clamp(game.controls[key] + v * 0.2, -1, 1);
+          game.observe();
         }),
     );
     (this.el("wheel") as HTMLInputElement).oninput = (e) => {
       if (allowed())
         game.controls.rudder =
           (Number((e.target as HTMLInputElement).value) * Math.PI) / 180;
+      game.observe();
     };
     for (const id of [
       "windSpeed",
@@ -76,6 +111,7 @@ export class UI {
       "yawDrag",
     ]) {
       (this.el(id) as HTMLInputElement).oninput = (e) => {
+        if (actions.readOnly()) return;
         const v = Number((e.target as HTMLInputElement).value);
         if (id === "windSpeed") game.weather.speed = v;
         else if (id === "windDirection")
@@ -88,6 +124,7 @@ export class UI {
       };
     }
     this.el("defaults").onclick = () => {
+      if (actions.readOnly()) return;
       game.tuning = { ...boat };
       game.weather.speed = scenario.wind.speed;
       game.weather.direction = scenario.wind.direction;
@@ -100,6 +137,7 @@ export class UI {
   }
   syncTuning() {
     const g = this.game;
+    g.observe();
     const values: Record<string, [number, string]> = {
       windSpeed: [g.weather.speed, `${g.weather.speed.toFixed(1)} m/s`],
       windDirection: [
@@ -120,16 +158,66 @@ export class UI {
     const g = this.game,
       s = g.state,
       p = g.progress,
-      r = requirements(s);
+      r = requirements(s, p.positionTarget, g.acceptableContact);
     this.instruments.update(g, this.view.mode);
+    this.root
+      .querySelectorAll<HTMLInputElement | HTMLButtonElement>(
+        "input, #neutral, #center, [data-value], #defaults",
+      )
+      .forEach((el) => {
+        el.disabled = this.actions.readOnly();
+      });
+    const secured = g.securingRequirements();
+    this.el("mission-phase").textContent =
+      p.phase === "approach"
+        ? "01 / APPROACH"
+        : p.phase === "securing"
+          ? "02 / SECURE THE BOAT"
+          : "03 / SECURED · LIVE";
+    this.el("mission-title").textContent =
+      p.phase === "approach"
+        ? "Approach North quay."
+        : p.phase === "securing"
+          ? "Make fast, without rushing."
+          : "Lines on. Stay attentive.";
+    this.el("mission-hint").textContent =
+      p.phase === "approach"
+        ? "Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines."
+        : p.phase === "securing"
+          ? p.positionTarget === "alongside"
+            ? "Amber area: settle alongside, not at the old centre point. Tend slack with Take in / Ease. Gentle covered fender contact is allowed."
+            : "Attach the first line to activate the amber alongside area. Use Crew & lines; either attachment order is allowed."
+          : "The boat is still live. Watch tension and wind. Release either line to practise again; fuel service comes next.";
     this.el("requirements").innerHTML = [
       [
         r.position,
-        `Position within ${scenario.target.positionTolerance} m · full hull inside`,
+        p.positionTarget === "alongside"
+          ? "Full hull inside amber alongside area"
+          : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
       ],
-      [r.heading, "Heading 000° ± 8°"],
+      [
+        r.heading,
+        p.positionTarget === "alongside"
+          ? "Parallel to quay · 000° ± 10°"
+          : "Heading 000° ± 8°",
+      ],
       [r.speed, "Speed ≤ 0.35 kn · minimal rotation"],
-      [r.clear, "Clear of docks and boundaries"],
+      [
+        r.clear,
+        p.positionTarget === "alongside"
+          ? "Clear or gentle covered fender contact"
+          : "Clear of docks and boundaries",
+      ],
+      ...(p.phase === "approach"
+        ? []
+        : [
+            [secured.fenders, "Starboard fenders deployed"],
+            [
+              secured.lines,
+              "Both lines · slack ≤0.45 m · safe load · crew idle",
+            ],
+            [secured.neutral, "Both neutral · delivered thrust settled"],
+          ]),
     ]
       .map(
         ([ok, text]) =>
@@ -137,10 +225,11 @@ export class UI {
       )
       .join("");
     this.el("dwell").style.width =
-      `${(p.dwell / scenario.target.dwell) * 100}%`;
-    this.el("result").textContent = p.success
-      ? `Berth held! ${p.elapsed.toFixed(1)} s + ${p.penalty} s penalties = ${(p.elapsed + p.penalty).toFixed(1)} s. Retry to improve.`
-      : `Hold: ${p.dwell.toFixed(1)} / 3.0 s`;
+      `${(p.dwell / (p.phase === "approach" ? scenario.target.dwell : mooringConfig.securedDwell)) * 100}%`;
+    this.el("result").textContent =
+      p.phase === "secured"
+        ? `Secured · first achieved ${p.securedAt!.toFixed(1)} s · +${p.penalty} s penalties. Simulation remains live.`
+        : `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
     this.el("time").textContent = `TIME ${p.elapsed.toFixed(1)} s`;
     this.el("penalties").textContent =
       `CONTACTS ${p.collisions} / +${p.penalty} s`;
@@ -159,6 +248,9 @@ export class UI {
     );
     this.el("camera").textContent =
       `${this.view.mode[0].toUpperCase() + this.view.mode.slice(1)} · C`;
-    this.el("paused").hidden = !g.paused;
+    this.el("paused").hidden = !g.paused || this.lab.mode === "demo";
+    this.logUI.update();
+    this.mooringUI.update();
+    this.demoUI.update();
   }
 }

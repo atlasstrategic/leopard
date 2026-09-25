@@ -1,7 +1,7 @@
 import "./style.css";
 import { STEP } from "./config";
 import { View, hasWebGL2, type CameraMode } from "./rendering";
-import { Session } from "./session";
+import { PracticeLab } from "./demonstration";
 import { Input } from "./input";
 import { UI } from "./ui";
 const canvas = document.querySelector<HTMLCanvasElement>("#scene")!;
@@ -23,8 +23,10 @@ if (!hasWebGL2()) {
   );
 } else {
   try {
-    const game = new Session(),
+    const lab = new PracticeLab(),
       view = new View(canvas);
+    let ui!: UI;
+    let practiceCamera: CameraMode = view.mode;
     const modes: CameraMode[] = ["chase", "overhead", "helm"];
     const actions = {
       camera: () => {
@@ -32,18 +34,47 @@ if (!hasWebGL2()) {
       },
       retry: () => {
         input.clear();
-        game.retry();
+        if (lab.mode === "demo") {
+          lab.showMe();
+          bindSession();
+        } else lab.active.retry();
+      },
+      readOnly: () => lab.mode === "demo",
+      showDemo: () => {
+        input.clear();
+        if (lab.mode === "practice") practiceCamera = view.mode;
+        lab.showMe();
+        view.mode = "overhead";
+        bindSession();
+      },
+      takeOver: () => {
+        input.clear();
+        lab.takeOver();
+        bindSession();
+      },
+      returnPractice: () => {
+        input.clear();
+        lab.returnToPractice();
+        view.mode = practiceCamera;
+        bindSession();
       },
       pause: () => {
+        const game = lab.active;
         input.clear();
         game.paused = !game.paused;
         game.clock.reset();
         game.previous = { ...game.state };
       },
     };
-    const input = new Input(game, actions),
-      ui = new UI(game, view, actions);
+    const input = new Input(lab.active, actions, actions.readOnly);
+    const bindSession = () => {
+      input.setSession(lab.active);
+      ui = new UI(lab.active, view, actions, lab);
+      ui.update();
+    };
+    bindSession();
     const suspend = () => {
+      const game = lab.active;
       input.clear();
       game.paused = true;
       game.clock.reset();
@@ -64,15 +95,24 @@ if (!hasWebGL2()) {
     let last = performance.now(),
       uiTime = 0;
     const frame = (now: number) => {
+      const game = lab.active;
       const dt = (now - last) / 1000;
       last = now;
       const alpha = game.paused
         ? 1
         : game.clock.advance(dt, () => {
-            if (!game.progress.success) input.tick(STEP);
-            game.tick();
+            input.tick(STEP);
+            lab.tick();
           });
-      view.render(game.interpolated(alpha), now / 1000, game.progress.dwell);
+      game.observe();
+      view.render(
+        game.interpolated(alpha),
+        now / 1000,
+        game.progress.dwell,
+        game.fenders,
+        game.mooring,
+        game.progress.positionTarget,
+      );
       uiTime += dt;
       if (uiTime > 1 / 15) {
         ui.update();

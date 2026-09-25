@@ -129,7 +129,7 @@ function atTarget(): State {
 }
 function dwell(s: State) {
   const p = initialProgress();
-  for (let i = 0; i < 240; i++) updateProgress(p, s, STEP);
+  for (let i = 0; i < 480; i++) updateProgress(p, s, STEP, true);
   return p;
 }
 test("objective rejects wrong berth, excess speed, heading, rotation and contact", () => {
@@ -141,8 +141,9 @@ test("objective rejects wrong berth, excess speed, heading, rotation and contact
     { ...atTarget(), yaw: 0.03 },
     { ...atTarget(), contact: true },
   ])
-    assert.equal(dwell(s).success, false);
-  assert.equal(dwell(atTarget()).success, true);
+    assert.equal(dwell(s).phase, "approach");
+  assert.equal(dwell(atTarget()).phase, "securing");
+  assert.equal(dwell(atTarget()).success, false);
 });
 test("dwell must be continuous and success never snaps pose", () => {
   const p = initialProgress(),
@@ -153,6 +154,11 @@ test("dwell must be continuous and success never snaps pose", () => {
   updateProgress(p, { ...s, vx: 1 }, STEP);
   close(p.dwell, 0);
   for (let i = 0; i < 180; i++) updateProgress(p, s, STEP);
+  assert.equal(p.phase, "securing");
+  assert.equal(p.success, false);
+  p.positionTarget = "alongside";
+  const alongside = { ...s, x: 2.5 };
+  for (let i = 0; i < 180; i++) updateProgress(p, alongside, STEP, true);
   assert.equal(p.success, true);
   assert.deepEqual(s, original);
   assert.ok(requirements(s).position);
@@ -176,10 +182,10 @@ test("dock contact withstands sustained forward thrust without penetration or en
   assert.ok(Math.hypot(s.vx, s.vy) < 0.05);
   assert.ok(Math.abs(s.yaw) < 0.01);
 });
-test("complete calm approach succeeds using only 20% lever steps, no pose snapping", () => {
+test("calm approach reaches live securing phase using only 20% lever steps, no pose snapping", () => {
   const g = new Session();
   g.weather.speed = 0;
-  for (let i = 0; i < 7200 && !g.progress.success; i++) {
+  for (let i = 0; i < 7200 && g.progress.phase === "approach"; i++) {
     const desiredSpeed = Math.max(
       -1,
       Math.min(1, (scenario.target.y - g.state.y) * 0.18),
@@ -191,21 +197,22 @@ test("complete calm approach succeeds using only 20% lever steps, no pose snappi
     g.controls.port = g.controls.starboard = Math.round(throttle * 5) / 5;
     g.tick();
   }
-  assert.equal(g.progress.success, true);
+  assert.equal(g.progress.phase, "securing");
+  assert.equal(g.progress.success, false);
   assert.equal(g.progress.collisions, 0);
   assert.ok(g.progress.elapsed > 30 && g.progress.elapsed < 90);
   assert.ok(Math.abs(g.state.y - scenario.target.y) < 1.2);
 });
-test("collision penalties are contact episodes, not per-frame", () => {
-  const p = initialProgress(),
-    s = { ...initialState(), contact: true, impact: 0.5 };
-  for (let i = 0; i < 120; i++) updateProgress(p, s, STEP);
-  assert.equal(p.collisions, 1);
-  assert.equal(p.penalty, 5);
-  for (let i = 0; i < 90; i++)
-    updateProgress(p, { ...s, contact: false }, STEP);
-  updateProgress(p, s, STEP);
-  assert.equal(p.collisions, 2);
+test("session collision penalties match recorded contact episodes, not frames", () => {
+  const g = new Session();
+  g.weather.speed = 0;
+  g.state.y = 24;
+  g.state.vy = 0.5;
+  g.controls.port = g.controls.starboard = 1;
+  for (let i = 0; i < 600; i++) g.tick();
+  assert.equal(g.progress.collisions, 1);
+  assert.equal(g.progress.penalty, 5);
+  assert.equal(g.recorder.events.filter((e) => e.type === "penalty").length, 1);
 });
 test("retry clears physics, actuators, objective, penalties, pause and clock; preserves chosen tuning", () => {
   const g = new Session();
@@ -217,7 +224,6 @@ test("retry clears physics, actuators, objective, penalties, pause and clock; pr
     collisions: 3,
     penalty: 15,
     dwell: 3,
-    contactCooldown: 1,
   });
   g.clock.accumulator = 0.01;
   g.paused = true;

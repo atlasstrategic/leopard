@@ -1,5 +1,14 @@
 {
-  "result": "Berth held! 49.1 s + 0 s penalties = 49.1 s. Retry to improve.",
+  "browser": "Chrome/150.0.7871.186",
+  "result": "Secured · first achieved 58.3 s · +0 s penalties. Simulation remains live.",
   "collisions": "CONTACTS 0 / +0 s",
-  "method": "Browser DOM controls only; calm-water approach using HUD speed/time integration, no simulation pose mutation"
+  "method": "UI-only calm approach with HUD speed/time integration; no pose injection",
+  "attachBoth": "pass",
+  "liveSecured": "pass",
+  "releaseRevokesSecured": "pass",
+  "reattachAndSecure": "pass",
+  "crewStillLive": "pass",
+  "lineEventsAndTelemetryExport": "pass",
+  "retryArchive": "pass",
+  "consoleErrors": []
 }

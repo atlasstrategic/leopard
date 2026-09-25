@@ -1,0 +1,115 @@
+.crew-controls {
+  border-top: 1px solid #72929b40;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.crew-buttons {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+.crew-controls button {
+  flex: 1;
+  padding: 7px 3px;
+  font-size: 10px;
+}
+#crew-status {
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 7px 0 0;
+  color: #c7dfdd;
+}
+.crew-controls button[aria-disabled="true"] {
+  opacity: 0.6;
+}
+.crew-controls button[aria-pressed="true"] {
+  color: #9df6c9;
+  border-color: #9df6c9;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.log-launch {
+  width: 100%;
+  text-align: left;
+  margin-top: 10px;
+  font-size: 11px;
+}
+.log-launch span {
+  float: right;
+  color: #9df6c9;
+}
+.log-launch small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 9px;
+  color: #afc7d2;
+  margin-top: 5px;
+}
+.objective {
+  max-height: calc(100vh - 335px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+#voyage-log {
+  pointer-events: auto;
+  width: min(1000px, 94vw);
+  max-height: 86vh;
+  padding: 24px;
+  border: 1px solid #708e9c;
+  border-radius: 14px;
+  color: #e7f1ef;
+  background: #102d3a;
+  box-shadow: 0 20px 70px #0008;
+}
+#voyage-log::backdrop {
+  background: #051a28ba;
+}
+.log-header,
+.log-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.log-options {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.log-options label {
+  margin: 6px 0;
+}
+.log-options select {
+  display: block;
+  border: 1px solid #718f9966;
+  background: #254754;
+  color: #e5f1ee;
+  padding: 8px;
+  border-radius: 5px;
+  margin-top: 4px;
+}
+#log-events {
+  max-height: 44vh;
+  overflow: auto;
+  border-top: 1px solid #718f9966;
+  padding-right: 8px;
+}
+.log-event {
+  padding: 12px 0;
+  border-bottom: 1px solid #718f9944;
+}
+.log-event strong {
+  font-size: 12px;
+  font-weight: 550;
+}
+.log-event p {
+  font:
+    11px/1.7 ui-monospace,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 5px 0 0;
+}

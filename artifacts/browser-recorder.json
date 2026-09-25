@@ -1,0 +1,11 @@
+{
+  "browser": "Chrome/150.0.7871.186",
+  "fenderCrew": "3s deployment verified",
+  "collision": "UI-only bow impact on North quay; side fenders correctly not covering",
+  "contactReports": 1,
+  "exportedJSON": true,
+  "exportedCSV": true,
+  "pauseAndResume": "pass",
+  "retryHistoryAndFenderReset": "pass",
+  "consoleErrors": []
+}

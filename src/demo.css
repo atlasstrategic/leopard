@@ -1,0 +1,80 @@
+#demo-panel {
+  position: absolute;
+  top: 126px;
+  left: 335px;
+  right: 470px;
+  max-width: 520px;
+  padding: 16px;
+  z-index: 6;
+  border-color: #dfc886;
+  background: #142e3bf5;
+}
+#demo-panel[hidden] {
+  display: none;
+}
+#demo-panel h2 {
+  font-size: 17px;
+}
+#demo-panel p {
+  color: #e0ece8;
+  font-size: 12px;
+}
+#demo-panel small {
+  display: block;
+  font-size: 9px;
+  color: #b5c9cd;
+  margin-top: 10px;
+}
+.demo-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 12px;
+}
+.demo-buttons button {
+  font-size: 11px;
+  padding: 7px 3px;
+}
+.lesson-focus {
+  outline: 2px solid #efca76;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.tending-buttons {
+  display: flex;
+  gap: 4px;
+  margin-top: 7px;
+}
+.tending-buttons button {
+  flex: 1;
+  padding: 7px 2px;
+  font-size: 9px;
+}
+.tending-status {
+  display: block;
+  font-size: 9px;
+  color: #c0d7d6;
+  padding: 5px 0 10px;
+}
+@media (max-width: 1200px) {
+  #demo-panel {
+    left: 285px;
+    right: 425px;
+    padding: 12px;
+  }
+  #demo-panel h2 {
+    font-size: 15px;
+  }
+  #demo-panel p {
+    font-size: 11px;
+  }
+}
+@media (max-width: 1000px) {
+  #demo-panel {
+    left: 275px;
+    right: 15px;
+    top: auto;
+    bottom: 245px;
+    max-width: 420px;
+  }
+}

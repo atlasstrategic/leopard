@@ -5,8 +5,8 @@
   "clickableLevers": "pass",
   "persistentWheelAndCenter": "pass",
   "neutralCoasting": {
-    "movingSpeed": "0.53 kn",
-    "coastingSpeed": "0.65 kn"
+    "movingSpeed": "0.59 kn",
+    "coastingSpeed": "0.78 kn"
   },
   "cameras": "3 rendered",
   "blurPauseClear": "pass",

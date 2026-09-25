@@ -1,31 +1,22 @@
 # Development status
 
-## Completed — milestone B prototype
+## Playable now
 
-- TypeScript/Vite/Three.js local game; original implementation plan preserved.
-- Procedural Leopard 42 baseline-sized twin hulls; fictional quay, solid amber boundaries and mint target berth.
-- Independent delayed forward/neutral/reverse thrust, persistent rudder, differential turning, water-relative resistance, air-relative wind/yaw and stable low-speed compound-hull contacts.
-- Chase/overhead/basic helm cameras, HUD, keyboard/clickable controls, tuning, automatic focus-loss pause and explicit resume.
-- Clean Raymarine-inspired heading/rudder and apparent/true wind instruments, larger in helm view. True-north HDG/COG/berth bearing distinguished; marine wind-from convention, knots, calm/standstill direction suppression. No pretend autopilot.
-- Continuous docking requirements, 3-second dwell, elapsed time/impact penalties and full attempt retry. Separate data, simulation, contact, scenario, input, rendering and DOM UI modules.
-- Fixed 60 Hz simulation, interpolated rendering, bounded catch-up, WebGL 2 fallback and context-loss recovery message.
+Milestone-B local Three.js twin-engine handling, wind/handling tuning and scenario current, three cameras, Raymarine-inspired instruments and a fictional solid berth. Milestone-C batches: bounded contact/telemetry recorder and JSON/CSV exports; independent delayed fender crew with local cushioning; B01/B02 bow/stern mooring with tension-only fairlead forces, load warnings and failure; live approach → securing → secured states. These are **not** the full fuel mission.
 
-## Verified here
+**Alongside correction:** after the first successful line attachment, the mint arrival target switches to a configurable amber alongside whole-hull envelope. The old 1.2 m approach-centre requirement no longer governs securing. Both lines need limited slack, safe load and idle crew; gentle correctly covered east-quay fender contact can count (hard/bare/wrong-obstacle contacts cannot). The active target stays alongside after both lines are released; Retry resets it. Take in/Ease adjusts paid-out length in bounded 0.25 m tasks at 0.12 m/s with neutral/speed/load/length limits, Stop, feedback and events. The vessel is never snapped toward a target.
 
-- `npm test`: **20 tests passed** (symmetry, thrust direction/delay, momentum/drag, relative flows, fixed-step 30/60/144 Hz equivalence, bounded catch-up, objective rejection/dwell, sustained dock contact, complete approach, penalties and retry; wind-from sign, rotating reference frames, apparent wind vectors/current, heading vs COG/bearing and angle wrapping).
-- `npm run typecheck` and `npm run build`: passed. Build has an informational >500 kB uncompressed Three.js chunk warning (~140 kB gzipped JS).
-- **Linux headless Chrome 150**, WebGL 2, 1440×1000: real keyboard and clickable lever inputs, persistent wheel/centre, neutral coasting, all cameras, tuning, focus-loss pause/held-key clearing, retry. **No captured console or page errors** during smoke test. Updated smoke also verifies apparent/true selection, knots, wind-from tuning conversion, larger helm instruments, and instrument/control clearance at 1100×760 (`artifacts/instruments-compact.png`).
-- Original milestone-B browser DOM-only calm-water approach (before instrument refresh): **success at 49.1 s, zero contacts/penalties**. No simulation state injection or target snapping. Screenshots: `artifacts/chase.png`, `overhead.png`, `helm.png`, `docking-success.png`. Optional repeatable scripts in `tools/`.
-- No Windows/macOS/mobile or physical GPU performance validation; no human skipper handling sign-off. Browser collision feel was not manually assessed; sustained-contact stability is covered by automated simulation checks.
+**Show me:** separate calm-water default-boat run with explanatory steps for fenders, momentum/braking, arrival hold, first-line target switch, paired gradual tending and settling. It uses ordinary session physics, crew commands and objectives; no pose injection. Pause/Repeat/Take over/Return to practice; the original attempt remains preserved, paused. This shows one suitable bow-first method for these conditions, not universal seamanship.
 
-## Known limitations / assumptions
+## Verified on this machine
 
-- Manufacturer September 2024 dimensions/equipment baseline, not verified 2026 equipment. Deck/helm/rig/submerged geometry, thrust, inertia, drag, wind area and contact coefficients are provisional. Nominal horsepower is metadata, not a calibrated propeller model.
-- Planar low-speed dynamics; no prop wash/walk, gear interlock, waves affecting physics, damage, mooring constraints, shallow-water effects or other vessels. Discrete contact solver is not arbitrary-speed continuous collision detection.
-- Instruments are a visual/functional interpretation, not an exact Raymarine model. No sensor noise/damping, magnetic variation, depth sensor or autopilot. True wind uses the water-relative convention; apparent wind is boat-relative.
-- Desktop layout recommended ≥1100×760. No remapping, replay recording, sound, persistence or quality tiers yet. Retry intentionally preserves user weather/tuning and camera.
-- A single berth challenge, not the full mission. No real Croatian geography, real fuel-service claims, or deployment.
+- `npm test`: **58 passed** including along-quay screenshot regression, real contact samples, line-tending safety/limits, demo completion and frame-rate equivalence (30/60/144 Hz), preservation, takeover and fail-stop.
+- `npm run typecheck`, `npm run build`, `git diff --check`: passed. Vite reports an informational >500 kB uncompressed chunk warning (~153 kB gzipped JS).
+- Linux Chrome 150 WebGL 2 browser **UI-only** “Show me”: completed normal secured state at **81.0 simulation seconds**, **zero impact penalties**; paused/resumed, read-only lesson controls, takeover and Ease, JSON export, restored the saved practice display, repeated cleanly. Checked 1440×1000 and 1100×760; no captured console/page errors. Evidence: `artifacts/show-me-tending.png`, `show-me-complete.png`, `show-me-compact.png`, `show-me-recording.json`; script `tools/browser-show-me.mjs`. Browser check was run before the small terminal-stage guard added afterward; that guard is covered by the final automated run.
+- Earlier Chrome smoke/contact/fender/mooring checks: UI controls/cameras, deliberate unprotected bow impact and local coverage, exports/history, and original approach/attach/secure/release at **58.3 s**, zero penalties. These earlier results predate the alongside rule and should **not** be interpreted as a fresh browser check of manual alongside securing. Files and scripts in `artifacts/` and `tools/`.
 
-## Next milestone — C
+## Assumptions and next work
 
-Add holding/traffic clearance → validated fender and line commands → secured berth → short refuelling checklist → release/departure → debrief. Keep this fictional quay while validating the mission loop. Seek experienced-operator feedback on stopping/turning/wind before calibrating coefficients; acquire vessel references and licensed Croatian harbour data for milestone D.
+September 2024 Leopard 42 dimensional/equipment baseline, not a verified 2026 configuration. Planar low-speed dynamics, visual hull/rig, thrust/drag, line elasticity/failure, fitting capacity, crew rates and fender coverage are **provisional game parameters**, not calibrated or certified safety limits. Contact load is summed solver impulse per fixed tick divided by tick duration, **not physical peak force or damage**. Two lines are not full real-world mooring; no springs/breast lines, rope wrapping/chafe, simulated crew travel, waves, prop effects, depth or moving traffic. Browser feel and real hardware performance have not been validated by a skipper; no Windows/macOS/mobile acceptance.
+
+Next milestone-C batches: holding/traffic clearance → refuelling/service checklist → validated departure → debrief. No actual Croatian geography or real fuel-service claims. See `README.md` for controls, units and verification procedures.

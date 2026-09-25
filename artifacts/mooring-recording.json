@@ -1,0 +1,6566 @@
+{
+  "schemaVersion": 1,
+  "attempt": 2,
+  "metadata": {
+    "boat": {
+      "length": 12.67,
+      "beam": 7.04,
+      "draft": 1.4,
+      "mass": 13691,
+      "engineHp": 45,
+      "inertia": 225000,
+      "hullRadius": 0.72,
+      "engineOffset": 2.8,
+      "engineAft": -4.5,
+      "maxThrust": 3000,
+      "reverseEfficiency": 0.72,
+      "engineLag": 1.1,
+      "longitudinalDrag": 850,
+      "lateralDrag": 12000,
+      "yawDrag": 110000,
+      "rudderForce": 1600,
+      "maxRudder": 0.5235987755982988,
+      "windArea": 38,
+      "windLever": 1.2
+    },
+    "scenario": {
+      "version": 2,
+      "name": "North quay · Berth 01",
+      "area": "Fictional training area",
+      "start": {
+        "x": 0,
+        "y": -22,
+        "heading": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 16,
+        "heading": 0,
+        "width": 10,
+        "length": 17,
+        "positionTolerance": 1.2,
+        "headingTolerance": 0.13962634015954636,
+        "maxSpeed": 0.18,
+        "maxYaw": 0.025,
+        "dwell": 3
+      },
+      "wind": {
+        "speed": 2,
+        "direction": 1.5707963267948966
+      },
+      "current": {
+        "x": 0,
+        "y": 0
+      },
+      "collisionPenalty": 5,
+      "obstacles": [
+        {
+          "id": "east-quay",
+          "name": "East quay",
+          "x": 12,
+          "y": 16,
+          "width": 10,
+          "length": 42,
+          "kind": "dock"
+        },
+        {
+          "id": "north-quay",
+          "name": "North quay",
+          "x": -3,
+          "y": 34,
+          "width": 40,
+          "length": 6,
+          "kind": "dock"
+        },
+        {
+          "id": "west-limit",
+          "name": "West training barrier",
+          "x": -46,
+          "y": 0,
+          "width": 2,
+          "length": 102,
+          "kind": "boundary"
+        },
+        {
+          "id": "east-limit",
+          "name": "East training barrier",
+          "x": 46,
+          "y": 0,
+          "width": 2,
+          "length": 102,
+          "kind": "boundary"
+        },
+        {
+          "id": "south-limit",
+          "name": "South training barrier",
+          "x": 0,
+          "y": -50,
+          "width": 94,
+          "length": 2,
+          "kind": "boundary"
+        },
+        {
+          "id": "north-limit",
+          "name": "North training barrier",
+          "x": 0,
+          "y": 50,
+          "width": 94,
+          "length": 2,
+          "kind": "boundary"
+        }
+      ]
+    },
+    "weather": {
+      "speed": 2,
+      "direction": 1.5707963267948966,
+      "currentX": 0,
+      "currentY": 0
+    },
+    "fenderConfig": {
+      "positions": [
+        -3,
+        0,
+        3
+      ],
+      "halfCoverage": 0.8,
+      "thickness": 0.25,
+      "stiffness": 18000,
+      "damping": 3500,
+      "maxForce": 6000,
+      "crewSeconds": 3
+    },
+    "recorderConfig": {
+      "events": 4000,
+      "snapshots": 7200,
+      "sampleSeconds": 1,
+      "separationSeconds": 0.5,
+      "impactThreshold": 0.08,
+      "history": 3
+    },
+    "mooringConfig": {
+      "reach": 6.5,
+      "maxPointSpeed": 0.25,
+      "maxYaw": 0.025,
+      "slack": 0.2,
+      "stiffness": 9000,
+      "damping": 9000,
+      "warningLoad": 7000,
+      "breakLoad": 16000,
+      "breakDelay": 0.4,
+      "securedDwell": 3,
+      "lines": {
+        "bow": {
+          "name": "Bow",
+          "bollard": "B01",
+          "obstacleId": "east-quay",
+          "anchor": {
+            "x": 7.7,
+            "y": 23
+          },
+          "fairlead": {
+            "x": 3.3,
+            "y": 4.6
+          }
+        },
+        "stern": {
+          "name": "Stern",
+          "bollard": "B02",
+          "obstacleId": "east-quay",
+          "anchor": {
+            "x": 7.7,
+            "y": 9
+          },
+          "fairlead": {
+            "x": 3.3,
+            "y": -4.6
+          }
+        }
+      }
+    },
+    "fixedStep": 0.016666666666666666,
+    "build": "milestone-C-mooring"
+  },
+  "units": {
+    "time": "s simulation time",
+    "position": "m; x east, y north",
+    "heading": "rad clockwise from north",
+    "windDirection": "rad TOWARD",
+    "speed": "m/s",
+    "impulse": "N·s (normal only)",
+    "lineTension": "N; modeled planar spring/damper load, not measured rope safe working load",
+    "lineLength": "m (planar); rest length includes attachment slack",
+    "estimatedPeakLoadN": "N = summed tick normal impulse / fixed dt; NOT physical peak force or damage"
+  },
+  "droppedEvents": 0,
+  "droppedSnapshots": 0,
+  "events": [
+    {
+      "sequence": 1,
+      "time": 0,
+      "phase": "approach",
+      "type": "attempt.start",
+      "message": "Approach practice started",
+      "data": {
+        "attempt": 2
+      }
+    },
+    {
+      "sequence": 2,
+      "time": 1.8833333333333315,
+      "phase": "approach",
+      "type": "line.rejected",
+      "message": "Bow / B01: First hold the marked berth for 3 seconds",
+      "data": {
+        "line": "bow",
+        "bollard": "B01",
+        "action": "attach",
+        "reason": "First hold the marked berth for 3 seconds",
+        "distance": 40.639874521577816
+      }
+    },
+    {
+      "sequence": 3,
+      "time": 3.1999999999999935,
+      "phase": "approach",
+      "type": "fender.command",
+      "message": "starboard fenders: deploy (3s)",
+      "data": {
+        "side": "starboard",
+        "target": true
+      }
+    },
+    {
+      "sequence": 4,
+      "time": 3.3333333333333264,
+      "phase": "approach",
+      "type": "weather.change",
+      "message": "weather: {\"speed\":0,\"direction\":1.5707963267948966,\"currentX\":0,\"currentY\":0}",
+      "data": {
+        "speed": 0,
+        "direction": 1.5707963267948966,
+        "currentX": 0,
+        "currentY": 0
+      }
+    },
+    {
+      "sequence": 5,
+      "time": 3.399999999999993,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":1,\"starboard\":0}",
+      "data": {
+        "port": 1,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 6,
+      "time": 3.399999999999993,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":1,\"starboard\":1}",
+      "data": {
+        "port": 1,
+        "starboard": 1
+      }
+    },
+    {
+      "sequence": 7,
+      "time": 5.28333333333332,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.8,\"starboard\":1}",
+      "data": {
+        "port": 0.8,
+        "starboard": 1
+      }
+    },
+    {
+      "sequence": 8,
+      "time": 5.28333333333332,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.8,\"starboard\":0.8}",
+      "data": {
+        "port": 0.8,
+        "starboard": 0.8
+      }
+    },
+    {
+      "sequence": 9,
+      "time": 5.666666666666652,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.6,\"starboard\":0.8}",
+      "data": {
+        "port": 0.6,
+        "starboard": 0.8
+      }
+    },
+    {
+      "sequence": 10,
+      "time": 5.666666666666652,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.6,\"starboard\":0.6}",
+      "data": {
+        "port": 0.6,
+        "starboard": 0.6
+      }
+    },
+    {
+      "sequence": 11,
+      "time": 6.199999999999983,
+      "phase": "approach",
+      "type": "fender.complete",
+      "message": "starboard fenders deployed",
+      "data": {
+        "side": "starboard",
+        "deployed": true
+      }
+    },
+    {
+      "sequence": 12,
+      "time": 6.26666666666665,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.4,\"starboard\":0.6}",
+      "data": {
+        "port": 0.4,
+        "starboard": 0.6
+      }
+    },
+    {
+      "sequence": 13,
+      "time": 6.26666666666665,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.4,\"starboard\":0.4}",
+      "data": {
+        "port": 0.4,
+        "starboard": 0.4
+      }
+    },
+    {
+      "sequence": 14,
+      "time": 6.683333333333315,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.4}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.4
+      }
+    },
+    {
+      "sequence": 15,
+      "time": 6.683333333333315,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 16,
+      "time": 7.716666666666645,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 17,
+      "time": 7.716666666666645,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 18,
+      "time": 10.300000000000091,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 19,
+      "time": 10.300000000000091,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 20,
+      "time": 16.98333333333365,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 21,
+      "time": 16.98333333333365,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 22,
+      "time": 17.400000000000293,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 23,
+      "time": 17.400000000000293,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 24,
+      "time": 20.166666666666803,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 25,
+      "time": 20.166666666666803,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 26,
+      "time": 20.71666666666677,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 27,
+      "time": 20.71666666666677,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 28,
+      "time": 24.14999999999991,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 29,
+      "time": 24.14999999999991,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 30,
+      "time": 24.49999999999989,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 31,
+      "time": 24.49999999999989,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 32,
+      "time": 26.883333333333088,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 33,
+      "time": 26.883333333333088,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 34,
+      "time": 27.38333333333306,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 35,
+      "time": 27.38333333333306,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 36,
+      "time": 30.716666666666203,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 37,
+      "time": 30.716666666666203,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 38,
+      "time": 31.099999999999515,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 39,
+      "time": 31.099999999999515,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 40,
+      "time": 33.683333333332705,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 41,
+      "time": 33.683333333332705,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 42,
+      "time": 34.066666666666016,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 43,
+      "time": 34.066666666666016,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 44,
+      "time": 36.88333333333252,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 45,
+      "time": 36.88333333333252,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 46,
+      "time": 37.69999999999914,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 47,
+      "time": 37.69999999999914,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0.2,\"starboard\":0.2}",
+      "data": {
+        "port": 0.2,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 48,
+      "time": 41.01666666666562,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0.2}",
+      "data": {
+        "port": 0,
+        "starboard": 0.2
+      }
+    },
+    {
+      "sequence": 49,
+      "time": 41.01666666666562,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 50,
+      "time": 41.83333333333224,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":-0.2,\"starboard\":0}",
+      "data": {
+        "port": -0.2,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 51,
+      "time": 41.83333333333224,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":-0.2,\"starboard\":-0.2}",
+      "data": {
+        "port": -0.2,
+        "starboard": -0.2
+      }
+    },
+    {
+      "sequence": 52,
+      "time": 43.533333333332145,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":-0.4,\"starboard\":-0.2}",
+      "data": {
+        "port": -0.4,
+        "starboard": -0.2
+      }
+    },
+    {
+      "sequence": 53,
+      "time": 43.533333333332145,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":-0.4,\"starboard\":-0.4}",
+      "data": {
+        "port": -0.4,
+        "starboard": -0.4
+      }
+    },
+    {
+      "sequence": 54,
+      "time": 45.23333333333205,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":-0.2,\"starboard\":-0.4}",
+      "data": {
+        "port": -0.2,
+        "starboard": -0.4
+      }
+    },
+    {
+      "sequence": 55,
+      "time": 45.23333333333205,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":-0.2,\"starboard\":-0.2}",
+      "data": {
+        "port": -0.2,
+        "starboard": -0.2
+      }
+    },
+    {
+      "sequence": 56,
+      "time": 49.93333333333178,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":-0.2}",
+      "data": {
+        "port": 0,
+        "starboard": -0.2
+      }
+    },
+    {
+      "sequence": 57,
+      "time": 49.93333333333178,
+      "phase": "approach",
+      "type": "engines.change",
+      "message": "engines: {\"port\":0,\"starboard\":0}",
+      "data": {
+        "port": 0,
+        "starboard": 0
+      }
+    },
+    {
+      "sequence": 58,
+      "time": 52.216666666664985,
+      "phase": "securing",
+      "type": "mission.securing",
+      "message": "Berth held — attach bow and stern lines",
+      "data": {
+        "phase": "securing"
+      }
+    },
+    {
+      "sequence": 59,
+      "time": 53.89999999999822,
+      "phase": "securing",
+      "type": "line.attach",
+      "message": "Bow attached to B01",
+      "data": {
+        "line": "bow",
+        "bollard": "B01",
+        "distance": 4.901343533741069,
+        "restLength": 5.101343533741069,
+        "slack": 0.2
+      }
+    },
+    {
+      "sequence": 60,
+      "time": 55.28333333333148,
+      "phase": "securing",
+      "type": "line.attach",
+      "message": "Stern attached to B02",
+      "data": {
+        "line": "stern",
+        "bollard": "B02",
+        "distance": 4.763490405799808,
+        "restLength": 4.963490405799808,
+        "slack": 0.2
+      }
+    },
+    {
+      "sequence": 61,
+      "time": 58.283333333331306,
+      "phase": "secured",
+      "type": "mission.secured",
+      "message": "Secured: both lines, starboard fenders and neutral held for 3s — simulation remains live",
+      "data": {
+        "phase": "secured"
+      }
+    },
+    {
+      "sequence": 62,
+      "time": 63.033333333331036,
+      "phase": "secured",
+      "type": "line.release",
+      "message": "Bow released from B01",
+      "data": {
+        "line": "bow",
+        "bollard": "B01",
+        "tensionN": 0
+      }
+    },
+    {
+      "sequence": 63,
+      "time": 63.033333333331036,
+      "phase": "securing",
+      "type": "mission.unsecured",
+      "message": "Line released — vessel no longer secured",
+      "data": {}
+    },
+    {
+      "sequence": 64,
+      "time": 64.83333333333094,
+      "phase": "securing",
+      "type": "line.attach",
+      "message": "Bow attached to B01",
+      "data": {
+        "line": "bow",
+        "bollard": "B01",
+        "distance": 4.652970934989863,
+        "restLength": 4.852970934989863,
+        "slack": 0.2
+      }
+    },
+    {
+      "sequence": 65,
+      "time": 67.83333333333077,
+      "phase": "secured",
+      "type": "mission.secured",
+      "message": "Secured: both lines, starboard fenders and neutral held for 3s — simulation remains live",
+      "data": {
+        "phase": "secured"
+      }
+    },
+    {
+      "sequence": 66,
+      "time": 68.9833333333307,
+      "phase": "secured",
+      "type": "fender.command",
+      "message": "port fenders: deploy (3s)",
+      "data": {
+        "side": "port",
+        "target": true
+      }
+    },
+    {
+      "sequence": 67,
+      "time": 69.99999999999731,
+      "phase": "secured",
+      "type": "pause.change",
+      "message": "pause: {\"paused\":true}",
+      "data": {
+        "paused": true
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "time": 0,
+      "data": {
+        "state": {
+          "x": 0,
+          "y": -22,
+          "heading": 0,
+          "vx": 0,
+          "vy": 0,
+          "yaw": 0,
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 2,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": 0,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 0,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 1.0000000000000013,
+      "data": {
+        "state": {
+          "x": 0.003040551008666052,
+          "y": -22.00000010853963,
+          "heading": 0.00022579461229684878,
+          "vx": 0.005607757778478983,
+          "vy": -3.9067015507587273e-7,
+          "yaw": 0.00042010376180447287,
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 2,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.00008001449982874862,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 1.0000000000000013,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 1.9999999999999978,
+      "data": {
+        "state": {
+          "x": 0.010664995964741958,
+          "y": -22.000001287868347,
+          "heading": 0.0008048969250708962,
+          "vx": 0.00932256531823037,
+          "vy": -0.0000021887240116483286,
+          "yaw": 0.0007159003607863021,
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 2,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.00028065777166496773,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 1.9999999999999978,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 2.9999999999999942,
+      "data": {
+        "state": {
+          "x": 0.021315594593047122,
+          "y": -22.000004955846745,
+          "heading": 0.0016327004538610145,
+          "vx": 0.011766845056215152,
+          "vy": -0.000005264269379206987,
+          "yaw": 0.0009240714780598917,
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 2,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.0005609365678284732,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 2.9999999999999942,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 3.9999999999999907,
+      "data": {
+        "state": {
+          "x": 0.03258337482640943,
+          "y": -21.986460465711076,
+          "heading": 0.002531752183679047,
+          "vx": 0.009591872117708376,
+          "vy": 0.06146577832962322,
+          "yaw": 0.0007778750244318143,
+          "port": 0.4204217212151902,
+          "starboard": 0.4204217212151902,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 1,
+          "starboard": 1,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": false,
+            "target": true,
+            "remaining": 2.200000000000003
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.0008577626458425822,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 3.9999999999999907,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 4.999999999999988,
+      "data": {
+        "state": {
+          "x": 0.04082951694488803,
+          "y": -21.80119604473976,
+          "heading": 0.0031879784245430454,
+          "vx": 0.00725228028045294,
+          "vy": 0.327235419223082,
+          "yaw": 0.0005513550774837919,
+          "port": 0.7664935209090865,
+          "starboard": 0.7664935209090865,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 1,
+          "starboard": 1,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": false,
+            "target": true,
+            "remaining": 1.2000000000000064
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.022158644345196855,
+        "berthBearing": -0.0010801113546453133,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 4.999999999999988,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 5.999999999999984,
+      "data": {
+        "state": {
+          "x": 0.047544846744244265,
+          "y": -21.306798214814357,
+          "heading": 0.0036531774031903015,
+          "vx": 0.00634689582631527,
+          "vy": 0.6498987222335648,
+          "yaw": 0.00039091110056930383,
+          "port": 0.7578889219906758,
+          "starboard": 0.7578889219906758,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.6,
+          "starboard": 0.6,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": false,
+            "target": true,
+            "remaining": 0.20000000000000562
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.009765666316635238,
+        "berthBearing": -0.001274427806166351,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 5.999999999999984,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 6.9999999999999805,
+      "data": {
+        "state": {
+          "x": 0.05368161441628095,
+          "y": -20.528797367824154,
+          "heading": 0.0039830379594778965,
+          "vx": 0.005959284026654893,
+          "vy": 0.8793891046281908,
+          "yaw": 0.0002772127008024398,
+          "port": 0.5162658379412604,
+          "starboard": 0.5162658379412604,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.0067765142596866255,
+        "berthBearing": -0.0014695686592568135,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 6.9999999999999805,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 7.999999999999977,
+      "data": {
+        "state": {
+          "x": 0.059454928910268885,
+          "y": -19.59108302987406,
+          "heading": 0.004216974113329287,
+          "vx": 0.005587641756329673,
+          "vy": 0.9761319572430589,
+          "yaw": 0.00019661236882397636,
+          "port": 0.2820050590003281,
+          "starboard": 0.2820050590003281,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.005724206328365867,
+        "berthBearing": -0.001670499140361243,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 7.999999999999977,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 9.000000000000027,
+      "data": {
+        "state": {
+          "x": 0.0648088949720566,
+          "y": -18.61097968588677,
+          "heading": 0.0043829013074418435,
+          "vx": 0.005117441471425631,
+          "vy": 0.9722145638383699,
+          "yaw": 0.00013946100938837567,
+          "port": 0.11361710889348438,
+          "starboard": 0.11361710889348438,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.005263646936014224,
+        "berthBearing": -0.0018724930590016304,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 9.000000000000027,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 10.000000000000076,
+      "data": {
+        "state": {
+          "x": 0.06968278557378844,
+          "y": -17.661175432210346,
+          "heading": 0.004500601035234291,
+          "vx": 0.004645359834977046,
+          "vy": 0.9244896544154734,
+          "yaw": 0.0000989295590423869,
+          "port": 0.04577523353330644,
+          "starboard": 0.04577523353330644,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.005024740641874775,
+        "berthBearing": -0.002070120402497281,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 10.000000000000076,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 11.000000000000126,
+      "data": {
+        "state": {
+          "x": 0.07413049431979783,
+          "y": -16.762492303613914,
+          "heading": 0.00458409594365484,
+          "vx": 0.004302770972216068,
+          "vy": 0.8808912240429032,
+          "yaw": 0.00007018131349542582,
+          "port": 0.11259973025629488,
+          "starboard": 0.11259973025629488,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004884526755809641,
+        "berthBearing": -0.002262659602508762,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 11.000000000000126,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 12.000000000000176,
+      "data": {
+        "state": {
+          "x": 0.07836443558038175,
+          "y": -15.887121579779015,
+          "heading": 0.004643328897076445,
+          "vx": 0.004193266506332785,
+          "vy": 0.8738517636877948,
+          "yaw": 0.00004978890729976848,
+          "port": 0.1647872772212257,
+          "starboard": 0.1647872772212257,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004798564808698966,
+        "berthBearing": -0.0024575525772026264,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 12.000000000000176,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 13.000000000000226,
+      "data": {
+        "state": {
+          "x": 0.08255117351461613,
+          "y": -15.01003495364615,
+          "heading": 0.004685351228251466,
+          "vx": 0.004191392282025145,
+          "vy": 0.8815226671484951,
+          "yaw": 0.000035322774593585154,
+          "port": 0.18581313479774342,
+          "starboard": 0.18581313479774342,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004754682838262132,
+        "berthBearing": -0.0026620730558553855,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 13.000000000000226,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 14.000000000000275,
+      "data": {
+        "state": {
+          "x": 0.08676198287802753,
+          "y": -14.122440601799076,
+          "heading": 0.004715164274962185,
+          "vx": 0.004233852987355001,
+          "vy": 0.8937883952358782,
+          "yaw": 0.00002506022121334126,
+          "port": 0.19428424931717234,
+          "starboard": 0.19428424931717234,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.0047369392382356134,
+        "berthBearing": -0.002880302565615408,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 14.000000000000275,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 15.000000000000325,
+      "data": {
+        "state": {
+          "x": 0.09102481047479417,
+          "y": -13.22204920112578,
+          "heading": 0.004736315683309946,
+          "vx": 0.004292069770523682,
+          "vy": 0.9067257505445575,
+          "yaw": 0.00001777954218566666,
+          "port": 0.19769717936961523,
+          "starboard": 0.19769717936961523,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.0047335566581851694,
+        "berthBearing": -0.0031149258373608566,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 15.000000000000325,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 16.000000000000373,
+      "data": {
+        "state": {
+          "x": 0.09534797109584232,
+          "y": -12.309046883406067,
+          "heading": 0.004751322099137223,
+          "vx": 0.004353075371020931,
+          "vy": 0.9188920582628317,
+          "yaw": 0.00001261421436894972,
+          "port": 0.19907221585580037,
+          "starboard": 0.19907221585580037,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004737273293717,
+        "berthBearing": -0.003368096811714934,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 16.000000000000373,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 17.000000000000316,
+      "data": {
+        "state": {
+          "x": 0.09973092529705584,
+          "y": -11.384485581448073,
+          "heading": 0.004761968873211169,
+          "vx": 0.004411004647234258,
+          "vy": 0.9298101052764963,
+          "yaw": 0.00000894957991328752,
+          "port": 0.19661874305288027,
+          "starboard": 0.19661874305288027,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004743948825886552,
+        "berthBearing": -0.003641860793208436,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 17.000000000000316,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 18.00000000000026,
+      "data": {
+        "state": {
+          "x": 0.10412795760905053,
+          "y": -10.458324689138145,
+          "heading": 0.004769522603867635,
+          "vx": 0.0043787410257877385,
+          "vy": 0.9216265436835,
+          "yaw": 0.00000634961052491863,
+          "port": 0.16330013285026704,
+          "starboard": 0.16330013285026704,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004751065503908119,
+        "berthBearing": -0.0039355258218858455,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 18.00000000000026,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 19.000000000000203,
+      "data": {
+        "state": {
+          "x": 0.10850911963089582,
+          "y": -9.536888927005535,
+          "heading": 0.004774881886377655,
+          "vx": 0.004390625409396731,
+          "vy": 0.9227640237282078,
+          "yaw": 0.000004504980738823468,
+          "port": 0.1852139787239676,
+          "starboard": 0.1852139787239676,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004758087834741882,
+        "berthBearing": -0.0042490871501835595,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 19.000000000000203,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 20.000000000000146,
+      "data": {
+        "state": {
+          "x": 0.11291803472390678,
+          "y": -8.610917417266169,
+          "heading": 0.00477868424445103,
+          "vx": 0.004428682666621794,
+          "vy": 0.9295374723120228,
+          "yaw": 0.000003196243024081033,
+          "port": 0.19404285513396274,
+          "starboard": 0.19404285513396274,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.0047643578547838,
+        "berthBearing": -0.004588095619384596,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 20.000000000000146,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 21.00000000000009,
+      "data": {
+        "state": {
+          "x": 0.11733910282643195,
+          "y": -7.683499211906966,
+          "heading": 0.004781381985306733,
+          "vx": 0.004385415669092651,
+          "vy": 0.9194824457204724,
+          "yaw": 0.0000022677091873852605,
+          "port": 0.13677561795408075,
+          "starboard": 0.13677561795408075,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004769403089171229,
+        "berthBearing": -0.0049544259356815645,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 21.00000000000009,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 22.000000000000032,
+      "data": {
+        "state": {
+          "x": 0.12170624249961662,
+          "y": -6.768269981963811,
+          "heading": 0.0047832960122730014,
+          "vx": 0.004362611447756341,
+          "vy": 0.9138945557636529,
+          "yaw": 0.0000016089236320878468,
+          "port": 0.17452750838903883,
+          "starboard": 0.17452750838903883,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004773612319611152,
+        "berthBearing": -0.005345381244113562,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 22.000000000000032,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 22.999999999999975,
+      "data": {
+        "state": {
+          "x": 0.12608062021134847,
+          "y": -5.852259976203248,
+          "heading": 0.004784654001439413,
+          "vx": 0.004390188324347582,
+          "vy": 0.9190072463820905,
+          "yaw": 0.00000114152088014007,
+          "port": 0.18973737966471163,
+          "starboard": 0.18973737966471163,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004777062364203559,
+        "berthBearing": -0.00576961931322763,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 22.999999999999975,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 23.99999999999992,
+      "data": {
+        "state": {
+          "x": 0.13049210715779766,
+          "y": -4.929071595679605,
+          "heading": 0.00478561748623026,
+          "vx": 0.004433115071541625,
+          "vy": 0.9274679311034761,
+          "yaw": 8.099021329757821e-7,
+          "port": 0.19586528959338423,
+          "starboard": 0.19586528959338423,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004779767755744591,
+        "berthBearing": -0.0062348879474960536,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 23.99999999999992,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 24.99999999999986,
+      "data": {
+        "state": {
+          "x": 0.13492247998822837,
+          "y": -4.002385645660107,
+          "heading": 0.004786301072983001,
+          "vx": 0.004413772902583317,
+          "vy": 0.9230323189920762,
+          "yaw": 5.746208836614991e-7,
+          "port": 0.16373728656333988,
+          "starboard": 0.16373728656333988,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004781781927637049,
+        "berthBearing": -0.006745217102593125,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 24.99999999999986,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 25.999999999999805,
+      "data": {
+        "state": {
+          "x": 0.13933598028500427,
+          "y": -3.0795705289062623,
+          "heading": 0.004786786073906725,
+          "vx": 0.004420332934888742,
+          "vy": 0.9241010410973222,
+          "yaw": 4.076903165608899e-7,
+          "port": 0.18539010372398523,
+          "starboard": 0.18539010372398523,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004783350548475345,
+        "berthBearing": -0.0073027588918983385,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 25.999999999999805,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 26.999999999999748,
+      "data": {
+        "state": {
+          "x": 0.14377180255312144,
+          "y": -2.1523553795952255,
+          "heading": 0.004787130179397309,
+          "vx": 0.004450389691992577,
+          "vy": 0.9301510926110159,
+          "yaw": 2.8925406920912964e-7,
+          "port": 0.17398784202044804,
+          "starboard": 0.17398784202044804,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004784551421757033,
+        "berthBearing": -0.007920117987372933,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 26.999999999999748,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 27.99999999999969,
+      "data": {
+        "state": {
+          "x": 0.1481888731873453,
+          "y": -1.2292559182354041,
+          "heading": 0.004787374320395573,
+          "vx": 0.004386085352867752,
+          "vy": 0.9165465121494025,
+          "yaw": 2.0522422416406475e-7,
+          "port": 0.15592542132948878,
+          "starboard": 0.15592542132948878,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004785411120976284,
+        "berthBearing": -0.008600790414356754,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 27.99999999999969,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 28.999999999999634,
+      "data": {
+        "state": {
+          "x": 0.15257042436260831,
+          "y": -0.3137251432721799,
+          "heading": 0.0047875475371449904,
+          "vx": 0.004386000373052573,
+          "vy": 0.916399908636774,
+          "yaw": 1.456055111361278e-7,
+          "port": 0.18224277882817674,
+          "starboard": 0.18224277882817674,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004786083938042599,
+        "berthBearing": -0.009352001156335306,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 28.999999999999634,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 29.999999999999577,
+      "data": {
+        "state": {
+          "x": 0.15697184417181698,
+          "y": 0.6058443636006584,
+          "heading": 0.004787670433525233,
+          "vx": 0.004419126502973462,
+          "vy": 0.9232231665185021,
+          "yaw": 1.0330635447200217e-7,
+          "port": 0.19284578745262018,
+          "starboard": 0.19284578745262018,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004786592141132407,
+        "berthBearing": -0.010196493253705738,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 29.999999999999577,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 30.99999999999952,
+      "data": {
+        "state": {
+          "x": 0.16141056765928313,
+          "y": 1.5331228214243728,
+          "heading": 0.004787757627871531,
+          "vx": 0.004446569855825248,
+          "vy": 0.9288841763823151,
+          "yaw": 7.329532620697975e-8,
+          "port": 0.15170225086999126,
+          "starboard": 0.15170225086999126,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004786964838458518,
+        "berthBearing": -0.011156787223464321,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 30.99999999999952,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 31.999999999999464,
+      "data": {
+        "state": {
+          "x": 0.16583222059427513,
+          "y": 2.4567747739746366,
+          "heading": 0.004787819491812131,
+          "vx": 0.0044104170602745065,
+          "vy": 0.9212807486927385,
+          "yaw": 5.200265822765607e-8,
+          "port": 0.17287273507770717,
+          "starboard": 0.17287273507770717,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787230574890033,
+        "berthBearing": -0.012244050492667467,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 31.999999999999464,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 32.99999999999941,
+      "data": {
+        "state": {
+          "x": 0.17024920574203417,
+          "y": 3.3794067459071617,
+          "heading": 0.004787863383961458,
+          "vx": 0.0044283659950344854,
+          "vy": 0.924991009988139,
+          "yaw": 3.689562042039316e-8,
+          "port": 0.18907068751325146,
+          "starboard": 0.18907068751325146,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.0047874326508801695,
+        "berthBearing": -0.013488976027876317,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 32.99999999999941,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 33.99999999999935,
+      "data": {
+        "state": {
+          "x": 0.17469304276071262,
+          "y": 4.3076139145343655,
+          "heading": 0.004787894525217531,
+          "vx": 0.004446375327030844,
+          "vy": 0.9287241459501059,
+          "yaw": 2.617725474327123e-8,
+          "port": 0.14556718136615213,
+          "starboard": 0.14556718136615213,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787580224645327,
+        "berthBearing": -0.014939640595496925,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 33.99999999999935,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 34.9999999999993,
+      "data": {
+        "state": {
+          "x": 0.1791138806829803,
+          "y": 5.23099330239289,
+          "heading": 0.0047879166197802355,
+          "vx": 0.0044098158581517746,
+          "vy": 0.9210677070035037,
+          "yaw": 1.8572629141455635e-8,
+          "port": 0.17303500426806345,
+          "starboard": 0.17303500426806345,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787685129704573,
+        "berthBearing": -0.016630815827392863,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 34.9999999999993,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 35.99999999999924,
+      "data": {
+        "state": {
+          "x": 0.18353039752191502,
+          "y": 6.153452484515122,
+          "heading": 0.0047879322957602045,
+          "vx": 0.00442799156495466,
+          "vy": 0.9248487325536242,
+          "yaw": 1.3177186067182498e-8,
+          "port": 0.18913606419952847,
+          "starboard": 0.18913606419952847,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787764285360983,
+        "berthBearing": -0.018636902726580317,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 35.99999999999924,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 36.99999999999918,
+      "data": {
+        "state": {
+          "x": 0.1879759269731403,
+          "y": 7.081958241217463,
+          "heading": 0.004787943417788434,
+          "vx": 0.004461273893323214,
+          "vy": 0.9317889706377117,
+          "yaw": 9.34914666567058e-9,
+          "port": 0.1754970532408751,
+          "starboard": 0.1754970532408751,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787822076566108,
+        "berthBearing": -0.021075041016395134,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 36.99999999999918,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 37.999999999999126,
+      "data": {
+        "state": {
+          "x": 0.19239216229668804,
+          "y": 8.004336352023188,
+          "heading": 0.004787951308811056,
+          "vx": 0.004352966817365839,
+          "vy": 0.9091603801330176,
+          "yaw": 6.6331721617287064e-9,
+          "port": 0.11844598686825679,
+          "starboard": 0.11844598686825679,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787861031481438,
+        "berthBearing": -0.024057420755777558,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 37.999999999999126,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 38.99999999999907,
+      "data": {
+        "state": {
+          "x": 0.1967141840752935,
+          "y": 8.907030576165624,
+          "heading": 0.0047879569074516124,
+          "vx": 0.004309449757626958,
+          "vy": 0.9000657910665081,
+          "yaw": 4.706202036238805e-9,
+          "port": 0.1671426774273609,
+          "starboard": 0.1671426774273609,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787890919254534,
+        "berthBearing": -0.027726578371950066,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 38.99999999999907,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 39.99999999999901,
+      "data": {
+        "state": {
+          "x": 0.20103261868369468,
+          "y": 9.80897066160609,
+          "heading": 0.00478796087965872,
+          "vx": 0.004333185072344177,
+          "vy": 0.905018856348073,
+          "yaw": 3.3390265047678868e-9,
+          "port": 0.18676210274412297,
+          "starboard": 0.18676210274412297,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787913456633002,
+        "berthBearing": -0.03246019293179951,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 39.99999999999901,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 40.999999999998956,
+      "data": {
+        "state": {
+          "x": 0.20538810542935693,
+          "y": 10.718645725718487,
+          "heading": 0.004787963697919545,
+          "vx": 0.004378679611924843,
+          "vy": 0.9145176158086602,
+          "yaw": 2.369022394818584e-9,
+          "port": 0.19466657931821008,
+          "starboard": 0.19466657931821008,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0.2,
+          "starboard": 0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787929807841537,
+        "berthBearing": -0.0388697003132906,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 40.999999999998956,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 41.9999999999989,
+      "data": {
+        "state": {
+          "x": 0.20974200759835454,
+          "y": 11.627987269013387,
+          "heading": 0.004787965697461329,
+          "vx": 0.00428742375545919,
+          "vy": 0.8954561536138967,
+          "yaw": 1.6808093933564645e-9,
+          "port": 0.05154042865155958,
+          "starboard": 0.05154042865155958,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.2,
+          "starboard": -0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787940733819194,
+        "berthBearing": -0.04793703411859384,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 41.9999999999989,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 42.99999999999884,
+      "data": {
+        "state": {
+          "x": 0.2138544572642643,
+          "y": 12.486898305560787,
+          "heading": 0.0047879671161261015,
+          "vx": 0.003912202926710234,
+          "vy": 0.8170877082284289,
+          "yaw": 1.1925257546638742e-9,
+          "port": -0.09865679582299718,
+          "starboard": -0.09865679582299718,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.2,
+          "starboard": -0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787947477664235,
+        "berthBearing": -0.06079838006778012,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 42.99999999999884,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 43.999999999998785,
+      "data": {
+        "state": {
+          "x": 0.21752514096250813,
+          "y": 13.25354284065444,
+          "heading": 0.004787968122661576,
+          "vx": 0.0034143210754686683,
+          "vy": 0.7131013263998937,
+          "yaw": 8.460909856968592e-10,
+          "port": -0.22831675329961565,
+          "starboard": -0.22831675329961565,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.4,
+          "starboard": -0.4,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787952088307389,
+        "berthBearing": -0.07903709751113094,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 43.999999999998785,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 44.99999999999873,
+      "data": {
+        "state": {
+          "x": 0.2206215869584658,
+          "y": 13.900253857217741,
+          "heading": 0.004787968836793398,
+          "vx": 0.0027752717157643134,
+          "vy": 0.5796317140909139,
+          "yaw": 6.002972712191202e-10,
+          "port": -0.33083048153571654,
+          "starboard": -0.33083048153571654,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.4,
+          "starboard": -0.4,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.0047879549048389985,
+        "berthBearing": -0.1046864871908472,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 44.99999999999873,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 45.99999999999867,
+      "data": {
+        "state": {
+          "x": 0.2230718920542268,
+          "y": 14.41201429177963,
+          "heading": 0.004787969343466308,
+          "vx": 0.002164517478207549,
+          "vy": 0.4520719393211884,
+          "yaw": 4.2590787519789906e-10,
+          "port": -0.27175074847652186,
+          "starboard": -0.27175074847652186,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.2,
+          "starboard": -0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787956848748165,
+        "berthBearing": -0.13956153282661027,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 45.99999999999867,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 46.999999999998614,
+      "data": {
+        "state": {
+          "x": 0.22498960669547302,
+          "y": 14.812539962533938,
+          "heading": 0.004787969702948177,
+          "vx": 0.001695174253293606,
+          "vy": 0.35404677245678,
+          "yaw": 3.021794815527902e-10,
+          "port": -0.22890768212366183,
+          "starboard": -0.22890768212366183,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.2,
+          "starboard": -0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787958629900105,
+        "berthBearing": -0.18725162603399692,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 46.999999999998614,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 47.99999999999856,
+      "data": {
+        "state": {
+          "x": 0.22647863712995514,
+          "y": 15.123532381801125,
+          "heading": 0.004787969957998741,
+          "vx": 0.0012979936820850563,
+          "vy": 0.2710932772954908,
+          "yaw": 2.1439481259415596e-10,
+          "port": -0.21164662534546408,
+          "starboard": -0.21164662534546408,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.2,
+          "starboard": -0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787959983271998,
+        "berthBearing": -0.2528681500119898,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 47.99999999999856,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 48.9999999999985,
+      "data": {
+        "state": {
+          "x": 0.2275922016001599,
+          "y": 15.356106561656691,
+          "heading": 0.004787970138955825,
+          "vx": 0.0009400435210697477,
+          "vy": 0.1963333448654931,
+          "yaw": 1.5211203433157434e-10,
+          "port": -0.20469231263016338,
+          "starboard": -0.20469231263016338,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": -0.2,
+          "starboard": -0.2,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": 0.004787960691746168,
+        "berthBearing": -0.33975613918442704,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 48.9999999999985,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 49.999999999998444,
+      "data": {
+        "state": {
+          "x": 0.2283609068608272,
+          "y": 15.516654955055142,
+          "heading": 0.004787970267343962,
+          "vx": 0.0006068285632954425,
+          "vy": 0.12673954887116068,
+          "yaw": 1.0792271841980962e-10,
+          "port": -0.19012927536924826,
+          "starboard": -0.19012927536924826,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.44137338958053546,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 49.999999999998444,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 0.7833333333333341,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 50.99999999999839,
+      "data": {
+        "state": {
+          "x": 0.2288500771445539,
+          "y": 15.618820916848284,
+          "heading": 0.004787970358434695,
+          "vx": 0.00040414010023056895,
+          "vy": 0.08440692846071025,
+          "yaw": 7.657062245560264e-11,
+          "port": -0.07660124488561754,
+          "starboard": -0.07660124488561754,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.5406945827011091,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 50.99999999999839,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 1.7833333333333319,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 51.99999999999833,
+      "data": {
+        "state": {
+          "x": 0.22920464980526375,
+          "y": 15.692875397572076,
+          "heading": 0.0047879704230631105,
+          "vx": 0.0003181970255050238,
+          "vy": 0.06645721431547762,
+          "yaw": 5.4326469063341445e-11,
+          "port": -0.030861900181498314,
+          "starboard": -0.030861900181498314,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.641123795448593,
+        "phase": "approach",
+        "progress": {
+          "elapsed": 51.99999999999833,
+          "phase": "approach",
+          "arrivalAt": null,
+          "securedAt": null,
+          "dwell": 2.7833333333333283,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 52.216666666664985,
+      "data": {
+        "state": {
+          "x": 0.22927226842328693,
+          "y": 15.70699792045718,
+          "heading": 0.004787970434374443,
+          "vx": 0.00030713567635827965,
+          "vy": 0.06414698440016983,
+          "yaw": 5.0433273849859924e-11,
+          "port": -0.025344271351863058,
+          "starboard": -0.025344271351863058,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.6639748153486115,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 52.216666666664985,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 53.21666666666493,
+      "data": {
+        "state": {
+          "x": 0.2295605611009136,
+          "y": 15.767209427431945,
+          "heading": 0.004787970476941976,
+          "vx": 0.0002739115301392704,
+          "vy": 0.05720791322194747,
+          "yaw": 3.578215252520171e-11,
+          "port": -0.01021096163387371,
+          "starboard": -0.01021096163387371,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.778412219843789,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 53.21666666666493,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 54.21666666666487,
+      "data": {
+        "state": {
+          "x": 0.22982475947553163,
+          "y": 15.822388684555108,
+          "heading": 0.004787970507143428,
+          "vx": 0.0002563726152961257,
+          "vy": 0.05354479549151589,
+          "yaw": 2.5387256103414387e-11,
+          "port": -0.004113897615793022,
+          "starboard": -0.004113897615793022,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -0.9128547184873929,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 54.21666666666487,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 55.216666666664814,
+      "data": {
+        "state": {
+          "x": 0.2300751602985907,
+          "y": 15.874686231328921,
+          "heading": 0.0047879705285712015,
+          "vx": 0.00024527724001204926,
+          "vy": 0.051227452294676804,
+          "yaw": 1.8012129706694385e-11,
+          "port": -0.0016574495331647856,
+          "starboard": -0.0016574495331647856,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -1.0720587075158006,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 55.216666666664814,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": null,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 56.21666666666476,
+      "data": {
+        "state": {
+          "x": 0.23031603556003852,
+          "y": 15.924994301532742,
+          "heading": 0.0047879705437741,
+          "vx": 0.00023690021644256652,
+          "vy": 0.0494778563178078,
+          "yaw": 1.2779514857854871e-11,
+          "port": -0.0006677703753350725,
+          "starboard": -0.0006677703753350725,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": null,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 56.21666666666476,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": null,
+          "dwell": 0.9333333333333346,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 57.2166666666647,
+      "data": {
+        "state": {
+          "x": 0.23054922685674123,
+          "y": 15.973697526660288,
+          "heading": 0.004787970554560481,
+          "vx": 0.00022973693822121448,
+          "vy": 0.047981760997550076,
+          "yaw": 9.067001107731105e-12,
+          "port": -0.0002690382212263773,
+          "starboard": -0.0002690382212263773,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": null,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 57.2166666666647,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": null,
+          "dwell": 1.9333333333333313,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 58.21666666666464,
+      "data": {
+        "state": {
+          "x": 0.23077559264588549,
+          "y": 16.020975202959132,
+          "heading": 0.00478797056221336,
+          "vx": 0.00022317717355946367,
+          "vy": 0.046611715086913294,
+          "yaw": 6.4329913930532415e-12,
+          "port": -0.00010839289545352126,
+          "starboard": -0.00010839289545352126,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": null,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 58.21666666666464,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": null,
+          "dwell": 2.933333333333328,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 58.283333333331306,
+      "data": {
+        "state": {
+          "x": 0.23079045348766553,
+          "y": 16.02407896715476,
+          "heading": 0.004787970562636145,
+          "vx": 0.00022275408638259588,
+          "vy": 0.046523350866459624,
+          "yaw": 6.287474795407447e-12,
+          "port": -0.00010201873635343873,
+          "starboard": -0.00010201873635343873,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": null,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 58.283333333331306,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 2.9999999999999942,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 59.28333333333125,
+      "data": {
+        "state": {
+          "x": 0.23101003915908347,
+          "y": 16.069940576347843,
+          "heading": 0.004787970567943002,
+          "vx": 0.0002165669151521283,
+          "vy": 0.04523112479147081,
+          "yaw": 4.460931543125889e-12,
+          "port": -0.000041102361491432796,
+          "starboard": -0.000041102361491432796,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": null,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 59.28333333333125,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 3,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 60.28333333333119,
+      "data": {
+        "state": {
+          "x": 0.2312235673132703,
+          "y": 16.114537038973424,
+          "heading": 0.004787970571708192,
+          "vx": 0.0002106246041186795,
+          "vy": 0.04399004014300444,
+          "yaw": 3.1650083507350557e-12,
+          "port": -0.000016559743636890017,
+          "starboard": -0.000016559743636890017,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.0307185659832316,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 60.28333333333119,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 3,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 61.283333333331136,
+      "data": {
+        "state": {
+          "x": 0.23143125792371552,
+          "y": 16.15791429854673,
+          "heading": 0.004787970574379578,
+          "vx": 0.0002048836932002483,
+          "vy": 0.042791019699872694,
+          "yaw": 2.2455574050839256e-12,
+          "port": -0.000006671760438306639,
+          "starboard": -0.000006671760438306639,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.1695698620119934,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 61.283333333331136,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 3,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 62.28333333333108,
+      "data": {
+        "state": {
+          "x": 0.23163330055551162,
+          "y": 16.200111947336246,
+          "heading": 0.0047879705762749105,
+          "vx": 0.00019932313951734028,
+          "vy": 0.041629668305243527,
+          "yaw": 1.5932116129683916e-12,
+          "port": -0.000002687987708154713,
+          "starboard": -0.000002687987708154713,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 5.101343533741069,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.2833146487877847,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 62.28333333333108,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 3,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 63.28333333333102,
+      "data": {
+        "state": {
+          "x": 0.23182986906362366,
+          "y": 16.24116629626881,
+          "heading": 0.0047879705776196395,
+          "vx": 0.00019393107714668146,
+          "vy": 0.04050350753540182,
+          "yaw": 1.1303755753260474e-12,
+          "port": -0.0000010829642320048102,
+          "starboard": -0.0000010829642320048102,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.375930833964332,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 63.28333333333102,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 64.28333333333097,
+      "data": {
+        "state": {
+          "x": 0.23210984461881057,
+          "y": 16.281054591078068,
+          "heading": 0.004774271422108175,
+          "vx": 0.0015130881018403802,
+          "vy": 0.038553818502933816,
+          "yaw": -0.00020464443396825014,
+          "port": -4.363158076369688e-7,
+          "starboard": -4.363158076369688e-7,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": false,
+            "restLength": 0,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 188.78014223876102,
+            "extension": 0.002003782703489776,
+            "peakTension": 188.78014223876102,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.4512851294610334,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 64.28333333333097,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 0,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 65.28333333333092,
+      "data": {
+        "state": {
+          "x": 0.2384817748603201,
+          "y": 16.315409928777566,
+          "heading": 0.003806071903882021,
+          "vx": 0.01018817123236247,
+          "vy": 0.03050750163613514,
+          "yaw": -0.001578292890883316,
+          "port": -1.7578741602710186e-7,
+          "starboard": -1.7578741602710186e-7,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 4.852970934989863,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 162.16363431134516,
+            "extension": 0.013381630584301973,
+            "peakTension": 189.73434032639364,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.4941983009229616,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 65.28333333333092,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 0.44999999999999996,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 66.28333333333086,
+      "data": {
+        "state": {
+          "x": 0.25074210435789945,
+          "y": 16.342644760533354,
+          "heading": 0.0018771861648138582,
+          "vx": 0.013466090362528086,
+          "vy": 0.024453610473964053,
+          "yaw": -0.0021459292580512106,
+          "port": -7.082304856393457e-8,
+          "starboard": -7.082304856393457e-8,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 4.852970934989863,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 106.6137380321023,
+            "extension": 0.014128234017671382,
+            "peakTension": 189.73434032639364,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.5098517908040368,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 66.28333333333086,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 1.4499999999999997,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 67.2833333333308,
+      "data": {
+        "state": {
+          "x": 0.26420794791412844,
+          "y": 16.364947642444665,
+          "heading": -0.0002983417967955391,
+          "vx": 0.01306087964235305,
+          "vy": 0.02051515719743216,
+          "yaw": -0.0021389076259737054,
+          "port": -2.8533920807597003e-8,
+          "starboard": -2.8533920807597003e-8,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 4.852970934989863,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 63.800845996771194,
+            "extension": 0.010886212182673383,
+            "peakTension": 189.73434032639364,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.5149656722508906,
+        "phase": "securing",
+        "progress": {
+          "elapsed": 67.2833333333308,
+          "phase": "securing",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 2.449999999999996,
+          "success": false,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 67.83333333333077,
+      "data": {
+        "state": {
+          "x": 0.27113239129853967,
+          "y": 16.37578081347748,
+          "heading": -0.0014412447486510714,
+          "vx": 0.012102259405917727,
+          "vy": 0.018981095458239734,
+          "yaw": -0.002012672491290452,
+          "port": -1.7306697811619846e-8,
+          "starboard": -1.7306697811619846e-8,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 4.852970934989863,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 49.1539076616314,
+            "extension": 0.008917824892815673,
+            "peakTension": 189.73434032639364,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.516570985438523,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 67.83333333333077,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 2.9999999999999942,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 68.83333333333071,
+      "data": {
+        "state": {
+          "x": 0.28220428741947706,
+          "y": 16.39361628975015,
+          "heading": -0.0033074894289808823,
+          "vx": 0.01007696252676071,
+          "vy": 0.016823861749615306,
+          "yaw": -0.0017210543524681073,
+          "port": -6.97270104593107e-9,
+          "starboard": -6.97270104593107e-9,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": false,
+            "remaining": 0
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 4.852970934989863,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 35.44568169928797,
+            "extension": 0.006138225043077483,
+            "peakTension": 189.73434032639364,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.519579374070342,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 68.83333333333071,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 3,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    },
+    {
+      "time": 69.83333333333066,
+      "data": {
+        "state": {
+          "x": 0.2913573563259384,
+          "y": 16.409515430527954,
+          "heading": -0.004887598075553197,
+          "vx": 0.008336286622978408,
+          "vy": 0.015036803249364242,
+          "yaw": -0.0014528029576242403,
+          "port": -2.809233766321694e-9,
+          "starboard": -2.809233766321694e-9,
+          "rudder": 0,
+          "contact": false,
+          "impact": 0
+        },
+        "controls": {
+          "port": 0,
+          "starboard": 0,
+          "rudder": 0
+        },
+        "weather": {
+          "speed": 0,
+          "direction": 1.5707963267948966,
+          "currentX": 0,
+          "currentY": 0
+        },
+        "fenders": {
+          "port": {
+            "deployed": false,
+            "target": true,
+            "remaining": 2.150000000000003
+          },
+          "starboard": {
+            "deployed": true,
+            "target": true,
+            "remaining": 0
+          }
+        },
+        "mooring": {
+          "bow": {
+            "attached": true,
+            "restLength": 4.852970934989863,
+            "tension": 0,
+            "extension": 0,
+            "peakTension": 0,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          },
+          "stern": {
+            "attached": true,
+            "restLength": 4.963490405799808,
+            "tension": 31.388731822114284,
+            "extension": 0.004584939199852478,
+            "peakTension": 189.73434032639364,
+            "overloadTime": 0,
+            "warning": false,
+            "broken": false
+          }
+        },
+        "course": null,
+        "berthBearing": -2.5232110629411775,
+        "phase": "secured",
+        "progress": {
+          "elapsed": 69.83333333333066,
+          "phase": "secured",
+          "arrivalAt": 52.216666666664985,
+          "securedAt": 58.283333333331306,
+          "dwell": 3,
+          "success": true,
+          "collisions": 0,
+          "penalty": 0
+        },
+        "paused": false
+      }
+    }
+  ],
+  "activeContacts": []
+}
