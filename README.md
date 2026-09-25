@@ -136,6 +136,12 @@ All force/drag coefficients, inertia, thrust conversion from nominal horsepower,
 
 Hull collision geometry is two rows of overlapping circles, slightly scalloped rather than a high-fidelity mesh. Contacts use eight sequential inelastic impulse/projection passes with rotational effective mass and mild friction, no restitution. Boundaries are visible amber training barriers with matching solids. This is a low-speed discrete solver, **not continuous collision detection for arbitrary externally injected high speeds**. Defaults and tuning ranges target harbour speeds. Contact projection only resolves overlap; it never moves the boat toward the objective.
 
+## GitHub Pages deployment
+
+The checked-in [`.github/workflows/pages.yml`](.github/workflows/pages.yml) runs `npm ci`, tests, typecheck and production build on pushes to `main` (or manually), then deploys **only `dist/`** with GitHub's official Pages artifact/deploy actions. No AWS account, repository secrets or server process are required. The build uses Vite `base: "/leopard/"`, so hashed JS/CSS resolve at `https://OWNER.github.io/leopard/`; local `npm run dev` still serves `/` on port 5174. The published game is public, runs entirely in the browser and **does not save attempts across reloads**.
+
+To publish: create a GitHub repository named **`leopard`**, push this branch to `main`, and in **Settings → Pages → Build and deployment**, choose **GitHub Actions** as the source. The Action's `deploy` job then reports the Pages URL. Give the first deployment a few minutes; check WebGL, controls and Show me at `https://OWNER.github.io/leopard/`. The repository currently has no remote configured, so publishing requires a repository and push. The workflow uses only the token GitHub grants it, scoped to Pages deployment. Preview locally with `npm run build && npx vite preview` and open the reported `/leopard/` URL. A custom domain or a differently named repository requires updating the Vite `base` and Pages settings before deploying; this configuration intentionally targets the project URL `/leopard/`.
+
 ## Verification / next step
 
 See [`DEVELOPMENT_STATUS.md`](DEVELOPMENT_STATUS.md) for checks actually run and limitations. Optional browser checks are preserved in `tools/`: start Chrome with remote debugging on port 9222 using a separate test profile, start the game, then run:
