@@ -217,6 +217,46 @@ export const missionConfig = {
   // Accelerated, fictional fuel service: not real quantities or procedures.
   service: { fuelType: "diesel", litres: 180, litresPerSecond: 20 },
 };
+// Debrief score: the plan's weighting, with provisional thresholds to tune in
+// playtesting. Each category scores 0–100 before weighting.
+export const scoreConfig = {
+  weights: { impact: 0.4, control: 0.25, procedure: 0.2, smoothness: 0.15 },
+  impact: {
+    perContact: 25,
+    // Hull-to-hull clearance to the monohull below which points are lost.
+    monohullClearance: 3,
+    monohullDeduction: 30,
+  },
+  control: {
+    // Peak speed within arrivalRadius of the berth before first securing.
+    arrivalRadius: 12,
+    arrivalGood: 0.3,
+    arrivalPoor: 0.8,
+    arrivalDeduction: 50,
+    perCountdownReset: 10,
+    perEarlyEntry: 25,
+    portSide: 30,
+  },
+  procedure: {
+    fendersLate: 30,
+    perServiceRefusal: 10,
+    perLineRefusal: 5,
+    perReleaseUnderLoad: 10,
+  },
+  smoothness: {
+    parTime: 300,
+    slowTime: 600,
+    slowTimeScore: 40,
+    leverPar: 60,
+    timeShare: 0.6,
+  },
+  ratings: [
+    [90, "Excellent"],
+    [75, "Good"],
+    [60, "Fair"],
+    [0, "Needs practice"],
+  ] as [number, string][],
+};
 // Scripted, kinematic harbour traffic. It follows its legs, never reacts to
 // impacts itself, and stops rather than pushing through the player.
 export const trafficConfig = {

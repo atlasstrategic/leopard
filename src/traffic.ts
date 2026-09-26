@@ -51,6 +51,27 @@ export function vesselObstacle(v: Vessel): VesselObstacle | null {
     radius: cfg.beam / 2,
   };
 }
+// Smallest hull-to-hull gap between the boat and the vessel's capsule.
+export function hullGap(v: VesselObstacle, s: State, p: Tuning) {
+  const ax = Math.sin(v.heading),
+    ay = Math.cos(v.heading);
+  const sn = Math.sin(s.heading),
+    cs = Math.cos(s.heading);
+  let min = Infinity;
+  for (const point of hullPoints(p)) {
+    const ox = s.x + point.x * cs + point.y * sn - v.x,
+      oy = s.y - point.x * sn + point.y * cs - v.y;
+    const along = Math.max(
+      -v.halfLength,
+      Math.min(v.halfLength, ox * ax + oy * ay),
+    );
+    min = Math.min(
+      min,
+      Math.hypot(ox - ax * along, oy - ay * along) - v.radius - p.hullRadius,
+    );
+  }
+  return min;
+}
 export function startDeparture(v: Vessel): TrafficEvent[] {
   if (v.status !== "moored") return [];
   v.status = "departing";

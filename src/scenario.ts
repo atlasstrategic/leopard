@@ -94,7 +94,31 @@ export type Progress = {
   // Departure: when the boat crossed the entrance gate and on which side.
   exitedAt: number | null;
   channelSide: "starboard" | "port" | null;
+  metrics: Metrics;
 };
+// Recorded during the attempt for the debrief.
+export type Metrics = {
+  // Hull-to-hull, while the monohull is in the harbour.
+  closestMonohull: number | null;
+  // m/s, near the berth before first securing.
+  arrivalPeakSpeed: number | null;
+  countdownResets: number;
+  fendersAtArrival: boolean | null;
+  leverChanges: number;
+  serviceRefusals: number;
+  lineRefusals: number;
+  releasesUnderLoad: number;
+};
+export const initialMetrics = (): Metrics => ({
+  closestMonohull: null,
+  arrivalPeakSpeed: null,
+  countdownResets: 0,
+  fendersAtArrival: null,
+  leverChanges: 0,
+  serviceRefusals: 0,
+  lineRefusals: 0,
+  releasesUnderLoad: 0,
+});
 // Fuel service checklist, in order: engines off → fuel type → fuel → pay →
 // engines on. Engines may be restarted at any time for safety.
 export type Service = {
@@ -134,6 +158,7 @@ export const initialProgress = (mission = false): Progress => ({
   service: initialService(),
   exitedAt: null,
   channelSide: null,
+  metrics: initialMetrics(),
 });
 export function requirements(
   s: State,

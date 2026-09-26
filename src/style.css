@@ -108,6 +108,10 @@ p {
   margin-top: 14px;
   color: #b7cfd0;
 }
+.debrief-launch {
+  margin-top: 8px;
+  width: 100%;
+}
 .service {
   margin-top: 12px;
   pointer-events: auto;

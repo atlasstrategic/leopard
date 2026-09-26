@@ -10,6 +10,7 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - The fuel mission now starts with **holding and clearance**: harbour-radio announcements, a holding area with a 5 s countdown that resets if you leave, the monohull departing on cue, and the berth called clear before the approach. Entering the fuel berth early costs +10 s per entry. Touching the monohull where no fender covers the hull fails the mission; covered contact is a normal penalty. Scenario version **5**, export schema version **2**. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 - Added the **fuel service checklist** once secured: engines off, confirm diesel, fuel (accelerated), pay, engines on. Out-of-order steps and petrol are refused with an explanation; losing secured stops fuelling until the boat is secured again. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 - Added the **departure**: a breakwater with a harbour entrance marked by red and green lights. After the service, let go the lines and leave between the lights on the starboard side of the channel (+5 s on the port side). Leaving completes the fuel mission. Scenario version **6**. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
+- Added the **debrief**: a score out of 100 using the plan's weighting (impact & clearance 40%, position & speed 25%, procedure 20%, smoothness 15%), key figures, penalty reasons, one practical tip and an overhead trace of your track and the monohull's. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 
 ## [0.1.0] — 2026-09-25
 

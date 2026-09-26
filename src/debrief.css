@@ -1,0 +1,181 @@
+#debrief {
+  pointer-events: auto;
+  width: min(1000px, 94vw);
+  max-height: 90vh;
+  padding: 24px;
+  border: 1px solid #708e9c;
+  border-radius: 14px;
+  color: #e7f1ef;
+  background: #102d3a;
+  box-shadow: 0 20px 70px #0008;
+}
+#debrief::backdrop {
+  background: #051a28ba;
+}
+.debrief-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
+  gap: 24px;
+  align-items: start;
+}
+.debrief-score {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 4px 0 12px;
+}
+.debrief-score strong {
+  font-size: 46px;
+  line-height: 1;
+  color: #9df6c9;
+}
+.debrief-score span {
+  font-size: 15px;
+  color: #dcf4e6;
+}
+.debrief-category {
+  margin: 10px 0;
+  font-size: 12px;
+}
+.debrief-category > div:first-child {
+  display: flex;
+  justify-content: space-between;
+}
+.debrief-category .bar {
+  height: 5px;
+  border-radius: 4px;
+  background: #45606b;
+  margin: 5px 0 3px;
+  overflow: hidden;
+}
+.debrief-category .bar div {
+  height: 100%;
+  background: #9df6c9;
+}
+.debrief-category small {
+  color: #9fb8c0;
+  font-size: 11px;
+}
+.debrief-tip {
+  font-size: 13px;
+  color: #e7f1ef;
+  border-left: 3px solid #f1bd62;
+  padding: 8px 12px;
+  background: #173d4c;
+  border-radius: 0 6px 6px 0;
+}
+#debrief-figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 14px 0;
+}
+#debrief-figures dt {
+  font-size: 10px;
+  color: #9fb8c0;
+}
+#debrief-figures dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+}
+#debrief-penalties p {
+  margin: 4px 0;
+  font-size: 11px;
+}
+.debrief-note {
+  font-size: 10px;
+  color: #8fa9b1;
+}
+.debrief-actions {
+  margin-top: 10px;
+}
+.debrief-track {
+  margin: 0;
+}
+#debrief-svg {
+  width: 100%;
+  max-height: 64vh;
+  display: block;
+  border-radius: 8px;
+}
+#debrief-svg .water {
+  fill: #0b3f4c;
+}
+#debrief-svg .dock,
+#debrief-svg .breakwater {
+  fill: #b9b5a4;
+}
+#debrief-svg .boundary {
+  fill: #f1bd6255;
+}
+#debrief-svg .berth {
+  fill: #6fffc41f;
+  stroke: #94ffce;
+  stroke-width: 0.3;
+}
+#debrief-svg .holding {
+  fill: #8fc4ff1f;
+  stroke: #a8d2ff;
+  stroke-width: 0.3;
+}
+#debrief-svg .light-red {
+  fill: #e0463c;
+}
+#debrief-svg .light-green {
+  fill: #3fbf6a;
+}
+#debrief-svg polyline {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+#debrief-svg .boat {
+  stroke: #9df6c9;
+  stroke-width: 0.9;
+}
+#debrief-svg .mono {
+  stroke: #8fb4d9;
+  stroke-width: 0.7;
+  stroke-dasharray: 2 1.5;
+}
+#debrief-svg .start {
+  fill: #e7f1ef;
+}
+#debrief-svg .contact {
+  fill: #ff8a70;
+}
+.debrief-track figcaption {
+  font-size: 10px;
+  color: #9fb8c0;
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.debrief-track figcaption span {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  margin-left: 6px;
+}
+.key-boat {
+  background: #9df6c9;
+}
+.key-mono {
+  background: #8fb4d9;
+}
+.key-contact {
+  background: #ff8a70;
+  height: 8px !important;
+  width: 8px !important;
+  border-radius: 50%;
+}
+@media (max-width: 760px) {
+  .debrief-body {
+    grid-template-columns: 1fr;
+  }
+  #debrief-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

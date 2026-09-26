@@ -88,7 +88,27 @@ Once the service is complete:
 2. **Clear the quay** without hard contact; normal contact penalties apply.
 3. **Exit between the lights.** The instrument caption shows **BRG EXIT**, and a dashed gate line with the starboard half of the channel tinted marks the way. The mission is complete when the boat's centre crosses the gate line outward. Crossing it in the **port (east) half** of the channel costs **+5 s**: keep to the starboard side of a channel.
 
-On completion the simulation stops, the radio reports the total time and penalties, and commands are refused until **Retry**. The monohull also leaves through the entrance on its starboard side. A full debrief comes next ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)).
+On completion the simulation stops, the radio reports the total time and penalties, the [debrief](#debrief-and-score) opens, and commands are refused until **Retry**. The monohull also leaves through the entrance on its starboard side.
+
+## Debrief and score
+
+When the mission completes (or fails), a **debrief** opens; reopen it from the **Debrief** button in the objective panel. It shows:
+
+- A **score out of 100** and a rating (Excellent ≥90, Good ≥75, Fair ≥60, Needs practice), using the plan's weighting. Each category starts at 100 and loses points as listed:
+
+  | Category | Weight | Loses points for |
+  | --- | --- | --- |
+  | Impact & clearance | 40% | 25 per penalised contact; up to 30 for passing within 3 m of the monohull (hull to hull) |
+  | Position & speed control | 25% | up to 50 for peak speed above 0.6 kn (full loss at 1.6 kn) within 12 m of the berth before first securing; 10 per holding countdown reset; 25 per early entry; 30 for leaving on the port side of the channel |
+  | Preparation & procedure | 20% | 30 if starboard fenders were not out on arrival; 10 per refused checklist step; 5 per refused line command; 10 per line let go under high load |
+  | Smoothness & efficiency | 15% | mission time over 5 min (down to 40% of this share at 10 min); lever changes beyond 60 |
+
+- **Key figures:** mission and penalty time, contacts, closest approach to the monohull, peak speed near the berth, early entries, countdown resets, channel side and lever changes.
+- **Penalties** with their reasons and times, taken from the voyage log.
+- **One thing to try:** the tip for the largest weighted loss, or a suggestion for a harder run after a clean one.
+- An **overhead trace** of your track and the monohull's from 1 Hz telemetry, with contact points, the berth, the holding area and the entrance lights.
+
+A failed mission is not scored; the debrief explains why. Weights and thresholds live in `scoreConfig` (`src/config.ts`) and are provisional game values to tune in playtesting, not a skipper assessment. Time is deliberately a minor factor.
 
 ## Guided “Show me” example
 
@@ -212,4 +232,4 @@ The scripts target only the local game tab. Dock automation uses DOM lever input
 
 The production bundle is approximately **153 kB gzipped JS** plus approximately 3.4 kB CSS; Vite warns that Three.js makes the uncompressed JS chunk exceed 500 kB. No external assets download at runtime.
 
-Next: milestone C's **debrief and scoring**, then restart checkpoints ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)); holding, clearance, approach, securing, fuel service and departure are implemented. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
+Next: milestone C's **restart checkpoints** ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)); the full holding → clearance → approach → secured → service → departure → debrief loop is implemented. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.

@@ -9,6 +9,7 @@ import {
 } from "./config";
 import { MooringUI, mooringMarkup } from "./mooring-ui";
 import { ServiceUI, serviceMarkup } from "./service-ui";
+import { DebriefUI, debriefMarkup } from "./debrief-ui";
 import { Instruments, instrumentsMarkup } from "./instruments";
 import { wrap } from "./instrument-data";
 import { LogUI, crewMarkup, logMarkup } from "./log-ui";
@@ -24,6 +25,7 @@ export class UI {
   logUI: LogUI;
   mooringUI: MooringUI;
   serviceUI: ServiceUI;
+  debriefUI: DebriefUI;
   demoUI: DemoUI;
   constructor(
     private game: Session,
@@ -41,7 +43,7 @@ export class UI {
       <section class="panel objective"><div class="eyebrow" id="mission-phase"></div><h2 id="mission-title"></h2><p id="mission-hint"></p>
       <div class="objective-tabs" role="group" aria-label="Objective panel section"><button id="objective-tab" aria-pressed="true">Objective</button><button id="crew-tab" aria-pressed="false">Crew & lines</button></div>
       <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div>${serviceMarkup}</div>
-      <div id="result" aria-live="polite"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div>
+      <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button><div class="stats"><span id="time"></span><span id="penalties"></span></div>
       <div id="crew-page" hidden>${mooringMarkup}${crewMarkup}</div></section>
       <section class="panel radio" id="radio" role="status" aria-live="polite" hidden><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><p id="radio-message"></p></section>
       ${instrumentsMarkup}
@@ -58,7 +60,7 @@ export class UI {
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
       <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
-      <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}`;
+      <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}${debriefMarkup}`;
     for (const section of ["objective", "crew"] as const) {
       this.el(`${section}-tab`).onclick = () => {
         for (const page of ["objective", "crew"]) {
@@ -73,6 +75,7 @@ export class UI {
     this.instruments = new Instruments(this.root);
     this.mooringUI = new MooringUI(this.root, game, actions.readOnly);
     this.serviceUI = new ServiceUI(this.root, game);
+    this.debriefUI = new DebriefUI(this.root, game, actions.retry);
     this.logUI = new LogUI(this.root, game, actions.pause, actions.readOnly);
     this.demoUI = new DemoUI(this.root, lab, actions);
     this.el("retry").onclick = actions.retry;
@@ -227,7 +230,7 @@ export class UI {
       p.phase === "departure"
         ? "Let go both lines, ease off the quay and exit between the lights at the south-west gap. Keep to the starboard (west) side of the channel: red light on your starboard side going out."
         : p.phase === "complete"
-          ? `Fuel mission complete with +${p.penalty} s penalties. A full debrief comes next; Retry (R) to go again.`
+          ? `Fuel mission complete with +${p.penalty} s penalties. Open the debrief for your score and one thing to try; Retry (R) to go again.`
           : p.phase === "holding"
             ? p.monohullDepartedAt === null
               ? "The monohull is refuelling. Keep your boat's centre inside the blue holding area south-east of the quay; it leaves 5 seconds after you are in position."
@@ -328,9 +331,11 @@ export class UI {
             : `${(p.dwell / (p.phase === "approach" ? scenario.target.dwell : mooringConfig.securedDwell)) * 100}%`;
     this.el("result").textContent =
       p.phase === "departure"
-        ? `Service complete at ${service.completedAt!.toFixed(1)} s · depart when ready`
+        ? service.completedAt === null
+          ? "Depart when ready"
+          : `Service complete at ${service.completedAt.toFixed(1)} s · depart when ready`
         : p.phase === "complete"
-          ? `Mission complete at ${p.exitedAt!.toFixed(1)} s · +${p.penalty} s penalties`
+          ? `Mission complete at ${(p.exitedAt ?? p.elapsed).toFixed(1)} s · +${p.penalty} s penalties`
           : p.phase === "holding"
             ? p.monohullDepartedAt !== null
               ? "Monohull leaving — wait to be called"
@@ -374,6 +379,7 @@ export class UI {
     this.logUI.update();
     this.mooringUI.update();
     this.serviceUI.update();
+    this.debriefUI.update();
     this.demoUI.update();
   }
 }

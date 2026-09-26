@@ -7,6 +7,7 @@ import {
   mooringConfig,
   trafficConfig,
   missionConfig,
+  scoreConfig,
   type Tuning,
 } from "./config";
 import { initialFenders, type Side } from "./fenders";
@@ -38,7 +39,9 @@ import {
   initialMonohull,
   startDeparture,
   vesselObstacle,
+  hullGap,
   type Vessel,
+  type VesselObstacle,
 } from "./traffic";
 import {
   type Phase,
@@ -163,13 +166,14 @@ export class Session {
   observe() {
     const next = this.observation();
     for (const [key, value] of Object.entries(next)) {
-      if (value !== this.observed[key])
-        this.recorder.event(
-          this.progress.elapsed,
-          `${key}.change`,
-          `${key}: ${value}`,
-          JSON.parse(value),
-        );
+      if (value === this.observed[key]) continue;
+      if (key === "engines") this.progress.metrics.leverChanges++;
+      this.recorder.event(
+        this.progress.elapsed,
+        `${key}.change`,
+        `${key}: ${value}`,
+        JSON.parse(value),
+      );
     }
     this.observed = next;
   }
@@ -287,6 +291,7 @@ export class Session {
       else if (!check.ok) reason = check.reason;
     }
     if (reason) {
+      this.progress.metrics.lineRefusals++;
       this.recorder.event(
         this.progress.elapsed,
         "line.rejected",
@@ -302,6 +307,7 @@ export class Session {
       return { accepted: false, message: reason };
     }
     if (action === "release") {
+      if (line.warning) this.progress.metrics.releasesUnderLoad++;
       this.recorder.event(
         this.progress.elapsed,
         "line.release",
@@ -404,6 +410,7 @@ export class Session {
       else if (service.paid) reason = "Already paid";
     }
     if (reason) {
+      p.metrics.serviceRefusals++;
       this.recorder.event(p.elapsed, "service.rejected", reason, {
         action,
         reason,
@@ -592,6 +599,7 @@ export class Session {
       vessel ? [vessel] : [],
     );
     this.acceptableContact = contactAcceptable(this.state, samples);
+    this.recordMetrics(vessel);
     const bareVesselContact = samples.find(
       (c) => c.obstacleId === trafficConfig.monohull.id && !c.covered,
     );
@@ -682,6 +690,9 @@ export class Session {
         message,
         { phase },
       );
+      if (phase === "securing" && priorPhase === "approach")
+        this.progress.metrics.fendersAtArrival =
+          this.fenders.starboard.deployed;
       if (phase === "failed")
         this.announce(
           `Mission failed: ${this.progress.failure}. Retry to start again.`,
@@ -718,6 +729,26 @@ export class Session {
     this.recorder.sample(this.progress.elapsed, this.telemetry());
   }
   private announcedSecured = false;
+  private recordMetrics(vessel: VesselObstacle | null) {
+    const m = this.progress.metrics,
+      p = this.progress,
+      s = this.state;
+    if (vessel) {
+      const gap = hullGap(vessel, s, this.tuning);
+      m.closestMonohull = Math.min(m.closestMonohull ?? Infinity, gap);
+    }
+    const target = positioningTarget(p.positionTarget);
+    if (
+      (p.phase === "approach" ||
+        (p.phase === "securing" && p.securedAt === null)) &&
+      Math.hypot(s.x - target.x, s.y - target.y) <=
+        scoreConfig.control.arrivalRadius
+    )
+      m.arrivalPeakSpeed = Math.max(
+        m.arrivalPeakSpeed ?? 0,
+        Math.hypot(s.vx, s.vy),
+      );
+  }
   // Departure ends when the boat crosses the entrance gate outward; leaving on
   // the port side of the channel costs a penalty.
   private advanceDeparture() {
@@ -763,6 +794,7 @@ export class Session {
       if (!inside) {
         if (p.countdown !== null) {
           p.countdown = null;
+          p.metrics.countdownResets++;
           this.recorder.event(
             time,
             "mission.countdown_reset",
