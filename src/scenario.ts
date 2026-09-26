@@ -1,6 +1,6 @@
 import { angle, boat, scenario, mooringConfig, missionConfig } from "./config";
 import type { State } from "./simulation";
-import type { ContactSample } from "./contacts";
+import { hullPoints, type ContactSample } from "./contacts";
 import type { VesselObstacle } from "./traffic";
 export type PositionTarget = "approach" | "alongside";
 export function contactAcceptable(s: State, samples: ContactSample[]) {
@@ -34,7 +34,45 @@ export function vesselInFuelZone(v: VesselObstacle) {
     Math.abs(v.y - zone.y) < zone.length / 2 + dy
   );
 }
-export type Phase = "holding" | "approach" | "securing" | "secured" | "failed";
+// Smallest gap between the boat's hull and the east quay.
+export function quayClearance(s: State) {
+  const quay = scenario.obstacles.find(
+    (b) => b.id === scenario.alongside.obstacleId,
+  )!;
+  const sn = Math.sin(s.heading),
+    cs = Math.cos(s.heading);
+  let min = Infinity;
+  for (const point of hullPoints(boat)) {
+    const x = s.x + point.x * cs + point.y * sn,
+      y = s.y - point.x * sn + point.y * cs;
+    const qx = Math.max(
+        quay.x - quay.width / 2,
+        Math.min(quay.x + quay.width / 2, x),
+      ),
+      qy = Math.max(
+        quay.y - quay.length / 2,
+        Math.min(quay.y + quay.length / 2, y),
+      );
+    min = Math.min(min, Math.hypot(x - qx, y - qy) - boat.hullRadius);
+  }
+  return min;
+}
+// Outward crossing of the entrance gate line between the lights. Leaving
+// southbound, the starboard half of the channel is the west (red) half.
+export function gateCrossing(previous: State, s: State) {
+  const gate = missionConfig.entrance;
+  if (!(previous.y > gate.y && s.y <= gate.y)) return null;
+  if (Math.abs(s.x - gate.x) > gate.width / 2) return null;
+  return s.x <= gate.x ? "starboard" : "port";
+}
+export type Phase =
+  | "holding"
+  | "approach"
+  | "securing"
+  | "secured"
+  | "departure"
+  | "complete"
+  | "failed";
 export type Progress = {
   elapsed: number;
   phase: Phase;
@@ -47,12 +85,15 @@ export type Progress = {
   penalty: number;
   // Holding stage: countdown remaining while inside (null when not counting).
   countdown: number | null;
-  departedAt: number | null;
+  monohullDepartedAt: number | null;
   clearedAt: number | null;
   inFuelZone: boolean;
   earlyEntries: number;
   failure: string | null;
   service: Service;
+  // Departure: when the boat crossed the entrance gate and on which side.
+  exitedAt: number | null;
+  channelSide: "starboard" | "port" | null;
 };
 // Fuel service checklist, in order: engines off → fuel type → fuel → pay →
 // engines on. Engines may be restarted at any time for safety.
@@ -85,12 +126,14 @@ export const initialProgress = (mission = false): Progress => ({
   collisions: 0,
   penalty: 0,
   countdown: null,
-  departedAt: null,
+  monohullDepartedAt: null,
   clearedAt: null,
   inFuelZone: false,
   earlyEntries: 0,
   failure: null,
   service: initialService(),
+  exitedAt: null,
+  channelSide: null,
 });
 export function requirements(
   s: State,
@@ -130,8 +173,15 @@ export function updateProgress(
   acceptableContact = false,
 ) {
   p.elapsed += dt;
-  // Holding is advanced by the session (it depends on traffic); failed is terminal.
-  if (p.phase === "holding" || p.phase === "failed") return;
+  // Holding and departure are advanced by the session; complete and failed
+  // are terminal.
+  if (
+    p.phase === "holding" ||
+    p.phase === "departure" ||
+    p.phase === "complete" ||
+    p.phase === "failed"
+  )
+    return;
   const inBerth = Object.values(
     requirements(s, p.positionTarget, acceptableContact),
   ).every(Boolean);

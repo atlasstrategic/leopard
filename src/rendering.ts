@@ -10,7 +10,7 @@ import {
 import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
 import { initialFenders, type Fenders } from "./fenders";
 import type { State } from "./simulation";
-import { positioningTarget, type PositionTarget } from "./scenario";
+import { positioningTarget, type Phase, type PositionTarget } from "./scenario";
 export type CameraMode = "chase" | "overhead" | "helm";
 export function hasWebGL2() {
   try {
@@ -26,6 +26,8 @@ export class View {
   vessel = new THREE.Group();
   monohull = new THREE.Group();
   holdingArea = new THREE.Group();
+  exitGate = new THREE.Group();
+  entranceLights: THREE.MeshStandardMaterial[] = [];
   fenderMeshes = { port: new THREE.Group(), starboard: new THREE.Group() };
   mooringMeshes = new Map<
     string,
@@ -103,8 +105,21 @@ export class View {
       parent.add(m);
       return m;
     };
+    const rock = mat(0x7d8580);
     for (const b of scenario.obstacles) {
-      if (b.kind === "dock") {
+      if (b.kind === "breakwater") {
+        box(this.scene, b.x, 0.7, -b.y, b.width, 1.6, b.length, rock);
+        box(
+          this.scene,
+          b.x,
+          1.55,
+          -b.y,
+          b.width,
+          0.1,
+          b.length - 0.8,
+          concrete,
+        );
+      } else if (b.kind === "dock") {
         box(this.scene, b.x, 0.45, -b.y, b.width, 1.0, b.length, concrete);
         box(
           this.scene,
@@ -359,6 +374,62 @@ export class View {
       );
       this.holdingArea.add(buoy);
     }
+    // Entrance lights: red at the west end of the gap, green at the east end
+    // (IALA A, entering northbound). Flashing is decorative only.
+    const gate = missionConfig.entrance;
+    for (const [dx, color] of [
+      [-1, 0xe0463c],
+      [1, 0x3fbf6a],
+    ] as const) {
+      const x = gate.x + (dx * gate.width) / 2;
+      const tower = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.45, 0.6, 4.2, 12),
+        mat(color),
+      );
+      tower.position.set(x, 3.6, -gate.y);
+      tower.castShadow = true;
+      this.scene.add(tower);
+      const light = new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 0.4,
+      });
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), light);
+      lamp.position.set(x, 6, -gate.y);
+      this.scene.add(lamp);
+      this.entranceLights.push(light);
+    }
+    // On the east breakwater, clear of boats passing through the gap.
+    this.label("HARBOUR ENTRANCE", gate.x + gate.width / 2 + 7, 3, -gate.y, 9);
+    const gateLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-gate.width / 2, 0.04, 0),
+        new THREE.Vector3(gate.width / 2, 0.04, 0),
+      ]),
+      new THREE.LineDashedMaterial({
+        color: 0xffe6a8,
+        dashSize: 1,
+        gapSize: 0.7,
+      }),
+    );
+    gateLine.computeLineDistances();
+    this.exitGate.add(gateLine);
+    // Starboard (west) half of the channel when leaving, lightly tinted.
+    const lane = new THREE.Mesh(
+      new THREE.PlaneGeometry(gate.width / 2, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0xffe6a8,
+        transparent: true,
+        opacity: 0.1,
+        depthWrite: false,
+      }),
+    );
+    lane.rotation.x = -Math.PI / 2;
+    lane.position.set(-gate.width / 4, 0.02, -2);
+    this.exitGate.add(lane);
+    this.exitGate.position.set(gate.x, 0, -gate.y);
+    this.exitGate.visible = false;
+    this.scene.add(this.exitGate);
     this.holdingArea.position.set(hold.x, 0, -hold.y);
     this.holdingArea.visible = false;
     this.scene.add(this.holdingArea);
@@ -402,9 +473,14 @@ export class View {
     mooring: Mooring = initialMooring(),
     positionTarget: PositionTarget = "approach",
     traffic: { x: number; y: number; heading: number } | null = null,
-    holding = false,
+    phase: Phase = "approach",
   ) {
-    this.holdingArea.visible = holding;
+    this.holdingArea.visible = phase === "holding";
+    this.exitGate.visible = phase === "departure";
+    // Flashing every 4 s: red and green offset by half a period.
+    this.entranceLights.forEach((light, i) => {
+      light.emissiveIntensity = (time / 4 + i / 2) % 1 < 0.2 ? 2.2 : 0.25;
+    });
     this.monohull.visible = !!traffic;
     if (traffic) {
       this.monohull.position.set(

@@ -31,7 +31,7 @@ const place = (g: Session, x: number, y: number) => {
 };
 const hold = (g: Session) =>
   place(g, missionConfig.holding.x, missionConfig.holding.y);
-// Smallest gap between the monohull's capsule and any dock box.
+// Smallest gap between the monohull's capsule and any dock or breakwater.
 function dockClearance(o: VesselObstacle) {
   let min = Infinity;
   const ax = Math.sin(o.heading),
@@ -39,7 +39,7 @@ function dockClearance(o: VesselObstacle) {
   for (let t = -o.halfLength; t <= o.halfLength; t += 0.25) {
     const x = o.x + ax * t,
       y = o.y + ay * t;
-    for (const b of scenario.obstacles.filter((b) => b.kind === "dock")) {
+    for (const b of scenario.obstacles.filter((b) => b.kind !== "boundary")) {
       const qx = Math.max(b.x - b.width / 2, Math.min(b.x + b.width / 2, x));
       const qy = Math.max(b.y - b.length / 2, Math.min(b.y + b.length / 2, y));
       min = Math.min(min, Math.hypot(x - qx, y - qy) - o.radius);

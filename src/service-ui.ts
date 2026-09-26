@@ -44,7 +44,9 @@ export class ServiceUI {
       p = g.progress,
       s = p.service,
       total = missionConfig.service.litres;
-    const visible = g.missionEnabled && p.securedAt !== null;
+    // Shown from first securing until the service is complete.
+    const visible =
+      g.missionEnabled && p.securedAt !== null && s.completedAt === null;
     this.el("service").hidden = !visible;
     if (!visible) return;
     if (this.attempt !== g.recorder.attempt) {

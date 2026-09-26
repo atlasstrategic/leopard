@@ -29,10 +29,14 @@ export type Box = {
   y: number;
   width: number;
   length: number;
-  kind: "dock" | "boundary";
+  kind: "dock" | "breakwater" | "boundary";
 };
+// Harbour entrance: a gap in the south breakwater, red light at its west end
+// and green at its east end (IALA region A, entering northbound). The gate
+// line runs across the gap at the breakwater's centre line.
+const entrance = { x: -30, y: -50, width: 18, breakwater: 3 };
 export const scenario = {
-  version: 5,
+  version: 6,
   name: "North quay · Berth 01",
   area: "Fictional training area",
   start: { x: 0, y: -22, heading: 0 },
@@ -85,28 +89,47 @@ export const scenario = {
       kind: "dock",
     },
     {
+      id: "west-breakwater",
+      name: "West breakwater",
+      x: (-47 + entrance.x - entrance.width / 2) / 2,
+      y: entrance.y,
+      width: entrance.x - entrance.width / 2 + 47,
+      length: entrance.breakwater,
+      kind: "breakwater",
+    },
+    {
+      id: "east-breakwater",
+      name: "East breakwater",
+      x: (47 + entrance.x + entrance.width / 2) / 2,
+      y: entrance.y,
+      width: 47 - entrance.x - entrance.width / 2,
+      length: entrance.breakwater,
+      kind: "breakwater",
+    },
+    // Training barriers enclose the harbour and the water outside the entrance.
+    {
       id: "west-limit",
       name: "West training barrier",
       x: -46,
-      y: 0,
+      y: -13.5,
       width: 2,
-      length: 102,
+      length: 129,
       kind: "boundary",
     },
     {
       id: "east-limit",
       name: "East training barrier",
       x: 46,
-      y: 0,
+      y: -13.5,
       width: 2,
-      length: 102,
+      length: 129,
       kind: "boundary",
     },
     {
       id: "south-limit",
       name: "South training barrier",
       x: 0,
-      y: -50,
+      y: -77,
       width: 94,
       length: 2,
       kind: "boundary",
@@ -188,6 +211,9 @@ export const missionConfig = {
   // Fuel berth and its approach lane (x -4..7, y -10..37).
   fuelZone: { x: 1.5, y: 13.5, width: 11, length: 47 },
   earlyEntryPenalty: 10,
+  entrance,
+  // Crossing the gate line in the port half of the channel on the way out.
+  channelSidePenalty: 5,
   // Accelerated, fictional fuel service: not real quantities or procedures.
   service: { fuelType: "diesel", litres: 180, litresPerSecond: 20 },
 };
@@ -214,8 +240,9 @@ export const trafficConfig = {
       // Back off the quay; the bow swings in as the stern opens, as with a bow spring.
       { gear: "astern", x: 3.2, y: 2, stop: true },
       { gear: "ahead", x: -12, y: 6, stop: false },
-      { gear: "ahead", x: -30, y: -8, stop: false },
-      { gear: "ahead", x: -30, y: -46, stop: false },
+      // Out through the entrance on the starboard (west) side of the channel.
+      { gear: "ahead", x: -33, y: -8, stop: false },
+      { gear: "ahead", x: -33, y: -64, stop: false },
     ] as { gear: "ahead" | "astern"; x: number; y: number; stop: boolean }[],
   },
 };

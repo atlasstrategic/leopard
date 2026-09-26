@@ -43,7 +43,7 @@ test("countdown runs only inside the holding area and restarts if the boat leave
   assert.equal(g.traffic!.status, "moored", "restarted from the full 5 s");
   run(g, 0.6);
   assert.equal(g.traffic!.status, "departing");
-  assert.notEqual(g.progress.departedAt, null);
+  assert.notEqual(g.progress.monohullDepartedAt, null);
   assert.ok(g.radio.some((m) => /departing/.test(m.message)));
 });
 test("berth is called clear once the monohull leaves the fuel zone; then the approach begins", () => {

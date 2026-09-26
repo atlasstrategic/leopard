@@ -41,6 +41,7 @@ import {
   type Vessel,
 } from "./traffic";
 import {
+  type Phase,
   type Service,
   initialProgress,
   updateProgress,
@@ -48,6 +49,7 @@ import {
   positioningTarget,
   insideHolding,
   insideFuelZone,
+  gateCrossing,
   vesselInFuelZone,
 } from "./scenario";
 export type RadioMessage = { time: number; message: string };
@@ -118,11 +120,13 @@ export class Session {
     this.radio = this.radio.slice(-10);
     this.recorder.event(time, "radio", message);
   }
-  // Commands are refused once the mission has failed; only Retry continues.
+  // Commands are refused once the mission has ended; only Retry continues.
   private failedReason() {
     return this.progress.phase === "failed"
       ? "Mission failed — Retry (R) to start again"
-      : "";
+      : this.progress.phase === "complete"
+        ? "Mission complete — Retry (R) to go again"
+        : "";
   }
   private newRecorder(attempt: number) {
     return new Recorder(
@@ -424,7 +428,16 @@ export class Session {
       if (service.fuelling) service.fuelling = false;
       if (service.paid) {
         service.completedAt = p.elapsed;
-        message = "Service complete. Prepare to depart.";
+        message =
+          "Service complete. Let go your lines and depart through the harbour entrance, keeping to the starboard side of the channel.";
+        p.phase = "departure";
+        this.recorder.phase = "departure";
+        this.recorder.event(
+          p.elapsed,
+          "mission.departure",
+          "Fuel service complete — depart through the harbour entrance",
+          { phase: "departure" },
+        );
       } else
         message =
           "Engines running. Switch them off again to continue the service.";
@@ -512,7 +525,12 @@ export class Session {
     this.previous = { ...this.state };
     this.previousTraffic = this.traffic && { ...this.traffic };
     this.observe();
-    if (this.paused || this.progress.phase === "failed") return;
+    if (
+      this.paused ||
+      this.progress.phase === "failed" ||
+      this.progress.phase === "complete"
+    )
+      return;
     if (this.traffic) {
       for (const event of advanceVessel(
         this.traffic,
@@ -641,8 +659,10 @@ export class Session {
       this.acceptableContact,
     );
     this.advanceService(this.progress.service);
-    if (this.progress.phase !== priorPhase) {
-      const phase = this.progress.phase;
+    if (this.progress.phase === "departure") this.advanceDeparture();
+    // Widened: the calls above may have moved the phase on.
+    const phase = this.progress.phase as Phase;
+    if (phase !== priorPhase) {
       this.recorder.phase = phase;
       const message =
         phase === "secured"
@@ -651,9 +671,11 @@ export class Session {
             ? "Fuel berth called clear — approach Berth 01"
             : phase === "failed"
               ? `Mission failed: ${this.progress.failure}`
-              : priorPhase === "approach"
-                ? "Berth held — attach bow and stern lines"
-                : "Secured conditions lost — tend lines and regain the berth";
+              : phase === "complete"
+                ? `Cleared the harbour entrance on the ${this.progress.channelSide} side — fuel mission complete`
+                : priorPhase === "approach"
+                  ? "Berth held — attach bow and stern lines"
+                  : "Secured conditions lost — tend lines and regain the berth";
       this.recorder.event(
         this.progress.elapsed,
         `mission.${phase === "securing" && priorPhase === "secured" ? "unsecured" : phase}`,
@@ -663,6 +685,10 @@ export class Session {
       if (phase === "failed")
         this.announce(
           `Mission failed: ${this.progress.failure}. Retry to start again.`,
+        );
+      else if (phase === "complete")
+        this.announce(
+          `Clear of the harbour. Fuel mission complete in ${this.progress.elapsed.toFixed(1)} s with +${this.progress.penalty} s penalties.`,
         );
       else if (phase === "securing" && priorPhase === "approach")
         this.announce(
@@ -692,6 +718,30 @@ export class Session {
     this.recorder.sample(this.progress.elapsed, this.telemetry());
   }
   private announcedSecured = false;
+  // Departure ends when the boat crosses the entrance gate outward; leaving on
+  // the port side of the channel costs a penalty.
+  private advanceDeparture() {
+    const side = gateCrossing(this.previous, this.state);
+    if (!side) return;
+    const p = this.progress,
+      time = p.elapsed;
+    p.channelSide = side;
+    p.exitedAt = time;
+    if (side === "port") {
+      p.penalty += missionConfig.channelSidePenalty;
+      this.recorder.event(
+        time,
+        "mission.channel_side",
+        `Left on the port side of the channel: +${missionConfig.channelSidePenalty}s`,
+        { penaltySeconds: missionConfig.channelSidePenalty },
+      );
+      this.announce(
+        `Keep to the starboard side of the channel: red light on your starboard side going out. +${missionConfig.channelSidePenalty} s`,
+        time,
+      );
+    }
+    p.phase = "complete";
+  }
   private trafficEvent(type: string, message: string) {
     const v = this.traffic!;
     this.recorder.event(this.progress.elapsed + STEP, type, message, {
@@ -740,7 +790,7 @@ export class Session {
       p.countdown = Math.max(0, p.countdown - STEP);
       if (p.countdown > 1e-9) return;
       p.countdown = 0;
-      p.departedAt = time;
+      p.monohullDepartedAt = time;
       for (const event of startDeparture(v))
         this.trafficEvent(event.type, event.message);
       this.announce(

@@ -12,7 +12,7 @@ import { ServiceUI, serviceMarkup } from "./service-ui";
 import { Instruments, instrumentsMarkup } from "./instruments";
 import { wrap } from "./instrument-data";
 import { LogUI, crewMarkup, logMarkup } from "./log-ui";
-import { insideHolding, requirements } from "./scenario";
+import { insideHolding, quayClearance, requirements } from "./scenario";
 import { DemoUI, demoMarkup, type DemoActions } from "./demo-ui";
 import type { PracticeLab } from "./demonstration";
 import { clamp } from "./simulation";
@@ -189,104 +189,126 @@ export class UI {
       String(n + (g.missionEnabled ? 1 : 0)).padStart(2, "0");
     // Fuel service runs while secured in the fuel mission.
     const service = p.service,
-      servicing = g.missionEnabled && p.phase === "secured",
-      serviced = service.completedAt !== null;
+      servicing = g.missionEnabled && p.phase === "secured";
+    const lines = !g.mooring.bow.attached && !g.mooring.stern.attached;
     this.el("mission-phase").textContent =
-      p.phase === "holding"
-        ? "01 / HOLD"
-        : p.phase === "failed"
-          ? "MISSION FAILED"
-          : p.phase === "approach"
-            ? `${stage(1)} / APPROACH`
-            : p.phase === "securing"
-              ? `${stage(2)} / SECURE THE BOAT`
-              : servicing
-                ? serviced
-                  ? `${stage(4)} / SERVICE COMPLETE`
-                  : `${stage(3)} / SECURED · FUEL SERVICE`
-                : `${stage(3)} / SECURED · LIVE`;
+      p.phase === "departure"
+        ? `${stage(4)} / DEPART`
+        : p.phase === "complete"
+          ? "MISSION COMPLETE"
+          : p.phase === "holding"
+            ? "01 / HOLD"
+            : p.phase === "failed"
+              ? "MISSION FAILED"
+              : p.phase === "approach"
+                ? `${stage(1)} / APPROACH`
+                : p.phase === "securing"
+                  ? `${stage(2)} / SECURE THE BOAT`
+                  : servicing
+                    ? `${stage(3)} / SECURED · FUEL SERVICE`
+                    : `${stage(3)} / SECURED · LIVE`;
     this.el("mission-title").textContent =
-      p.phase === "holding"
-        ? "Wait for the fuel berth."
-        : p.phase === "failed"
-          ? "Hull contact without a fender."
-          : p.phase === "approach"
-            ? "Approach North quay."
-            : p.phase === "securing"
-              ? "Make fast, without rushing."
-              : servicing
-                ? serviced
-                  ? "Fuelled. Ready to depart."
-                  : "Fuel service alongside."
-                : "Lines on. Stay attentive.";
+      p.phase === "departure"
+        ? "Leave through the harbour entrance."
+        : p.phase === "complete"
+          ? "Clear of the harbour."
+          : p.phase === "holding"
+            ? "Wait for the fuel berth."
+            : p.phase === "failed"
+              ? "Hull contact without a fender."
+              : p.phase === "approach"
+                ? "Approach North quay."
+                : p.phase === "securing"
+                  ? "Make fast, without rushing."
+                  : servicing
+                    ? "Fuel service alongside."
+                    : "Lines on. Stay attentive.";
     this.el("mission-hint").textContent =
-      p.phase === "holding"
-        ? p.departedAt === null
-          ? "The monohull is refuelling. Keep your boat's centre inside the blue holding area south-east of the quay; it leaves 5 seconds after you are in position."
-          : "The monohull is leaving. Keep clear of the fuel berth and its approach lane until the radio calls it clear."
-        : p.phase === "failed"
-          ? `${p.failure}. Fenders must cover the point of contact with another vessel. Retry (R) to start again.`
-          : p.phase === "approach"
-            ? "Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines."
-            : p.phase === "securing"
-              ? p.positionTarget === "alongside"
-                ? "Amber area: settle alongside, not at the old centre point. Tend slack with Take in / Ease. Gentle covered fender contact is allowed."
-                : "Attach the first line to activate the amber alongside area. Use Crew & lines; either attachment order is allowed."
-              : servicing
-                ? serviced
-                  ? "The boat is still live and secured. Departure through the harbour entrance comes next."
-                  : "Work through the checklist in order. Stay secured: fuelling stops if a line, fender or position requirement is lost."
-                : "The boat is still live. Watch tension and wind. Release either line to practise again.";
+      p.phase === "departure"
+        ? "Let go both lines, ease off the quay and exit between the lights at the south-west gap. Keep to the starboard (west) side of the channel: red light on your starboard side going out."
+        : p.phase === "complete"
+          ? `Fuel mission complete with +${p.penalty} s penalties. A full debrief comes next; Retry (R) to go again.`
+          : p.phase === "holding"
+            ? p.monohullDepartedAt === null
+              ? "The monohull is refuelling. Keep your boat's centre inside the blue holding area south-east of the quay; it leaves 5 seconds after you are in position."
+              : "The monohull is leaving. Keep clear of the fuel berth and its approach lane until the radio calls it clear."
+            : p.phase === "failed"
+              ? `${p.failure}. Fenders must cover the point of contact with another vessel. Retry (R) to start again.`
+              : p.phase === "approach"
+                ? "Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines."
+                : p.phase === "securing"
+                  ? p.positionTarget === "alongside"
+                    ? "Amber area: settle alongside, not at the old centre point. Tend slack with Take in / Ease. Gentle covered fender contact is allowed."
+                    : "Attach the first line to activate the amber alongside area. Use Crew & lines; either attachment order is allowed."
+                  : servicing
+                    ? "Work through the checklist in order. Stay secured: fuelling stops if a line, fender or position requirement is lost."
+                    : "The boat is still live. Watch tension and wind. Release either line to practise again.";
     const checks: [boolean, string][] =
-      p.phase === "holding"
+      p.phase === "departure"
         ? [
-            [insideHolding(s), "Boat centre inside holding area"],
-            [
-              p.departedAt !== null,
-              `Monohull departs after ${missionConfig.holding.countdown} s in position`,
-            ],
-            [!p.inFuelZone, "Stay out of the fuel berth until called"],
+            [lines, "Both lines let go"],
+            [quayClearance(s) > 2, "Clear of the quay by 2 m"],
+            [false, "Exit between the lights · starboard side of the channel"],
           ]
-        : p.phase === "failed"
-          ? []
-          : servicing
-            ? [[true, "Secured alongside · lines, fenders, neutral"]]
-            : [
+        : p.phase === "complete"
+          ? [
+              [true, "Both lines let go"],
+              [
+                p.channelSide === "starboard",
+                p.channelSide === "starboard"
+                  ? "Left on the starboard side of the channel"
+                  : `Left on the port side of the channel · +${missionConfig.channelSidePenalty} s`,
+              ],
+            ]
+          : p.phase === "holding"
+            ? [
+                [insideHolding(s), "Boat centre inside holding area"],
                 [
-                  r.position,
-                  p.positionTarget === "alongside"
-                    ? "Full hull inside amber alongside area"
-                    : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
+                  p.monohullDepartedAt !== null,
+                  `Monohull departs after ${missionConfig.holding.countdown} s in position`,
                 ],
-                [
-                  r.heading,
-                  p.positionTarget === "alongside"
-                    ? "Parallel to quay · 000° ± 10°"
-                    : "Heading 000° ± 8°",
-                ],
-                [r.speed, "Speed ≤ 0.35 kn · minimal rotation"],
-                [
-                  r.clear,
-                  p.positionTarget === "alongside"
-                    ? "Clear or gentle covered fender contact"
-                    : "Clear of docks and boundaries",
-                ],
-                ...(p.phase === "approach"
-                  ? []
-                  : ([
-                      [secured.fenders, "Starboard fenders deployed"],
-                      [
-                        secured.lines,
-                        "Both lines · slack ≤0.45 m · safe load · crew idle",
-                      ],
-                      [
-                        secured.neutral,
-                        service.enginesOff
-                          ? "Engines off for fuel service"
-                          : "Both neutral · delivered thrust settled",
-                      ],
-                    ] as [boolean, string][])),
-              ];
+                [!p.inFuelZone, "Stay out of the fuel berth until called"],
+              ]
+            : p.phase === "failed"
+              ? []
+              : servicing
+                ? [[true, "Secured alongside · lines, fenders, neutral"]]
+                : [
+                    [
+                      r.position,
+                      p.positionTarget === "alongside"
+                        ? "Full hull inside amber alongside area"
+                        : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
+                    ],
+                    [
+                      r.heading,
+                      p.positionTarget === "alongside"
+                        ? "Parallel to quay · 000° ± 10°"
+                        : "Heading 000° ± 8°",
+                    ],
+                    [r.speed, "Speed ≤ 0.35 kn · minimal rotation"],
+                    [
+                      r.clear,
+                      p.positionTarget === "alongside"
+                        ? "Clear or gentle covered fender contact"
+                        : "Clear of docks and boundaries",
+                    ],
+                    ...(p.phase === "approach"
+                      ? []
+                      : ([
+                          [secured.fenders, "Starboard fenders deployed"],
+                          [
+                            secured.lines,
+                            "Both lines · slack ≤0.45 m · safe load · crew idle",
+                          ],
+                          [
+                            secured.neutral,
+                            service.enginesOff
+                              ? "Engines off for fuel service"
+                              : "Both neutral · delivered thrust settled",
+                          ],
+                        ] as [boolean, string][])),
+                  ];
     this.el("requirements").innerHTML = checks
       .map(
         ([ok, text]) =>
@@ -295,27 +317,33 @@ export class UI {
       .join("");
     const countdown = missionConfig.holding.countdown;
     this.el("dwell").style.width =
-      p.phase === "holding"
-        ? `${(p.departedAt !== null ? 1 : p.countdown === null ? 0 : (countdown - p.countdown) / countdown) * 100}%`
-        : p.phase === "failed"
-          ? "0%"
-          : `${(p.dwell / (p.phase === "approach" ? scenario.target.dwell : mooringConfig.securedDwell)) * 100}%`;
+      p.phase === "departure" || p.phase === "complete"
+        ? p.phase === "complete"
+          ? "100%"
+          : "0%"
+        : p.phase === "holding"
+          ? `${(p.monohullDepartedAt !== null ? 1 : p.countdown === null ? 0 : (countdown - p.countdown) / countdown) * 100}%`
+          : p.phase === "failed"
+            ? "0%"
+            : `${(p.dwell / (p.phase === "approach" ? scenario.target.dwell : mooringConfig.securedDwell)) * 100}%`;
     this.el("result").textContent =
-      p.phase === "holding"
-        ? p.departedAt !== null
-          ? "Monohull leaving — wait to be called"
-          : p.countdown === null
-            ? "Countdown starts inside the holding area"
-            : `Monohull departs in ${p.countdown.toFixed(1)} s`
-        : p.phase === "failed"
-          ? `Mission failed at ${p.elapsed.toFixed(1)} s · press Retry (R)`
-          : servicing && service.fuelling
-            ? `Fuelling ${service.litres.toFixed(0)} / ${missionConfig.service.litres} L`
-            : servicing && serviced
-              ? `Service complete at ${service.completedAt!.toFixed(1)} s · +${p.penalty} s penalties`
-              : p.phase === "secured"
-                ? `Secured · first achieved ${p.securedAt!.toFixed(1)} s · +${p.penalty} s penalties. Simulation remains live.`
-                : `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
+      p.phase === "departure"
+        ? `Service complete at ${service.completedAt!.toFixed(1)} s · depart when ready`
+        : p.phase === "complete"
+          ? `Mission complete at ${p.exitedAt!.toFixed(1)} s · +${p.penalty} s penalties`
+          : p.phase === "holding"
+            ? p.monohullDepartedAt !== null
+              ? "Monohull leaving — wait to be called"
+              : p.countdown === null
+                ? "Countdown starts inside the holding area"
+                : `Monohull departs in ${p.countdown.toFixed(1)} s`
+            : p.phase === "failed"
+              ? `Mission failed at ${p.elapsed.toFixed(1)} s · press Retry (R)`
+              : servicing && service.fuelling
+                ? `Fuelling ${service.litres.toFixed(0)} / ${missionConfig.service.litres} L`
+                : p.phase === "secured"
+                  ? `Secured · first achieved ${p.securedAt!.toFixed(1)} s · +${p.penalty} s penalties. Simulation remains live.`
+                  : `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
     const latest = g.radio.at(-1);
     this.el("radio").hidden = !latest;
     if (latest) {

@@ -77,15 +77,24 @@ export class Instruments {
     return this.elements.get(id)!;
   }
   update(game: Session, camera: CameraMode) {
-    // While holding, the training bearing points at the holding area.
-    const holding = game.progress.phase === "holding";
-    this.el("bearing-target").textContent = holding ? "HOLD" : "01";
+    // While holding, the training bearing points at the holding area, and
+    // at the harbour entrance while departing.
+    const phase = game.progress.phase,
+      holding = phase === "holding",
+      leaving = phase === "departure" || phase === "complete";
+    this.el("bearing-target").textContent = holding
+      ? "HOLD"
+      : leaving
+        ? "EXIT"
+        : "01";
     const data = instrumentData(
         game.state,
         game.weather,
         holding
           ? missionConfig.holding
-          : positioningTarget(game.progress.positionTarget),
+          : leaving
+            ? missionConfig.entrance
+            : positioningTarget(game.progress.positionTarget),
       ),
       wind = data[this.mode];
     this.root

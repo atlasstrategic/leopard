@@ -74,9 +74,21 @@ Once the boat is first **Secured**, the objective panel shows a **fuel service c
 2. **Fuel type:** choose **Diesel**. Petrol is refused: this Leopard 42 has diesel engines.
 3. **Start fuelling:** 180 L at an accelerated 20 L per simulation second (9 s). It pauses with the game.
 4. **Pay:** after the tank is full.
-5. **Engines on:** both levers in neutral. This completes the service: the radio calls "Service complete. Prepare to depart."
+5. **Engines on:** both levers in neutral. This completes the service and starts the [departure](#departure-milestone-c-in-progress).
 
 Every step stays clickable. A step taken out of order is **refused with an explanation**, not penalised, and logged as `service.rejected`. The boat must **stay secured** throughout: if securing is lost (a line released or broken, fenders retrieved, leaving the alongside area), fuelling stops, keeps the litres already delivered and logs `service.interrupted`; the other steps are refused until the boat is secured again. **Engines on** is always allowed once the engines are off, for safety (for example if the boat breaks free); restarting before paying means switching off again to continue. Quantities, rates and the procedure are fictional game content, not real fuel-dock practice. Retry resets the service; **Show me** has no fuel service.
+
+## Departure (milestone C, in progress)
+
+The harbour's south side is a **breakwater** with an 18 m **entrance** at x = −30 m. A **red** light marks the west end of the gap and a **green** light the east end (IALA region A, as used in Croatia: red is the port-hand mark when entering, so going out it stays on your **starboard** side). The lights flash for orientation only. Training barriers enclose the water outside the entrance.
+
+Once the service is complete:
+
+1. **Let go both lines** from Crew & lines (any order; releasing under load is logged). Letting go no longer revokes a secured state: you are departing.
+2. **Clear the quay** without hard contact; normal contact penalties apply.
+3. **Exit between the lights.** The instrument caption shows **BRG EXIT**, and a dashed gate line with the starboard half of the channel tinted marks the way. The mission is complete when the boat's centre crosses the gate line outward. Crossing it in the **port (east) half** of the channel costs **+5 s**: keep to the starboard side of a channel.
+
+On completion the simulation stops, the radio reports the total time and penalties, and commands are refused until **Retry**. The monohull also leaves through the entrance on its starboard side. A full debrief comes next ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)).
 
 ## Guided “Show me” example
 
@@ -200,4 +212,4 @@ The scripts target only the local game tab. Dock automation uses DOM lever input
 
 The production bundle is approximately **153 kB gzipped JS** plus approximately 3.4 kB CSS; Vite warns that Three.js makes the uncompressed JS chunk exceed 500 kB. No external assets download at runtime.
 
-Next: milestone C's remaining **departure → debrief** stages ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)); holding, clearance, approach, securing and fuel service are implemented. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
+Next: milestone C's **debrief and scoring**, then restart checkpoints ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)); holding, clearance, approach, securing, fuel service and departure are implemented. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
