@@ -17,7 +17,9 @@ import { insideHolding, quayClearance, requirements } from "./scenario";
 import { DemoUI, demoMarkup, type DemoActions } from "./demo-ui";
 import type { PracticeLab } from "./demonstration";
 import { clamp } from "./simulation";
-import type { Session } from "./session";
+import { checkpointLabels, type CheckpointId, type Session } from "./session";
+import { checkpointIds, checkpointMarkup } from "./checkpoint-ui";
+
 import type { View } from "./rendering";
 export class UI {
   root = document.querySelector<HTMLDivElement>("#ui")!;
@@ -32,6 +34,7 @@ export class UI {
     private view: View,
     private actions: {
       retry: () => void;
+      restartFrom: (id: CheckpointId) => void;
       pause: () => void;
       camera: () => void;
       readOnly: () => boolean;
@@ -43,7 +46,7 @@ export class UI {
       <section class="panel objective"><div class="eyebrow" id="mission-phase"></div><h2 id="mission-title"></h2><p id="mission-hint"></p>
       <div class="objective-tabs" role="group" aria-label="Objective panel section"><button id="objective-tab" aria-pressed="true">Objective</button><button id="crew-tab" aria-pressed="false">Crew & lines</button></div>
       <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div>${serviceMarkup}</div>
-      <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button><div class="stats"><span id="time"></span><span id="penalties"></span></div>
+      <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button>${checkpointMarkup("restart")}<div class="stats"><span id="time"></span><span id="penalties"></span></div>
       <div id="crew-page" hidden>${mooringMarkup}${crewMarkup}</div></section>
       <section class="panel radio" id="radio" role="status" aria-live="polite" hidden><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><p id="radio-message"></p></section>
       ${instrumentsMarkup}
@@ -76,6 +79,12 @@ export class UI {
     this.mooringUI = new MooringUI(this.root, game, actions.readOnly);
     this.serviceUI = new ServiceUI(this.root, game);
     this.debriefUI = new DebriefUI(this.root, game, actions.retry);
+    for (const prefix of ["restart", "debrief-restart"])
+      for (const id of checkpointIds)
+        this.el(`${prefix}-${id}`).onclick = () => {
+          (this.el("debrief") as HTMLDialogElement).close();
+          actions.restartFrom(id);
+        };
     this.logUI = new LogUI(this.root, game, actions.pause, actions.readOnly);
     this.demoUI = new DemoUI(this.root, lab, actions);
     this.el("retry").onclick = actions.retry;
@@ -147,6 +156,23 @@ export class UI {
       this.syncTuning();
     };
     this.syncTuning();
+  }
+  // Restart buttons appear once a checkpoint has been reached.
+  private updateCheckpoints() {
+    const g = this.game,
+      readOnly = this.actions.readOnly();
+    for (const prefix of ["restart", "debrief-restart"]) {
+      let any = false;
+      for (const id of checkpointIds) {
+        const c = g.checkpoints[id],
+          button = this.el(`${prefix}-${id}`) as HTMLButtonElement;
+        button.hidden = !c || readOnly;
+        any ||= !button.hidden;
+        if (c)
+          button.title = `Restart from the ${checkpointLabels[id].toLowerCase()} checkpoint saved in attempt ${c.attempt} at ${c.time.toFixed(1)} s`;
+      }
+      this.el(`${prefix}-checkpoints`).hidden = !any;
+    }
   }
   el(id: string) {
     return this.root.querySelector<HTMLElement>(`#${id}`)!;
@@ -380,6 +406,7 @@ export class UI {
     this.mooringUI.update();
     this.serviceUI.update();
     this.debriefUI.update();
+    this.updateCheckpoints();
     this.demoUI.update();
   }
 }

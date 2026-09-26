@@ -180,6 +180,7 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
     ["Countdown resets", String(m.countdownResets)],
     ["Channel side on exit", p.channelSide ?? "—"],
     ["Lever changes", String(m.leverChanges)],
+    ["Checkpoint restarts", String(m.checkpointRestarts)],
   ];
   const penalties = events
     .filter((e) =>

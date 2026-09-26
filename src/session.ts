@@ -10,7 +10,7 @@ import {
   scoreConfig,
   type Tuning,
 } from "./config";
-import { initialFenders, type Side } from "./fenders";
+import { initialFenders, type Fenders, type Side } from "./fenders";
 import {
   initialMooring,
   initialLine,
@@ -18,6 +18,7 @@ import {
   attachmentCheck,
   lineGeometry,
   type LineId,
+  type Mooring,
 } from "./mooring";
 import { Recorder, headingChanged, type Recording } from "./recorder";
 import {
@@ -31,6 +32,7 @@ import {
   initialControls,
   initialWeather,
   step,
+  type Controls,
   type State,
   type Weather,
 } from "./simulation";
@@ -44,6 +46,7 @@ import {
   type VesselObstacle,
 } from "./traffic";
 import {
+  type Progress,
   type Phase,
   type Service,
   initialProgress,
@@ -56,6 +59,28 @@ import {
   vesselInFuelZone,
 } from "./scenario";
 export type RadioMessage = { time: number; message: string };
+export type CheckpointId = "approach" | "departure";
+export const checkpointLabels: Record<CheckpointId, string> = {
+  approach: "Approach",
+  departure: "Departure",
+};
+// Everything needed to continue an attempt from a saved moment. Weather and
+// tuning are not included: like Retry, restarts keep the current settings.
+type Checkpoint = {
+  attempt: number;
+  time: number;
+  state: State;
+  controls: Controls;
+  progress: Progress;
+  fenders: Fenders;
+  mooring: Mooring;
+  traffic: Vessel | null;
+  radio: RadioMessage[];
+  acceptableContact: boolean;
+  announcedSecured: boolean;
+  loggedHeading: number;
+  recorder: Recorder;
+};
 export type ServiceAction =
   "enginesOff" | "diesel" | "petrol" | "fuel" | "pay" | "enginesOn";
 export class FixedClock {
@@ -94,6 +119,10 @@ export class Session {
   previousTraffic: Vessel | null;
   // Harbour radio: short instructions telling the skipper what to do next.
   radio: RadioMessage[] = [];
+  // Saved automatically when the berth is called clear and when the service
+  // completes; kept across retries until reached again.
+  checkpoints: Partial<Record<CheckpointId, Checkpoint>> = {};
+  private pendingCheckpoint: CheckpointId | null = null;
   recorder = this.newRecorder(1);
   history: Recording[] = [];
   private observed: Record<string, string> = {};
@@ -453,7 +482,33 @@ export class Session {
       litres: service.litres,
     });
     this.announce(message);
+    if (p.phase === "departure") this.saveCheckpoint("departure");
     return { accepted: true, message };
+  }
+  private saveCheckpoint(id: CheckpointId) {
+    const time = this.progress.elapsed;
+    this.recorder.event(
+      time,
+      "mission.checkpoint",
+      `Checkpoint saved: ${checkpointLabels[id]}`,
+      { checkpoint: id },
+    );
+    this.checkpoints[id] = structuredClone({
+      attempt: this.recorder.attempt,
+      time,
+      state: this.state,
+      controls: this.controls,
+      progress: this.progress,
+      fenders: this.fenders,
+      mooring: this.mooring,
+      traffic: this.traffic,
+      radio: this.radio,
+      acceptableContact: this.acceptableContact,
+      announcedSecured: this.announcedSecured,
+      loggedHeading: this.loggedHeading,
+      recorder: null,
+    }) as unknown as Checkpoint;
+    this.checkpoints[id]!.recorder = this.recorder.fork(this.recorder.attempt);
   }
   private advanceService(service: Service) {
     if (!service.fuelling) return;
@@ -727,6 +782,11 @@ export class Session {
       );
     }
     this.recorder.sample(this.progress.elapsed, this.telemetry());
+    // Saved at the end of the tick so the snapshot is a consistent state.
+    if (this.pendingCheckpoint) {
+      this.saveCheckpoint(this.pendingCheckpoint);
+      this.pendingCheckpoint = null;
+    }
   }
   private announcedSecured = false;
   private recordMetrics(vessel: VesselObstacle | null) {
@@ -835,24 +895,32 @@ export class Session {
     if (o && vesselInFuelZone(o)) return;
     p.clearedAt = time;
     p.phase = "approach";
+    this.pendingCheckpoint = "approach";
     this.announce(
       "Fuel berth clear. Proceed to Berth 01, bow north, starboard side to.",
       time,
     );
   }
-  retry() {
+  // Retry the whole mission, or restart from a saved checkpoint.
+  retry(from?: CheckpointId) {
     this.observe();
     this.recorder.sample(this.progress.elapsed, this.telemetry(), true);
     this.recorder.finish(this.progress.elapsed, "retry");
     this.history.unshift(this.recorder.export());
     this.history = this.history.slice(0, recorderConfig.history);
     const nextAttempt = this.recorder.attempt + 1;
+    this.clock.reset();
+    this.paused = false;
+    this.pendingCheckpoint = null;
+    const checkpoint = from && this.checkpoints[from];
+    if (checkpoint) {
+      this.restore(checkpoint, nextAttempt, from!);
+      return;
+    }
     this.state = initialState();
     this.previous = initialState();
     this.controls = initialControls();
     this.progress = initialProgress(this.missionEnabled);
-    this.clock.reset();
-    this.paused = false;
     this.acceptableContact = true;
     this.fenders = initialFenders();
     this.mooring = initialMooring();
@@ -866,6 +934,31 @@ export class Session {
     this.announcedSecured = false;
     this.briefing();
     // User-selected weather/handling settings deliberately persist across attempts.
+  }
+  private restore(c: Checkpoint, attempt: number, id: CheckpointId) {
+    const copy = structuredClone({ ...c, recorder: null });
+    this.state = copy.state;
+    this.previous = { ...copy.state };
+    this.controls = copy.controls;
+    this.progress = copy.progress;
+    this.fenders = copy.fenders;
+    this.mooring = copy.mooring;
+    this.traffic = copy.traffic;
+    this.previousTraffic = this.traffic && { ...this.traffic };
+    this.radio = copy.radio;
+    this.acceptableContact = copy.acceptableContact;
+    this.announcedSecured = copy.announcedSecured;
+    this.loggedHeading = copy.loggedHeading;
+    this.progress.metrics.checkpointRestarts++;
+    this.recorder = c.recorder.fork(attempt);
+    this.recorder.event(
+      this.progress.elapsed,
+      "attempt.checkpoint",
+      `Restarted from checkpoint: ${checkpointLabels[id]} (saved in attempt ${c.attempt} at ${c.time.toFixed(1)} s)`,
+      { checkpoint: id, fromAttempt: c.attempt, savedAt: c.time },
+    );
+    this.observed = this.observation();
+    this.recorder.sample(this.progress.elapsed, this.telemetry(), true);
   }
   interpolatedTraffic(alpha: number) {
     const v = this.traffic,

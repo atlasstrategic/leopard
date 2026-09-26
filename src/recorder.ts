@@ -65,6 +65,18 @@ export class Recorder {
     }
     return event;
   }
+  // A copy of this log for a new attempt continuing from a checkpoint. Open
+  // contact episodes are not carried over.
+  fork(attempt: number) {
+    const next = new Recorder(attempt, this.metadata, this.phase);
+    next.events = structuredClone(this.events);
+    next.snapshots = structuredClone(this.snapshots);
+    next.droppedEvents = this.droppedEvents;
+    next.droppedSnapshots = this.droppedSnapshots;
+    next.sequence = this.sequence;
+    next.nextSample = this.nextSample;
+    return next;
+  }
   sample(time: number, data: Record<string, unknown>, force = false) {
     if (!force && time + 1e-8 < this.nextSample) return;
     this.nextSample = time + recorderConfig.sampleSeconds;

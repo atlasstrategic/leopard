@@ -11,6 +11,7 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - Added the **fuel service checklist** once secured: engines off, confirm diesel, fuel (accelerated), pay, engines on. Out-of-order steps and petrol are refused with an explanation; losing secured stops fuelling until the boat is secured again. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 - Added the **departure**: a breakwater with a harbour entrance marked by red and green lights. After the service, let go the lines and leave between the lights on the starboard side of the channel (+5 s on the port side). Leaving completes the fuel mission. Scenario version **6**. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 - Added the **debrief**: a score out of 100 using the plan's weighting (impact & clearance 40%, position & speed 25%, procedure 20%, smoothness 15%), key figures, penalty reasons, one practical tip and an overhead trace of your track and the monohull's. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
+- Added **restart checkpoints**: restart from the approach (berth called clear) or the departure (service complete) instead of repeating the whole mission. The debrief counts restarts. This completes the milestone C mission loop. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 
 ## [0.1.0] — 2026-09-25
 

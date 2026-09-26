@@ -47,7 +47,7 @@ Each new obstacle-contact episode above 0.08 m/s closing speed incurs **+5 secon
 
 Levers go from reverse through neutral to forward. On-screen sliders and −REV/N/FWD+ buttons work independently; ± buttons change one step rather than commanding full power. The HUD distinguishes commanded lever setting from delayed delivered thrust. Mouse wheel/rudder slider is also available. Input widgets retain ordinary keyboard accessibility; click the scene to return keyboard focus from a slider. Bindings are shown in-game; remapping is deferred.
 
-Blur/tab hiding **pauses and clears held keys**, without silently moving persistent levers or the rudder. Explicit resume is required. Retry clears position, velocity, rotation, actual/commanded engines, wheel, interpolation, timer, dwell, success, contact history and penalties; it deliberately **keeps chosen weather/tuning and camera** for repeatable practice. Restore tuning defaults is separate.
+Blur/tab hiding **pauses and clears held keys**, without silently moving persistent levers or the rudder. Explicit resume is required. Retry clears position, velocity, rotation, actual/commanded engines, wheel, interpolation, timer, dwell, success, contact history and penalties; it deliberately **keeps chosen weather/tuning and camera** for repeatable practice. Restore tuning defaults is separate. To skip parts you have already done, use a [restart checkpoint](#restart-checkpoints).
 
 ## Harbour traffic (milestone C, in progress)
 
@@ -89,6 +89,15 @@ Once the service is complete:
 3. **Exit between the lights.** The instrument caption shows **BRG EXIT**, and a dashed gate line with the starboard half of the channel tinted marks the way. The mission is complete when the boat's centre crosses the gate line outward. Crossing it in the **port (east) half** of the channel costs **+5 s**: keep to the starboard side of a channel.
 
 On completion the simulation stops, the radio reports the total time and penalties, the [debrief](#debrief-and-score) opens, and commands are refused until **Retry**. The monohull also leaves through the entrance on its starboard side.
+
+## Restart checkpoints
+
+Two checkpoints are saved automatically during the fuel mission:
+
+- **Approach:** the moment the radio calls the fuel berth clear.
+- **Departure:** the moment the fuel service completes, secured with both lines on.
+
+Once reached, **Restart from · Approach / Departure** buttons appear in the objective panel and in the debrief. A restart restores that exact moment of your run (boat, levers, lines, fenders, monohull, radio, penalties and debrief metrics so far) as a **new attempt** in the voyage log, continuing the earlier log. **Retry · R** still restarts the whole mission. Checkpoints stay available after a full retry until you reach them again, and the button tooltip says which attempt and time they come from. Like Retry, restarts keep your current weather and tuning settings. The debrief counts checkpoint restarts but does not score them. **Show me** has no checkpoints.
 
 ## Debrief and score
 
@@ -232,4 +241,4 @@ The scripts target only the local game tab. Dock automation uses DOM lever input
 
 The production bundle is approximately **153 kB gzipped JS** plus approximately 3.4 kB CSS; Vite warns that Three.js makes the uncompressed JS chunk exceed 500 kB. No external assets download at runtime.
 
-Next: milestone C's **restart checkpoints** ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)); the full holding → clearance → approach → secured → service → departure → debrief loop is implemented. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
+Milestone C's mission loop ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) is complete: holding → clearance → approach → secured → service → departure → debrief, with restart checkpoints. Next: calibrate low-speed response and scoring with experienced operators before claiming training fidelity; Croatian geography and exact boat assets are milestone D. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.

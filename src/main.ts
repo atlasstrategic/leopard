@@ -4,6 +4,7 @@ import { View, hasWebGL2, type CameraMode } from "./rendering";
 import { PracticeLab } from "./demonstration";
 import { Input } from "./input";
 import { UI } from "./ui";
+import type { CheckpointId } from "./session";
 const canvas = document.querySelector<HTMLCanvasElement>("#scene")!;
 function error(message: string) {
   document.querySelector("#ui")!.innerHTML = "";
@@ -40,6 +41,10 @@ if (!hasWebGL2()) {
           lab.showMe();
           bindSession();
         } else lab.active.retry();
+      },
+      restartFrom: (id: CheckpointId) => {
+        input.clear();
+        if (lab.mode === "practice") lab.active.retry(id);
       },
       readOnly: () => lab.mode === "demo",
       showDemo: () => {

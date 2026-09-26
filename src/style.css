@@ -112,6 +112,28 @@ p {
   margin-top: 8px;
   width: 100%;
 }
+.checkpoints {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #acbec4;
+}
+.checkpoints button {
+  font-size: 11px;
+  padding: 5px 9px;
+}
+.debrief-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.debrief-actions .checkpoints {
+  margin-top: 0;
+}
 .service {
   margin-top: 12px;
   pointer-events: auto;

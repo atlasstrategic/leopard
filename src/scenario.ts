@@ -108,6 +108,8 @@ export type Metrics = {
   serviceRefusals: number;
   lineRefusals: number;
   releasesUnderLoad: number;
+  // Shown in the debrief, not scored.
+  checkpointRestarts: number;
 };
 export const initialMetrics = (): Metrics => ({
   closestMonohull: null,
@@ -118,6 +120,7 @@ export const initialMetrics = (): Metrics => ({
   serviceRefusals: 0,
   lineRefusals: 0,
   releasesUnderLoad: 0,
+  checkpointRestarts: 0,
 });
 // Fuel service checklist, in order: engines off → fuel type → fuel → pay →
 // engines on. Engines may be restarted at any time for safety.
