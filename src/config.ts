@@ -188,6 +188,8 @@ export const missionConfig = {
   // Fuel berth and its approach lane (x -4..7, y -10..37).
   fuelZone: { x: 1.5, y: 13.5, width: 11, length: 47 },
   earlyEntryPenalty: 10,
+  // Accelerated, fictional fuel service: not real quantities or procedures.
+  service: { fuelType: "diesel", litres: 180, litresPerSecond: 20 },
 };
 // Scripted, kinematic harbour traffic. It follows its legs, never reacts to
 // impacts itself, and stops rather than pushing through the player.

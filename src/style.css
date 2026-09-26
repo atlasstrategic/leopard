@@ -108,6 +108,39 @@ p {
   margin-top: 14px;
   color: #b7cfd0;
 }
+.service {
+  margin-top: 12px;
+  pointer-events: auto;
+}
+.service-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #acbec4;
+  margin: 6px 0;
+}
+.service-row.ok {
+  color: #a0f2cb;
+}
+.service-label {
+  flex: 1;
+}
+.service-label small {
+  color: #8fb1bb;
+}
+.service-buttons {
+  display: flex;
+  gap: 4px;
+}
+.service-buttons button {
+  font-size: 10px;
+  padding: 4px 7px;
+}
+#service-feedback {
+  font-size: 11px;
+  margin: 8px 0 0;
+}
 .radio {
   position: absolute;
   top: 25px;

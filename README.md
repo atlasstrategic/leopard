@@ -29,7 +29,7 @@ Use a desktop WebGL 2 browser. A viewport of at least 1100×760 is recommended. 
 
 Approach the mint **Berth 01** rectangle beside the quay, bow north. The entire vessel footprint must be inside, its centre within **1.2 m** of the berth centre, heading **000° ±8°**, speed **≤0.18 m/s (0.35 kn)**, yaw rate **≤0.025 rad/s (1.43°/s)**, and no dock/boundary contact, continuously for **3 seconds**. This arrival hold unlocks **securing**, not a frozen success screen. There is no snapping or automatic mooring. Open **Crew & lines**, deploy starboard fenders, put both engines in neutral and attach bow/stern lines in whichever order suits your approach. The **first successful attachment** replaces the mint approach target with an **amber alongside envelope** (centre x=2 m, y=16 m, 10×20 m, heading 000° ±10°): the old 1.2 m centre tolerance no longer applies. Tend excessive slack with Take in/Ease, keeping both lines attached, crew idle, paid-out slack ≤0.45 m and load below the warning threshold. Hold the alongside envelope, low speed/yaw, neutral/settled thrust and fenders for another **3 seconds** to reach **Secured · live**. The boat, controls, wind and timer keep running; releasing a line or losing a prerequisite revokes secured status. Retry is immediate.
 
-Each new obstacle-contact episode above 0.08 m/s closing speed incurs **+5 seconds**; sustained rubbing is not penalized every frame. Each obstacle has its own episode; returning after more than 0.5 simulation seconds without contact starts a new one. Even gentle/zero-impulse contacts are logged. The HUD contact count counts penalized impacts, not every touch. The HUD/log show elapsed time, first-secured time, contacts and penalty seconds; the final fuel-mission debrief is still to come. These are game thresholds, not safety limits. Scrapes below the threshold still physically collide. The approach hold requires no contact; alongside securing permits only gentle (≤0.08 m/s) **covered**, non-bottomed fender contact against the east quay. Other, hard or unprotected contacts break the dwell.
+Each new obstacle-contact episode above 0.08 m/s closing speed incurs **+5 seconds**; sustained rubbing is not penalized every frame. Each obstacle has its own episode; returning after more than 0.5 simulation seconds without contact starts a new one. Even gentle/zero-impulse contacts are logged. The HUD contact count counts penalized impacts, not every touch. The HUD/log show elapsed time, first-secured time, contacts and penalty seconds; the fuel-mission debrief is still to come. These are game thresholds, not safety limits. Scrapes below the threshold still physically collide. The approach hold requires no contact; alongside securing permits only gentle (≤0.08 m/s) **covered**, non-bottomed fender contact against the east quay. Other, hard or unprotected contacts break the dwell.
 
 **First attempt:** set wind to zero, use overhead view, start with both engines at 20–40%, and use short equal reverse bursts well before the target to brake. Neutral retains momentum; engines take time to respond. Port ahead and starboard astern turn the bow to starboard. Small alternating lever corrections work better than chasing the wheel at a standstill.
 
@@ -65,6 +65,18 @@ Entering that fuel zone (boat centre) before clearance costs **+10 s** per entry
 A 12 m **monohull** lies alongside the east quay at the fuel berth when the attempt starts. When it departs, it backs off the quay, turns and motors out to the south-west.
 
 The monohull is scripted and kinematic: it follows its route with limited acceleration and turn rate, and does not react to impacts. If your boat is in the corridor ahead of it, it **stops and waits** rather than pushing through, then carries on once you clear it. Its collision shape is a capsule that matches the visible hull. Contact speed is measured **relative to the moving hull**, so a boat that is struck while stationary still logs an impact. Contacts with it are penalised like any other obstacle (+5 s above 0.08 m/s) and appear in the voyage log. Departure, yielding and leaving the harbour are logged as `traffic.*` events, and its state is in 1 Hz telemetry and exports. Retry puts it back at the fuel berth and restarts the holding stage. **Show me** uses a harbour without traffic and starts at the approach.
+
+## Fuel service (milestone C, in progress)
+
+Once the boat is first **Secured**, the objective panel shows a **fuel service checklist**, in order:
+
+1. **Engines off:** both levers must be in neutral. With the engines off, the levers deliver no thrust (the lever readouts show ENGINE OFF), and "engines off" satisfies the neutral securing requirement.
+2. **Fuel type:** choose **Diesel**. Petrol is refused: this Leopard 42 has diesel engines.
+3. **Start fuelling:** 180 L at an accelerated 20 L per simulation second (9 s). It pauses with the game.
+4. **Pay:** after the tank is full.
+5. **Engines on:** both levers in neutral. This completes the service: the radio calls "Service complete. Prepare to depart."
+
+Every step stays clickable. A step taken out of order is **refused with an explanation**, not penalised, and logged as `service.rejected`. The boat must **stay secured** throughout: if securing is lost (a line released or broken, fenders retrieved, leaving the alongside area), fuelling stops, keeps the litres already delivered and logs `service.interrupted`; the other steps are refused until the boat is secured again. **Engines on** is always allowed once the engines are off, for safety (for example if the boat breaks free); restarting before paying means switching off again to continue. Quantities, rates and the procedure are fictional game content, not real fuel-dock practice. Retry resets the service; **Show me** has no fuel service.
 
 ## Guided “Show me” example
 
@@ -182,8 +194,10 @@ node tools/browser-show-me.mjs  # UI lesson, pause, takeover, export, repeat and
 # npm ci restores the exact dependency tree afterwards.
 ```
 
+In development builds (`npm run dev`) the running game is also reachable as `window.__leopard.lab` for scripted browser checks, e.g. to set up a secured fuel-mission state before clicking the real checklist buttons. The handle is compiled out of production builds.
+
 The scripts target only the local game tab. Dock automation uses DOM lever inputs and HUD speed/time, not a pose injection or hidden autopilot in the game. `PUPPETEER_MODULE` can alternatively point at an existing Puppeteer ES module. These are optional browser tests, not part of `npm test`.
 
 The production bundle is approximately **153 kB gzipped JS** plus approximately 3.4 kB CSS; Vite warns that Three.js makes the uncompressed JS chunk exceed 500 kB. No external assets download at runtime.
 
-Next: milestone C's explicit **holding → clearance → approach → secured → service → departure → debrief** state machine, building on the implemented approach/lines/secured states. Add timed fictional traffic, holding clearance, a compact fuel checklist and a validated departure/debrief. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
+Next: milestone C's remaining **departure → debrief** stages ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)); holding, clearance, approach, securing and fuel service are implemented. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.

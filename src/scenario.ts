@@ -52,12 +52,31 @@ export type Progress = {
   inFuelZone: boolean;
   earlyEntries: number;
   failure: string | null;
+  service: Service;
 };
-// With traffic the attempt starts by waiting for the fuel berth; the
-// traffic-free practice harbour (Show me) starts at the approach.
-export const initialProgress = (traffic = false): Progress => ({
+// Fuel service checklist, in order: engines off → fuel type → fuel → pay →
+// engines on. Engines may be restarted at any time for safety.
+export type Service = {
+  enginesOff: boolean;
+  fuelConfirmed: boolean;
+  litres: number;
+  fuelling: boolean;
+  paid: boolean;
+  completedAt: number | null;
+};
+export const initialService = (): Service => ({
+  enginesOff: false,
+  fuelConfirmed: false,
+  litres: 0,
+  fuelling: false,
+  paid: false,
+  completedAt: null,
+});
+// The fuel mission starts by waiting for the fuel berth; the docking-only
+// practice harbour (Show me) starts at the approach.
+export const initialProgress = (mission = false): Progress => ({
   elapsed: 0,
-  phase: traffic ? "holding" : "approach",
+  phase: mission ? "holding" : "approach",
   positionTarget: "approach",
   arrivalAt: null,
   securedAt: null,
@@ -71,6 +90,7 @@ export const initialProgress = (traffic = false): Progress => ({
   inFuelZone: false,
   earlyEntries: 0,
   failure: null,
+  service: initialService(),
 });
 export function requirements(
   s: State,

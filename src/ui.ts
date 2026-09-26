@@ -8,6 +8,7 @@ import {
   missionConfig,
 } from "./config";
 import { MooringUI, mooringMarkup } from "./mooring-ui";
+import { ServiceUI, serviceMarkup } from "./service-ui";
 import { Instruments, instrumentsMarkup } from "./instruments";
 import { wrap } from "./instrument-data";
 import { LogUI, crewMarkup, logMarkup } from "./log-ui";
@@ -22,6 +23,7 @@ export class UI {
   instruments: Instruments;
   logUI: LogUI;
   mooringUI: MooringUI;
+  serviceUI: ServiceUI;
   demoUI: DemoUI;
   constructor(
     private game: Session,
@@ -38,7 +40,7 @@ export class UI {
       <header><div class="eyebrow">LEOPARD / HANDLING LAB</div><h1>A little power. A lot of patience.</h1><p>42-foot twin-hull · Fictional training area · Mooring prototype</p></header>
       <section class="panel objective"><div class="eyebrow" id="mission-phase"></div><h2 id="mission-title"></h2><p id="mission-hint"></p>
       <div class="objective-tabs" role="group" aria-label="Objective panel section"><button id="objective-tab" aria-pressed="true">Objective</button><button id="crew-tab" aria-pressed="false">Crew & lines</button></div>
-      <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div></div>
+      <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div>${serviceMarkup}</div>
       <div id="result" aria-live="polite"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div>
       <div id="crew-page" hidden>${mooringMarkup}${crewMarkup}</div></section>
       <section class="panel radio" id="radio" role="status" aria-live="polite" hidden><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><p id="radio-message"></p></section>
@@ -70,6 +72,7 @@ export class UI {
     }
     this.instruments = new Instruments(this.root);
     this.mooringUI = new MooringUI(this.root, game, actions.readOnly);
+    this.serviceUI = new ServiceUI(this.root, game);
     this.logUI = new LogUI(this.root, game, actions.pause, actions.readOnly);
     this.demoUI = new DemoUI(this.root, lab, actions);
     this.el("retry").onclick = actions.retry;
@@ -183,7 +186,11 @@ export class UI {
     const secured = g.securingRequirements();
     // Stage numbers include the holding stage only when there is traffic.
     const stage = (n: number) =>
-      String(n + (g.trafficEnabled ? 1 : 0)).padStart(2, "0");
+      String(n + (g.missionEnabled ? 1 : 0)).padStart(2, "0");
+    // Fuel service runs while secured in the fuel mission.
+    const service = p.service,
+      servicing = g.missionEnabled && p.phase === "secured",
+      serviced = service.completedAt !== null;
     this.el("mission-phase").textContent =
       p.phase === "holding"
         ? "01 / HOLD"
@@ -193,7 +200,11 @@ export class UI {
             ? `${stage(1)} / APPROACH`
             : p.phase === "securing"
               ? `${stage(2)} / SECURE THE BOAT`
-              : `${stage(3)} / SECURED · LIVE`;
+              : servicing
+                ? serviced
+                  ? `${stage(4)} / SERVICE COMPLETE`
+                  : `${stage(3)} / SECURED · FUEL SERVICE`
+                : `${stage(3)} / SECURED · LIVE`;
     this.el("mission-title").textContent =
       p.phase === "holding"
         ? "Wait for the fuel berth."
@@ -203,7 +214,11 @@ export class UI {
             ? "Approach North quay."
             : p.phase === "securing"
               ? "Make fast, without rushing."
-              : "Lines on. Stay attentive.";
+              : servicing
+                ? serviced
+                  ? "Fuelled. Ready to depart."
+                  : "Fuel service alongside."
+                : "Lines on. Stay attentive.";
     this.el("mission-hint").textContent =
       p.phase === "holding"
         ? p.departedAt === null
@@ -217,7 +232,11 @@ export class UI {
               ? p.positionTarget === "alongside"
                 ? "Amber area: settle alongside, not at the old centre point. Tend slack with Take in / Ease. Gentle covered fender contact is allowed."
                 : "Attach the first line to activate the amber alongside area. Use Crew & lines; either attachment order is allowed."
-              : "The boat is still live. Watch tension and wind. Release either line to practise again; fuel service comes next.";
+              : servicing
+                ? serviced
+                  ? "The boat is still live and secured. Departure through the harbour entrance comes next."
+                  : "Work through the checklist in order. Stay secured: fuelling stops if a line, fender or position requirement is lost."
+                : "The boat is still live. Watch tension and wind. Release either line to practise again.";
     const checks: [boolean, string][] =
       p.phase === "holding"
         ? [
@@ -230,40 +249,44 @@ export class UI {
           ]
         : p.phase === "failed"
           ? []
-          : [
-              [
-                r.position,
-                p.positionTarget === "alongside"
-                  ? "Full hull inside amber alongside area"
-                  : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
-              ],
-              [
-                r.heading,
-                p.positionTarget === "alongside"
-                  ? "Parallel to quay · 000° ± 10°"
-                  : "Heading 000° ± 8°",
-              ],
-              [r.speed, "Speed ≤ 0.35 kn · minimal rotation"],
-              [
-                r.clear,
-                p.positionTarget === "alongside"
-                  ? "Clear or gentle covered fender contact"
-                  : "Clear of docks and boundaries",
-              ],
-              ...(p.phase === "approach"
-                ? []
-                : ([
-                    [secured.fenders, "Starboard fenders deployed"],
-                    [
-                      secured.lines,
-                      "Both lines · slack ≤0.45 m · safe load · crew idle",
-                    ],
-                    [
-                      secured.neutral,
-                      "Both neutral · delivered thrust settled",
-                    ],
-                  ] as [boolean, string][])),
-            ];
+          : servicing
+            ? [[true, "Secured alongside · lines, fenders, neutral"]]
+            : [
+                [
+                  r.position,
+                  p.positionTarget === "alongside"
+                    ? "Full hull inside amber alongside area"
+                    : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
+                ],
+                [
+                  r.heading,
+                  p.positionTarget === "alongside"
+                    ? "Parallel to quay · 000° ± 10°"
+                    : "Heading 000° ± 8°",
+                ],
+                [r.speed, "Speed ≤ 0.35 kn · minimal rotation"],
+                [
+                  r.clear,
+                  p.positionTarget === "alongside"
+                    ? "Clear or gentle covered fender contact"
+                    : "Clear of docks and boundaries",
+                ],
+                ...(p.phase === "approach"
+                  ? []
+                  : ([
+                      [secured.fenders, "Starboard fenders deployed"],
+                      [
+                        secured.lines,
+                        "Both lines · slack ≤0.45 m · safe load · crew idle",
+                      ],
+                      [
+                        secured.neutral,
+                        service.enginesOff
+                          ? "Engines off for fuel service"
+                          : "Both neutral · delivered thrust settled",
+                      ],
+                    ] as [boolean, string][])),
+              ];
     this.el("requirements").innerHTML = checks
       .map(
         ([ok, text]) =>
@@ -286,9 +309,13 @@ export class UI {
             : `Monohull departs in ${p.countdown.toFixed(1)} s`
         : p.phase === "failed"
           ? `Mission failed at ${p.elapsed.toFixed(1)} s · press Retry (R)`
-          : p.phase === "secured"
-            ? `Secured · first achieved ${p.securedAt!.toFixed(1)} s · +${p.penalty} s penalties. Simulation remains live.`
-            : `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
+          : servicing && service.fuelling
+            ? `Fuelling ${service.litres.toFixed(0)} / ${missionConfig.service.litres} L`
+            : servicing && serviced
+              ? `Service complete at ${service.completedAt!.toFixed(1)} s · +${p.penalty} s penalties`
+              : p.phase === "secured"
+                ? `Secured · first achieved ${p.securedAt!.toFixed(1)} s · +${p.penalty} s penalties. Simulation remains live.`
+                : `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
     const latest = g.radio.at(-1);
     this.el("radio").hidden = !latest;
     if (latest) {
@@ -301,8 +328,9 @@ export class UI {
       `CONTACTS ${p.collisions} / +${p.penalty} s`;
     for (const k of ["port", "starboard"] as const) {
       const v = g.controls[k];
-      this.el(`${k}Value`).textContent =
-        Math.abs(v) < 0.01
+      this.el(`${k}Value`).textContent = service.enginesOff
+        ? "ENGINE OFF"
+        : Math.abs(v) < 0.01
           ? "NEUTRAL"
           : `${v > 0 ? "AHEAD" : "ASTERN"} ${Math.round(Math.abs(v) * 100)}%`;
       (this.el(k) as HTMLInputElement).value = String(v * 100);
@@ -317,6 +345,7 @@ export class UI {
     this.el("paused").hidden = !g.paused || this.lab.mode === "demo";
     this.logUI.update();
     this.mooringUI.update();
+    this.serviceUI.update();
     this.demoUI.update();
   }
 }

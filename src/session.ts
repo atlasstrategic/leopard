@@ -41,6 +41,7 @@ import {
   type Vessel,
 } from "./traffic";
 import {
+  type Service,
   initialProgress,
   updateProgress,
   contactAcceptable,
@@ -50,6 +51,8 @@ import {
   vesselInFuelZone,
 } from "./scenario";
 export type RadioMessage = { time: number; message: string };
+export type ServiceAction =
+  "enginesOff" | "diesel" | "petrol" | "fuel" | "pay" | "enginesOn";
 export class FixedClock {
   accumulator = 0;
   advance(delta: number, tick: () => void) {
@@ -79,10 +82,11 @@ export class Session {
   acceptableContact = true;
   fenders = initialFenders();
   mooring = initialMooring();
-  // Harbour traffic; null in the docking-only practice harbour (Show me).
+  // Fuel mission (traffic, holding, service); off in the docking-only
+  // practice harbour (Show me), where traffic is null.
+  readonly missionEnabled: boolean;
   traffic: Vessel | null;
   previousTraffic: Vessel | null;
-  readonly trafficEnabled: boolean;
   // Harbour radio: short instructions telling the skipper what to do next.
   radio: RadioMessage[] = [];
   recorder = this.newRecorder(1);
@@ -91,20 +95,20 @@ export class Session {
   private loggedHeading = this.state.heading;
   constructor(
     weather: Weather = initialWeather(),
-    options: { traffic?: boolean } = {},
+    options: { mission?: boolean } = {},
   ) {
     this.weather = { ...weather };
-    this.trafficEnabled = options.traffic ?? true;
-    this.traffic = this.trafficEnabled ? initialMonohull() : null;
+    this.missionEnabled = options.mission ?? true;
+    this.traffic = this.missionEnabled ? initialMonohull() : null;
     this.previousTraffic = this.traffic && { ...this.traffic };
-    this.progress = initialProgress(this.trafficEnabled);
+    this.progress = initialProgress(this.missionEnabled);
     this.recorder = this.newRecorder(1);
     this.observed = this.observation();
     this.recorder.sample(0, this.telemetry(), true);
     this.briefing();
   }
   private briefing() {
-    if (this.trafficEnabled)
+    if (this.missionEnabled)
       this.announce(
         "Fuel berth occupied. Proceed to the holding area south-east of the quay and wait until called.",
       );
@@ -235,11 +239,13 @@ export class Session {
             mooringConfig.maxSecuredSlack
         );
       }),
+      // Engines switched off for fuel service count as neutral.
       neutral:
-        Math.abs(this.controls.port) < 0.01 &&
-        Math.abs(this.controls.starboard) < 0.01 &&
-        Math.abs(this.state.port) < 0.03 &&
-        Math.abs(this.state.starboard) < 0.03,
+        this.progress.service.enginesOff ||
+        (Math.abs(this.controls.port) < 0.01 &&
+          Math.abs(this.controls.starboard) < 0.01 &&
+          Math.abs(this.state.port) < 0.03 &&
+          Math.abs(this.state.starboard) < 0.03),
     };
   }
   requestLine(
@@ -347,6 +353,114 @@ export class Session {
       message: `${def.name} attached to ${def.bollard} with ${mooringConfig.slack.toFixed(2)} m slack. Use gradual Take in / Ease; attachment does not move the boat.`,
     };
   }
+  requestService(action: ServiceAction): {
+    accepted: boolean;
+    message: string;
+  } {
+    const p = this.progress,
+      service = p.service,
+      cfg = missionConfig.service;
+    const neutral =
+      Math.abs(this.controls.port) < 0.01 &&
+      Math.abs(this.controls.starboard) < 0.01;
+    const full = service.litres >= cfg.litres;
+    let reason = this.failedReason();
+    if (reason) {
+      // Failed attempts refuse every command.
+    } else if (this.paused) reason = "Paused — resume (P) first";
+    else if (!this.missionEnabled)
+      reason = "No fuel service in this practice harbour";
+    else if (service.completedAt !== null)
+      reason = "Fuel service is already complete";
+    else if (action === "enginesOn") {
+      // Always allowed for safety, e.g. if the boat breaks free.
+      if (!service.enginesOff) reason = "Engines are already running";
+      else if (!neutral)
+        reason = "Put both levers in neutral before starting the engines";
+    } else if (p.phase !== "secured")
+      reason =
+        p.securedAt === null
+          ? "Secure the boat alongside first"
+          : "Boat no longer secured — re-secure it to continue the service";
+    else if (action === "enginesOff") {
+      if (service.enginesOff) reason = "Engines are already off";
+      else if (!neutral) reason = "Put both levers in neutral first";
+    } else if (!service.enginesOff) reason = "Switch both engines off first";
+    else if (action === "petrol")
+      reason =
+        "This Leopard 42 has diesel engines — petrol would damage them. Choose diesel";
+    else if (action === "diesel") {
+      if (service.fuelConfirmed) reason = "Diesel is already confirmed";
+    } else if (action === "fuel") {
+      if (!service.fuelConfirmed) reason = "Confirm the fuel type first";
+      else if (service.fuelling) reason = "Already fuelling";
+      else if (full) reason = "Tank is already full";
+    } else if (action === "pay") {
+      if (!full) reason = "Finish fuelling first";
+      else if (service.paid) reason = "Already paid";
+    }
+    if (reason) {
+      this.recorder.event(p.elapsed, "service.rejected", reason, {
+        action,
+        reason,
+      });
+      return { accepted: false, message: reason };
+    }
+    let message = "";
+    if (action === "enginesOff") {
+      service.enginesOff = true;
+      message = "Engines off. Confirm the fuel type.";
+    } else if (action === "diesel") {
+      service.fuelConfirmed = true;
+      message = "Diesel confirmed. Start fuelling when ready.";
+    } else if (action === "fuel") {
+      service.fuelling = true;
+      message = `Fuelling started — ${cfg.litres} L, accelerated.`;
+    } else if (action === "pay") {
+      service.paid = true;
+      message = "Payment received. Start the engines when ready.";
+    } else {
+      service.enginesOff = false;
+      if (service.fuelling) service.fuelling = false;
+      if (service.paid) {
+        service.completedAt = p.elapsed;
+        message = "Service complete. Prepare to depart.";
+      } else
+        message =
+          "Engines running. Switch them off again to continue the service.";
+    }
+    this.recorder.event(p.elapsed, `service.${action}`, message, {
+      litres: service.litres,
+    });
+    this.announce(message);
+    return { accepted: true, message };
+  }
+  private advanceService(service: Service) {
+    if (!service.fuelling) return;
+    const time = this.progress.elapsed + STEP,
+      cfg = missionConfig.service;
+    if (this.progress.phase !== "secured") {
+      service.fuelling = false;
+      const message = `Fuelling stopped at ${service.litres.toFixed(0)} L: boat no longer secured. Re-secure, then start fuelling again.`;
+      this.recorder.event(time, "service.interrupted", message, {
+        litres: service.litres,
+      });
+      this.announce(message, time);
+      return;
+    }
+    service.litres = Math.min(
+      cfg.litres,
+      service.litres + cfg.litresPerSecond * STEP,
+    );
+    if (service.litres < cfg.litres - 1e-9) return;
+    service.litres = cfg.litres;
+    service.fuelling = false;
+    const message = `Fuelling complete: ${cfg.litres} L. Please pay.`;
+    this.recorder.event(time, "service.fuelled", message, {
+      litres: service.litres,
+    });
+    this.announce(message, time);
+  }
   requestTend(
     id: LineId,
     action: TendAction,
@@ -447,7 +561,10 @@ export class Session {
     const priorPhase = this.progress.phase;
     const samples = step(
       this.state,
-      this.controls,
+      // Engines switched off for fuel service deliver no thrust.
+      this.progress.service.enginesOff
+        ? { ...this.controls, port: 0, starboard: 0 }
+        : this.controls,
       this.weather,
       STEP,
       this.tuning,
@@ -496,7 +613,11 @@ export class Session {
     if (this.traffic && this.progress.phase !== "failed") {
       // Entering the fuel berth before it is called clear: once per entry.
       const inZone = insideFuelZone(this.state);
-      if (inZone && !this.progress.inFuelZone && !this.progress.clearedAt) {
+      if (
+        inZone &&
+        !this.progress.inFuelZone &&
+        this.progress.clearedAt === null
+      ) {
         this.progress.earlyEntries++;
         this.progress.penalty += missionConfig.earlyEntryPenalty;
         this.recorder.event(
@@ -519,6 +640,7 @@ export class Session {
       Object.values(this.securingRequirements()).every(Boolean),
       this.acceptableContact,
     );
+    this.advanceService(this.progress.service);
     if (this.progress.phase !== priorPhase) {
       const phase = this.progress.phase;
       this.recorder.phase = phase;
@@ -546,10 +668,14 @@ export class Session {
         this.announce(
           "Arrival confirmed. Deploy starboard fenders and make fast bow and stern lines.",
         );
-      else if (phase === "secured" && !this.announcedSecured) {
+      else if (
+        phase === "secured" &&
+        this.missionEnabled &&
+        !this.announcedSecured
+      ) {
         this.announcedSecured = true;
         this.announce(
-          "Secured alongside the fuel berth. Stand by for service.",
+          "Secured alongside the fuel berth. Switch the engines off to begin the fuel service.",
         );
       }
       this.recorder.sample(this.progress.elapsed, this.telemetry(), true);
@@ -642,13 +768,13 @@ export class Session {
     this.state = initialState();
     this.previous = initialState();
     this.controls = initialControls();
-    this.progress = initialProgress(this.trafficEnabled);
+    this.progress = initialProgress(this.missionEnabled);
     this.clock.reset();
     this.paused = false;
     this.acceptableContact = true;
     this.fenders = initialFenders();
     this.mooring = initialMooring();
-    this.traffic = this.trafficEnabled ? initialMonohull() : null;
+    this.traffic = this.missionEnabled ? initialMonohull() : null;
     this.previousTraffic = this.traffic && { ...this.traffic };
     this.recorder = this.newRecorder(nextAttempt);
     this.observed = this.observation();

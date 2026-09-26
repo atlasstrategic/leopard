@@ -226,7 +226,7 @@ export class PracticeLab {
     // Docking-only lesson: calm water and no harbour traffic.
     this.active = new Session(
       { speed: 0, direction: 0, currentX: 0, currentY: 0 },
-      { traffic: false },
+      { mission: false },
     );
     this.demonstration = new Demonstration(this.active);
     this.mode = "demo";

@@ -25,6 +25,8 @@ if (!hasWebGL2()) {
   try {
     const lab = new PracticeLab(),
       view = new View(canvas);
+    // Development-only handle for browser checks; absent from production builds.
+    if (import.meta.env.DEV) Object.assign(window, { __leopard: { lab } });
     let ui!: UI;
     let practiceCamera: CameraMode = view.mode;
     const modes: CameraMode[] = ["chase", "overhead", "helm"];

@@ -14,7 +14,7 @@ import { resolveContacts, type ContactSample } from "../src/contacts";
 function alongside(x = 2.5, y = 16) {
   const g = new Session(
     { speed: 0, direction: 0, currentX: 0, currentY: 0 },
-    { traffic: false },
+    { mission: false },
   );
   Object.assign(g.state, { x, y });
   g.progress.phase = "securing";

@@ -13,7 +13,7 @@ import { initialState } from "../src/simulation";
 const close = (a: number, b: number, epsilon = 1e-8) =>
   assert.ok(Math.abs(a - b) < epsilon, `${a} != ${b}`);
 function ready(x = 0) {
-  const g = new Session(undefined, { traffic: false });
+  const g = new Session(undefined, { mission: false });
   g.weather.speed = 0;
   Object.assign(g.state, { x, y: 16 });
   g.previous = { ...g.state };
@@ -237,7 +237,7 @@ test("mooring response and phase transitions match at 30/60/144 render Hz", () =
   assert.deepEqual(run(144), run(60));
 });
 test("entire calm approach, attach, secure and release uses commands without berth snapping", () => {
-  const g = new Session(undefined, { traffic: false });
+  const g = new Session(undefined, { mission: false });
   g.weather.speed = 0;
   g.requestFenders("starboard");
   for (let i = 0; i < 7200 && g.progress.phase === "approach"; i++) {
