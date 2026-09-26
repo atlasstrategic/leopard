@@ -1,6 +1,7 @@
-import { angle, boat, scenario, mooringConfig } from "./config";
+import { angle, boat, scenario, mooringConfig, missionConfig } from "./config";
 import type { State } from "./simulation";
 import type { ContactSample } from "./contacts";
+import type { VesselObstacle } from "./traffic";
 export type PositionTarget = "approach" | "alongside";
 export function contactAcceptable(s: State, samples: ContactSample[]) {
   if (!s.contact) return true;
@@ -17,9 +18,26 @@ export function contactAcceptable(s: State, samples: ContactSample[]) {
 }
 export const positioningTarget = (mode: PositionTarget) =>
   mode === "alongside" ? scenario.alongside : scenario.target;
+export const insideHolding = (s: State) =>
+  Math.hypot(s.x - missionConfig.holding.x, s.y - missionConfig.holding.y) <=
+  missionConfig.holding.radius;
+const zone = missionConfig.fuelZone;
+export const insideFuelZone = (s: State) =>
+  Math.abs(s.x - zone.x) <= zone.width / 2 &&
+  Math.abs(s.y - zone.y) <= zone.length / 2;
+// Any part of the vessel's capsule (by bounding box) inside the fuel zone.
+export function vesselInFuelZone(v: VesselObstacle) {
+  const dx = Math.abs(Math.sin(v.heading)) * v.halfLength + v.radius,
+    dy = Math.abs(Math.cos(v.heading)) * v.halfLength + v.radius;
+  return (
+    Math.abs(v.x - zone.x) < zone.width / 2 + dx &&
+    Math.abs(v.y - zone.y) < zone.length / 2 + dy
+  );
+}
+export type Phase = "holding" | "approach" | "securing" | "secured" | "failed";
 export type Progress = {
   elapsed: number;
-  phase: "approach" | "securing" | "secured";
+  phase: Phase;
   positionTarget: PositionTarget;
   arrivalAt: number | null;
   securedAt: number | null;
@@ -27,10 +45,19 @@ export type Progress = {
   success: boolean;
   collisions: number;
   penalty: number;
+  // Holding stage: countdown remaining while inside (null when not counting).
+  countdown: number | null;
+  departedAt: number | null;
+  clearedAt: number | null;
+  inFuelZone: boolean;
+  earlyEntries: number;
+  failure: string | null;
 };
-export const initialProgress = (): Progress => ({
+// With traffic the attempt starts by waiting for the fuel berth; the
+// traffic-free practice harbour (Show me) starts at the approach.
+export const initialProgress = (traffic = false): Progress => ({
   elapsed: 0,
-  phase: "approach",
+  phase: traffic ? "holding" : "approach",
   positionTarget: "approach",
   arrivalAt: null,
   securedAt: null,
@@ -38,6 +65,12 @@ export const initialProgress = (): Progress => ({
   success: false,
   collisions: 0,
   penalty: 0,
+  countdown: null,
+  departedAt: null,
+  clearedAt: null,
+  inFuelZone: false,
+  earlyEntries: 0,
+  failure: null,
 });
 export function requirements(
   s: State,
@@ -77,6 +110,8 @@ export function updateProgress(
   acceptableContact = false,
 ) {
   p.elapsed += dt;
+  // Holding is advanced by the session (it depends on traffic); failed is terminal.
+  if (p.phase === "holding" || p.phase === "failed") return;
   const inBerth = Object.values(
     requirements(s, p.positionTarget, acceptableContact),
   ).every(Boolean);

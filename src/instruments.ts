@@ -1,4 +1,4 @@
-import { degrees } from "./config";
+import { degrees, missionConfig } from "./config";
 import { positioningTarget } from "./scenario";
 import { bearingText, instrumentData, type WindMode } from "./instrument-data";
 import type { Session } from "./session";
@@ -40,7 +40,7 @@ export const instrumentsMarkup = `
       <div class="dial-readout"><small>HDG / TRUE</small><strong id="heading">000° T</strong></div>
     </div>
     <div class="instrument-data"><div><small>SOG</small><strong id="speed">0.00 kn</strong></div><div><small>COG / TRUE</small><strong id="course">—</strong></div></div>
-    <div class="instrument-caption berth-caption" title="Training overlay: bearing to the centre of berth 01, not a steering command">◆ BRG 01 <span id="bearing">—</span></div>
+    <div class="instrument-caption berth-caption" title="Training overlay: bearing to the centre of berth 01 (or the holding area while holding), not a steering command">◆ BRG <b id="bearing-target">01</b> <span id="bearing">—</span></div>
   </article>
   <article class="instrument">
     <div class="instrument-title"><span>WIND</span><span>FROM · KNOTS</span></div>
@@ -77,10 +77,15 @@ export class Instruments {
     return this.elements.get(id)!;
   }
   update(game: Session, camera: CameraMode) {
+    // While holding, the training bearing points at the holding area.
+    const holding = game.progress.phase === "holding";
+    this.el("bearing-target").textContent = holding ? "HOLD" : "01";
     const data = instrumentData(
         game.state,
         game.weather,
-        positioningTarget(game.progress.positionTarget),
+        holding
+          ? missionConfig.holding
+          : positioningTarget(game.progress.positionTarget),
       ),
       wind = data[this.mode];
     this.root

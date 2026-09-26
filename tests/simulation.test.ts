@@ -233,7 +233,8 @@ test("retry clears physics, actuators, objective, penalties, pause and clock; pr
   assert.deepEqual(g.state, initialState());
   assert.deepEqual(g.previous, initialState());
   assert.deepEqual(g.controls, initialControls());
-  assert.deepEqual(g.progress, initialProgress());
+  assert.deepEqual(g.progress, initialProgress(true));
+  assert.equal(g.radio.length, 1, "only the fresh briefing remains");
   assert.equal(g.paused, false);
   assert.equal(g.clock.accumulator, 0);
   assert.equal(g.weather.speed, 7);

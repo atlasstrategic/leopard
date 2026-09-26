@@ -37,12 +37,12 @@ export class Recorder {
   droppedSnapshots = 0;
   private sequence = 0;
   private nextSample = 0;
-  phase = "approach";
   constructor(
     public attempt: number,
     public metadata: Record<string, unknown>,
+    public phase = "approach",
   ) {
-    this.event(0, "attempt.start", "Approach practice started", { attempt });
+    this.event(0, "attempt.start", "Attempt started", { attempt });
   }
   event(
     time: number,
@@ -176,7 +176,7 @@ export class Recorder {
   }
   export() {
     return structuredClone({
-      schemaVersion: 1,
+      schemaVersion: 2,
       attempt: this.attempt,
       metadata: this.metadata,
       units: {

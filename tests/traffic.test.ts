@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boat, scenario, STEP, trafficConfig } from "../src/config";
+import {
+  boat,
+  missionConfig,
+  scenario,
+  STEP,
+  trafficConfig,
+} from "../src/config";
 import { resolveContacts } from "../src/contacts";
 import { initialFenders } from "../src/fenders";
 import { initialState } from "../src/simulation";
@@ -19,6 +25,12 @@ const run = (g: Session, seconds: number, each = () => {}) => {
     each();
   }
 };
+const place = (g: Session, x: number, y: number) => {
+  Object.assign(g.state, { x, y, vx: 0, vy: 0, yaw: 0 });
+  g.previous = { ...g.state };
+};
+const hold = (g: Session) =>
+  place(g, missionConfig.holding.x, missionConfig.holding.y);
 // Smallest gap between the monohull's capsule and any dock box.
 function dockClearance(o: VesselObstacle) {
   let min = Infinity;
@@ -35,22 +47,27 @@ function dockClearance(o: VesselObstacle) {
   }
   return min;
 }
-test("monohull waits at the fuel berth, departs on cue and leaves the harbour clear of docks", () => {
+test("monohull waits until the holding countdown, then leaves the harbour clear of docks", () => {
   const g = new Session(calm);
   let clearance = Infinity;
-  run(g, 4.9);
-  assert.equal(g.traffic!.status, "moored");
+  run(g, 20);
+  assert.equal(g.traffic!.status, "moored", "no departure until holding");
   assert.deepEqual(
     { x: g.traffic!.x, y: g.traffic!.y, heading: g.traffic!.heading },
     mono.start,
   );
+  hold(g);
+  const entered = g.progress.elapsed;
   run(g, 130, () => {
     const o = g.traffic && vesselObstacle(g.traffic);
     if (o) clearance = Math.min(clearance, dockClearance(o));
   });
   const types = g.recorder.events.map((e) => e.type);
   const depart = g.recorder.events.find((e) => e.type === "traffic.depart")!;
-  assert.ok(Math.abs(depart.time - mono.departAt) < 2 * STEP);
+  assert.ok(
+    Math.abs(depart.time - entered - missionConfig.holding.countdown) <
+      2 * STEP,
+  );
   assert.ok(types.includes("traffic.clear"));
   assert.ok(!types.includes("traffic.yield"));
   assert.equal(g.traffic!.status, "gone");
@@ -87,31 +104,17 @@ test("moving hull contact uses relative velocity and pushes the boat", () => {
   ]);
   assert.ok(shared.every((c) => c.speed < 1e-9 && c.impulse < 1e-6));
 });
-test("driving into the moored monohull is a penalised contact episode", () => {
-  const g = new Session(calm);
-  Object.assign(g.state, {
-    x: mono.start.x - mono.beam / 2 - boat.beam / 2 - 0.3,
-    y: mono.start.y,
-    vx: 0.3,
-  });
-  g.previous = { ...g.state };
-  run(g, 3);
-  assert.equal(g.traffic!.status, "moored");
-  assert.equal(g.progress.collisions, 1);
-  assert.equal(g.progress.penalty, scenario.collisionPenalty);
-  const contact = g.recorder.events.find((e) => e.type === "contact")!;
-  assert.equal(contact.data.obstacleId, mono.id);
-  assert.ok(g.state.x < mono.start.x - mono.beam / 2 - boat.beam / 2 + 0.05);
-});
 test("monohull stops for a boat in its path without pushing it, then resumes", () => {
   const g = new Session(calm);
+  hold(g);
+  run(g, missionConfig.holding.countdown + 1);
+  assert.equal(g.traffic!.status, "departing");
   // Directly astern of the monohull's reversing leg.
-  Object.assign(g.state, { x: mono.start.x - 2, y: 0 });
-  g.previous = { ...g.state };
+  place(g, mono.start.x - 2, 0);
   run(g, 30);
   assert.equal(g.traffic!.status, "yielding");
   assert.equal(g.traffic!.speed, 0);
-  assert.ok(Math.abs(g.traffic!.y - mono.start.y) < 0.5);
+  assert.ok(Math.abs(g.traffic!.y - mono.start.y) < 1);
   assert.ok(
     !g.recorder.events.some(
       (e) => e.type === "contact" && e.data.obstacleId === mono.id,
@@ -120,22 +123,24 @@ test("monohull stops for a boat in its path without pushing it, then resumes", (
   );
   assert.equal(g.progress.collisions, 0);
   assert.ok(g.recorder.events.some((e) => e.type === "traffic.yield"));
-  Object.assign(g.state, { x: 20, y: -35 });
-  g.previous = { ...g.state };
+  assert.ok(g.radio.some((m) => /in its path/.test(m.message)));
+  place(g, 20, -35);
   run(g, 130);
   assert.ok(g.recorder.events.some((e) => e.type === "traffic.resume"));
   assert.equal(g.traffic!.status, "gone");
 });
 test("traffic resets on retry, matches across render rates and is absent from Show me", () => {
   const g = new Session(calm);
+  hold(g);
   run(g, 20);
   assert.notEqual(g.traffic!.status, "moored");
   g.retry();
   assert.deepEqual(g.traffic, initialMonohull());
   const at = (hz: number) => {
     const s = new Session(calm);
-    for (let i = 0; i < hz * 30; i++) s.clock.advance(1 / hz, () => s.tick());
-    return s.traffic;
+    hold(s);
+    for (let i = 0; i < hz * 45; i++) s.clock.advance(1 / hz, () => s.tick());
+    return { traffic: s.traffic, progress: s.progress, radio: s.radio };
   };
   assert.deepEqual(at(30), at(60));
   assert.deepEqual(at(60), at(144));

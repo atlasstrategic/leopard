@@ -32,7 +32,7 @@ export type Box = {
   kind: "dock" | "boundary";
 };
 export const scenario = {
-  version: 4,
+  version: 5,
   name: "North quay · Berth 01",
   area: "Fictional training area",
   start: { x: 0, y: -22, heading: 0 },
@@ -180,6 +180,15 @@ export const recorderConfig = {
   impactThreshold: 0.08,
   history: 3,
 };
+// Fuel mission before the approach: wait in the holding area, then enter the
+// fuel berth only once it is called clear.
+export const missionConfig = {
+  // Boat centre must stay inside; clear of the monohull's south-west exit.
+  holding: { x: 20, y: -22, radius: 8, countdown: 5 },
+  // Fuel berth and its approach lane (x -4..7, y -10..37).
+  fuelZone: { x: 1.5, y: 13.5, width: 11, length: 47 },
+  earlyEntryPenalty: 10,
+};
 // Scripted, kinematic harbour traffic. It follows its legs, never reacts to
 // impacts itself, and stops rather than pushing through the player.
 export const trafficConfig = {
@@ -190,8 +199,6 @@ export const trafficConfig = {
     beam: 3.9,
     // Alongside the east quay at the fuel berth, bow north.
     start: { x: 4.5, y: 16, heading: 0 },
-    // Interim trigger until the holding-area countdown replaces it (issue #1).
-    departAt: 5,
     cruiseSpeed: 1,
     accel: 0.15,
     brake: 0.4,

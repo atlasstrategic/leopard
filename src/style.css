@@ -108,6 +108,25 @@ p {
   margin-top: 14px;
   color: #b7cfd0;
 }
+.radio {
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(460px, calc(100vw - 840px));
+  min-width: 240px;
+  padding: 11px 15px;
+  border-left: 3px solid #f1bd62;
+}
+.radio p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #e7f1ef;
+}
+.radio.fresh {
+  background: #173d4cf2;
+  box-shadow: 0 0 0 1px #f1bd6266;
+}
 .tools {
   position: absolute;
   right: 26px;
@@ -330,6 +349,13 @@ footer {
 @media (max-width: 760px) {
   header p {
     display: none;
+  }
+  .radio {
+    top: 96px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    transform: none;
   }
   header h1 {
     font-size: 16px;

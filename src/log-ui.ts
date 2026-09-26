@@ -116,7 +116,7 @@ export class LogUI {
       (filter === "contact" && ["contact", "penalty"].includes(type)) ||
       (filter === "crew" && /^(fender|crew)\./.test(type)) ||
       (filter === "lines" && /^line\./.test(type)) ||
-      (filter === "mission" && /^mission\./.test(type)) ||
+      (filter === "mission" && /^(mission|traffic)\.|^radio$/.test(type)) ||
       (filter === "controls" && /^(engines|rudder|heading)\./.test(type)) ||
       (filter === "weather" && /^(weather|tuning)\./.test(type));
     for (const event of r.events

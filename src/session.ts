@@ -6,6 +6,7 @@ import {
   recorderConfig,
   mooringConfig,
   trafficConfig,
+  missionConfig,
   type Tuning,
 } from "./config";
 import { initialFenders, type Side } from "./fenders";
@@ -44,7 +45,11 @@ import {
   updateProgress,
   contactAcceptable,
   positioningTarget,
+  insideHolding,
+  insideFuelZone,
+  vesselInFuelZone,
 } from "./scenario";
+export type RadioMessage = { time: number; message: string };
 export class FixedClock {
   accumulator = 0;
   advance(delta: number, tick: () => void) {
@@ -78,6 +83,8 @@ export class Session {
   traffic: Vessel | null;
   previousTraffic: Vessel | null;
   readonly trafficEnabled: boolean;
+  // Harbour radio: short instructions telling the skipper what to do next.
+  radio: RadioMessage[] = [];
   recorder = this.newRecorder(1);
   history: Recording[] = [];
   private observed: Record<string, string> = {};
@@ -90,9 +97,28 @@ export class Session {
     this.trafficEnabled = options.traffic ?? true;
     this.traffic = this.trafficEnabled ? initialMonohull() : null;
     this.previousTraffic = this.traffic && { ...this.traffic };
+    this.progress = initialProgress(this.trafficEnabled);
     this.recorder = this.newRecorder(1);
     this.observed = this.observation();
     this.recorder.sample(0, this.telemetry(), true);
+    this.briefing();
+  }
+  private briefing() {
+    if (this.trafficEnabled)
+      this.announce(
+        "Fuel berth occupied. Proceed to the holding area south-east of the quay and wait until called.",
+      );
+  }
+  announce(message: string, time = this.progress.elapsed) {
+    this.radio.push({ time, message });
+    this.radio = this.radio.slice(-10);
+    this.recorder.event(time, "radio", message);
+  }
+  // Commands are refused once the mission has failed; only Retry continues.
+  private failedReason() {
+    return this.progress.phase === "failed"
+      ? "Mission failed — Retry (R) to start again"
+      : "";
   }
   private newRecorder(attempt: number) {
     return new Recorder(
@@ -105,9 +131,11 @@ export class Session {
         recorderConfig,
         mooringConfig,
         trafficConfig,
+        missionConfig,
         fixedStep: STEP,
-        build: "milestone-C-traffic",
+        build: "milestone-C-holding",
       }),
+      this.progress.phase,
     );
   }
   private observation(): Record<string, string> {
@@ -159,6 +187,8 @@ export class Session {
     };
   }
   requestFenders(side: Side): { accepted: boolean; message: string } {
+    if (this.failedReason())
+      return { accepted: false, message: this.failedReason() };
     if (this.paused)
       return {
         accepted: false,
@@ -224,12 +254,17 @@ export class Session {
       scenario.obstacles,
       this.acceptableContact,
     );
-    let reason = "";
-    if (this.paused) reason = "Paused — resume (P) to command the line crew";
+    let reason = this.failedReason();
+    if (reason) {
+      // Failed attempts refuse every crew command.
+    } else if (this.paused)
+      reason = "Paused — resume (P) to command the line crew";
     else if (action === "release" && !line.attached)
       reason = "Line is not attached";
     else if (action === "attach") {
       if (line.attached) reason = "Line already attached";
+      else if (this.progress.phase === "holding")
+        reason = "Wait until the fuel berth is called clear";
       else if (this.progress.phase === "approach")
         reason = "First hold the marked berth for 3 seconds";
       else if (!this.securingRequirements().fenders)
@@ -318,13 +353,15 @@ export class Session {
   ): { accepted: boolean; message: string } {
     const line = this.mooring[id],
       def = mooringConfig.lines[id];
-    const reason = this.paused
-      ? "Paused — resume before tending"
-      : action === "stop"
-        ? ""
-        : line.tending !== "idle"
-          ? "Crew already adjusting — Stop before changing direction"
-          : tendingBlock(this.state, this.controls, this.mooring, id, action);
+    const reason = this.failedReason()
+      ? this.failedReason()
+      : this.paused
+        ? "Paused — resume before tending"
+        : action === "stop"
+          ? ""
+          : line.tending !== "idle"
+            ? "Crew already adjusting — Stop before changing direction"
+            : tendingBlock(this.state, this.controls, this.mooring, id, action);
     if (reason) {
       this.recorder.event(
         this.progress.elapsed,
@@ -361,27 +398,21 @@ export class Session {
     this.previous = { ...this.state };
     this.previousTraffic = this.traffic && { ...this.traffic };
     this.observe();
-    if (this.paused) return;
+    if (this.paused || this.progress.phase === "failed") return;
     if (this.traffic) {
-      const events =
-        this.progress.elapsed + 1e-9 >= trafficConfig.monohull.departAt
-          ? startDeparture(this.traffic)
-          : [];
-      events.push(
-        ...advanceVessel(this.traffic, this.state, this.tuning, STEP),
-      );
-      for (const event of events)
-        this.recorder.event(
-          this.progress.elapsed + STEP,
-          event.type,
-          event.message,
-          {
-            vessel: trafficConfig.monohull.id,
-            x: this.traffic.x,
-            y: this.traffic.y,
-            heading: this.traffic.heading,
-          },
-        );
+      for (const event of advanceVessel(
+        this.traffic,
+        this.state,
+        this.tuning,
+        STEP,
+      )) {
+        this.trafficEvent(event.type, event.message);
+        if (event.type === "traffic.yield")
+          this.announce(
+            "Monohull holding position: you are in its path. Give way.",
+            this.progress.elapsed + STEP,
+          );
+      }
     }
     const vessel = this.traffic && vesselObstacle(this.traffic);
     for (const side of ["port", "starboard"] as const) {
@@ -426,6 +457,9 @@ export class Session {
       vessel ? [vessel] : [],
     );
     this.acceptableContact = contactAcceptable(this.state, samples);
+    const bareVesselContact = samples.find(
+      (c) => c.obstacleId === trafficConfig.monohull.id && !c.covered,
+    );
     const impacts = this.recorder.contacts(
       this.progress.elapsed + STEP,
       samples,
@@ -455,6 +489,29 @@ export class Session {
           { line: id, tensionN: line.tension },
         );
     }
+    if (bareVesselContact) {
+      this.progress.phase = "failed";
+      this.progress.failure = `Contact with the ${trafficConfig.monohull.name.toLowerCase()} on the ${bareVesselContact.side} hull where no fender covered it`;
+    } else if (this.progress.phase === "holding") this.advanceHolding();
+    if (this.traffic && this.progress.phase !== "failed") {
+      // Entering the fuel berth before it is called clear: once per entry.
+      const inZone = insideFuelZone(this.state);
+      if (inZone && !this.progress.inFuelZone && !this.progress.clearedAt) {
+        this.progress.earlyEntries++;
+        this.progress.penalty += missionConfig.earlyEntryPenalty;
+        this.recorder.event(
+          this.progress.elapsed + STEP,
+          "mission.early_entry",
+          `Entered the fuel berth before clearance: +${missionConfig.earlyEntryPenalty}s`,
+          { penaltySeconds: missionConfig.earlyEntryPenalty },
+        );
+        this.announce(
+          `Fuel berth not clear. Return to the holding area. +${missionConfig.earlyEntryPenalty} s`,
+          this.progress.elapsed + STEP,
+        );
+      }
+      this.progress.inFuelZone = inZone;
+    }
     updateProgress(
       this.progress,
       this.state,
@@ -463,19 +520,38 @@ export class Session {
       this.acceptableContact,
     );
     if (this.progress.phase !== priorPhase) {
-      this.recorder.phase = this.progress.phase;
+      const phase = this.progress.phase;
+      this.recorder.phase = phase;
       const message =
-        this.progress.phase === "secured"
+        phase === "secured"
           ? "Secured: both lines, starboard fenders and neutral held for 3s — simulation remains live"
-          : priorPhase === "approach"
-            ? "Berth held — attach bow and stern lines"
-            : "Secured conditions lost — tend lines and regain the berth";
+          : phase === "approach"
+            ? "Fuel berth called clear — approach Berth 01"
+            : phase === "failed"
+              ? `Mission failed: ${this.progress.failure}`
+              : priorPhase === "approach"
+                ? "Berth held — attach bow and stern lines"
+                : "Secured conditions lost — tend lines and regain the berth";
       this.recorder.event(
         this.progress.elapsed,
-        `mission.${this.progress.phase === "securing" && priorPhase === "secured" ? "unsecured" : this.progress.phase}`,
+        `mission.${phase === "securing" && priorPhase === "secured" ? "unsecured" : phase}`,
         message,
-        { phase: this.progress.phase },
+        { phase },
       );
+      if (phase === "failed")
+        this.announce(
+          `Mission failed: ${this.progress.failure}. Retry to start again.`,
+        );
+      else if (phase === "securing" && priorPhase === "approach")
+        this.announce(
+          "Arrival confirmed. Deploy starboard fenders and make fast bow and stern lines.",
+        );
+      else if (phase === "secured" && !this.announcedSecured) {
+        this.announcedSecured = true;
+        this.announce(
+          "Secured alongside the fuel berth. Stand by for service.",
+        );
+      }
       this.recorder.sample(this.progress.elapsed, this.telemetry(), true);
     }
     if (headingChanged(this.state.heading, this.loggedHeading)) {
@@ -489,6 +565,73 @@ export class Session {
     }
     this.recorder.sample(this.progress.elapsed, this.telemetry());
   }
+  private announcedSecured = false;
+  private trafficEvent(type: string, message: string) {
+    const v = this.traffic!;
+    this.recorder.event(this.progress.elapsed + STEP, type, message, {
+      vessel: trafficConfig.monohull.id,
+      x: v.x,
+      y: v.y,
+      heading: v.heading,
+    });
+  }
+  // Holding: a fixed countdown while the boat's centre is inside the holding
+  // area (restarting if it leaves), then the monohull departs; the berth is
+  // called clear once the monohull is out of the fuel berth and approach lane.
+  private advanceHolding() {
+    const p = this.progress,
+      v = this.traffic!,
+      time = p.elapsed + STEP;
+    if (v.status === "moored") {
+      const inside = insideHolding(this.state);
+      if (!inside) {
+        if (p.countdown !== null) {
+          p.countdown = null;
+          this.recorder.event(
+            time,
+            "mission.countdown_reset",
+            "Left the holding area — countdown reset",
+          );
+          this.announce(
+            "You left the holding area. The countdown restarts when you are back inside.",
+            time,
+          );
+        }
+        return;
+      }
+      if (p.countdown === null) {
+        p.countdown = missionConfig.holding.countdown;
+        this.recorder.event(
+          time,
+          "mission.countdown",
+          "Holding area reached — countdown started",
+        );
+        this.announce(
+          `Holding area reached. Monohull departs in ${missionConfig.holding.countdown} seconds. Stay inside.`,
+          time,
+        );
+      }
+      p.countdown = Math.max(0, p.countdown - STEP);
+      if (p.countdown > 1e-9) return;
+      p.countdown = 0;
+      p.departedAt = time;
+      for (const event of startDeparture(v))
+        this.trafficEvent(event.type, event.message);
+      this.announce(
+        "Monohull departing the fuel berth. Keep clear and wait to be called.",
+        time,
+      );
+      return;
+    }
+    const o = vesselObstacle(v);
+    if (o && vesselInFuelZone(o)) return;
+    p.clearedAt = time;
+    p.phase = "approach";
+    this.announce(
+      "Fuel berth clear. Proceed to Berth 01, bow north, starboard side to.",
+      time,
+    );
+  }
   retry() {
     this.observe();
     this.recorder.sample(this.progress.elapsed, this.telemetry(), true);
@@ -499,7 +642,7 @@ export class Session {
     this.state = initialState();
     this.previous = initialState();
     this.controls = initialControls();
-    this.progress = initialProgress();
+    this.progress = initialProgress(this.trafficEnabled);
     this.clock.reset();
     this.paused = false;
     this.acceptableContact = true;
@@ -511,6 +654,9 @@ export class Session {
     this.observed = this.observation();
     this.loggedHeading = this.state.heading;
     this.recorder.sample(0, this.telemetry(), true);
+    this.radio = [];
+    this.announcedSecured = false;
+    this.briefing();
     // User-selected weather/handling settings deliberately persist across attempts.
   }
   interpolatedTraffic(alpha: number) {

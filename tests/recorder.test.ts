@@ -216,7 +216,7 @@ test("exports are detached snapshots; active contacts retained; CSV quotes comma
   r.contacts(0.1, [sample({ impulse: 99 })]);
   assert.equal(exported.activeContacts[0].totalNormalImpulseNs, 10);
   assert.equal(exported.activeContacts[0].status, "active");
-  assert.equal(JSON.parse(JSON.stringify(exported)).schemaVersion, 1);
+  assert.equal(JSON.parse(JSON.stringify(exported)).schemaVersion, 2);
   const csv = recordingCSV(exported);
   assert.ok(csv.includes("estimatedPeakLoadN"));
   assert.ok(csv.includes('"\'=bad,""quoted""\nline"'));

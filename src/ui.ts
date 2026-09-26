@@ -5,12 +5,13 @@ import {
   metresPerSecond,
   scenario,
   mooringConfig,
+  missionConfig,
 } from "./config";
 import { MooringUI, mooringMarkup } from "./mooring-ui";
 import { Instruments, instrumentsMarkup } from "./instruments";
 import { wrap } from "./instrument-data";
 import { LogUI, crewMarkup, logMarkup } from "./log-ui";
-import { requirements } from "./scenario";
+import { insideHolding, requirements } from "./scenario";
 import { DemoUI, demoMarkup, type DemoActions } from "./demo-ui";
 import type { PracticeLab } from "./demonstration";
 import { clamp } from "./simulation";
@@ -35,11 +36,12 @@ export class UI {
   ) {
     this.root.innerHTML = `
       <header><div class="eyebrow">LEOPARD / HANDLING LAB</div><h1>A little power. A lot of patience.</h1><p>42-foot twin-hull · Fictional training area · Mooring prototype</p></header>
-      <section class="panel objective"><div class="eyebrow" id="mission-phase">01 / APPROACH</div><h2 id="mission-title">Approach North quay.</h2><p id="mission-hint">Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines.</p>
+      <section class="panel objective"><div class="eyebrow" id="mission-phase"></div><h2 id="mission-title"></h2><p id="mission-hint"></p>
       <div class="objective-tabs" role="group" aria-label="Objective panel section"><button id="objective-tab" aria-pressed="true">Objective</button><button id="crew-tab" aria-pressed="false">Crew & lines</button></div>
       <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div></div>
       <div id="result" aria-live="polite"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div>
       <div id="crew-page" hidden>${mooringMarkup}${crewMarkup}</div></section>
+      <section class="panel radio" id="radio" role="status" aria-live="polite" hidden><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><p id="radio-message"></p></section>
       ${instrumentsMarkup}
       <aside class="tools"><div class="toolbar"><button id="camera">Camera</button><button id="pause">Pause · P</button><button id="retry">Retry · R</button><button id="show-me">Show me</button></div>
       <details class="panel"><summary>Handling & weather <span>↗</span></summary><p>Experimental coefficients, not certified training.</p>
@@ -179,68 +181,121 @@ export class UI {
         el.disabled = this.actions.readOnly();
       });
     const secured = g.securingRequirements();
+    // Stage numbers include the holding stage only when there is traffic.
+    const stage = (n: number) =>
+      String(n + (g.trafficEnabled ? 1 : 0)).padStart(2, "0");
     this.el("mission-phase").textContent =
-      p.phase === "approach"
-        ? "01 / APPROACH"
-        : p.phase === "securing"
-          ? "02 / SECURE THE BOAT"
-          : "03 / SECURED · LIVE";
+      p.phase === "holding"
+        ? "01 / HOLD"
+        : p.phase === "failed"
+          ? "MISSION FAILED"
+          : p.phase === "approach"
+            ? `${stage(1)} / APPROACH`
+            : p.phase === "securing"
+              ? `${stage(2)} / SECURE THE BOAT`
+              : `${stage(3)} / SECURED · LIVE`;
     this.el("mission-title").textContent =
-      p.phase === "approach"
-        ? "Approach North quay."
-        : p.phase === "securing"
-          ? "Make fast, without rushing."
-          : "Lines on. Stay attentive.";
+      p.phase === "holding"
+        ? "Wait for the fuel berth."
+        : p.phase === "failed"
+          ? "Hull contact without a fender."
+          : p.phase === "approach"
+            ? "Approach North quay."
+            : p.phase === "securing"
+              ? "Make fast, without rushing."
+              : "Lines on. Stay attentive.";
     this.el("mission-hint").textContent =
-      p.phase === "approach"
-        ? "Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines."
-        : p.phase === "securing"
-          ? p.positionTarget === "alongside"
-            ? "Amber area: settle alongside, not at the old centre point. Tend slack with Take in / Ease. Gentle covered fender contact is allowed."
-            : "Attach the first line to activate the amber alongside area. Use Crew & lines; either attachment order is allowed."
-          : "The boat is still live. Watch tension and wind. Release either line to practise again; fuel service comes next.";
-    this.el("requirements").innerHTML = [
-      [
-        r.position,
-        p.positionTarget === "alongside"
-          ? "Full hull inside amber alongside area"
-          : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
-      ],
-      [
-        r.heading,
-        p.positionTarget === "alongside"
-          ? "Parallel to quay · 000° ± 10°"
-          : "Heading 000° ± 8°",
-      ],
-      [r.speed, "Speed ≤ 0.35 kn · minimal rotation"],
-      [
-        r.clear,
-        p.positionTarget === "alongside"
-          ? "Clear or gentle covered fender contact"
-          : "Clear of docks and boundaries",
-      ],
-      ...(p.phase === "approach"
-        ? []
-        : [
-            [secured.fenders, "Starboard fenders deployed"],
+      p.phase === "holding"
+        ? p.departedAt === null
+          ? "The monohull is refuelling. Keep your boat's centre inside the blue holding area south-east of the quay; it leaves 5 seconds after you are in position."
+          : "The monohull is leaving. Keep clear of the fuel berth and its approach lane until the radio calls it clear."
+        : p.phase === "failed"
+          ? `${p.failure}. Fenders must cover the point of contact with another vessel. Retry (R) to start again.`
+          : p.phase === "approach"
+            ? "Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines."
+            : p.phase === "securing"
+              ? p.positionTarget === "alongside"
+                ? "Amber area: settle alongside, not at the old centre point. Tend slack with Take in / Ease. Gentle covered fender contact is allowed."
+                : "Attach the first line to activate the amber alongside area. Use Crew & lines; either attachment order is allowed."
+              : "The boat is still live. Watch tension and wind. Release either line to practise again; fuel service comes next.";
+    const checks: [boolean, string][] =
+      p.phase === "holding"
+        ? [
+            [insideHolding(s), "Boat centre inside holding area"],
             [
-              secured.lines,
-              "Both lines · slack ≤0.45 m · safe load · crew idle",
+              p.departedAt !== null,
+              `Monohull departs after ${missionConfig.holding.countdown} s in position`,
             ],
-            [secured.neutral, "Both neutral · delivered thrust settled"],
-          ]),
-    ]
+            [!p.inFuelZone, "Stay out of the fuel berth until called"],
+          ]
+        : p.phase === "failed"
+          ? []
+          : [
+              [
+                r.position,
+                p.positionTarget === "alongside"
+                  ? "Full hull inside amber alongside area"
+                  : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
+              ],
+              [
+                r.heading,
+                p.positionTarget === "alongside"
+                  ? "Parallel to quay · 000° ± 10°"
+                  : "Heading 000° ± 8°",
+              ],
+              [r.speed, "Speed ≤ 0.35 kn · minimal rotation"],
+              [
+                r.clear,
+                p.positionTarget === "alongside"
+                  ? "Clear or gentle covered fender contact"
+                  : "Clear of docks and boundaries",
+              ],
+              ...(p.phase === "approach"
+                ? []
+                : ([
+                    [secured.fenders, "Starboard fenders deployed"],
+                    [
+                      secured.lines,
+                      "Both lines · slack ≤0.45 m · safe load · crew idle",
+                    ],
+                    [
+                      secured.neutral,
+                      "Both neutral · delivered thrust settled",
+                    ],
+                  ] as [boolean, string][])),
+            ];
+    this.el("requirements").innerHTML = checks
       .map(
         ([ok, text]) =>
           `<div class="check ${ok ? "ok" : ""}"><span>${ok ? "●" : "○"}</span>${text}</div>`,
       )
       .join("");
+    const countdown = missionConfig.holding.countdown;
     this.el("dwell").style.width =
-      `${(p.dwell / (p.phase === "approach" ? scenario.target.dwell : mooringConfig.securedDwell)) * 100}%`;
+      p.phase === "holding"
+        ? `${(p.departedAt !== null ? 1 : p.countdown === null ? 0 : (countdown - p.countdown) / countdown) * 100}%`
+        : p.phase === "failed"
+          ? "0%"
+          : `${(p.dwell / (p.phase === "approach" ? scenario.target.dwell : mooringConfig.securedDwell)) * 100}%`;
     this.el("result").textContent =
-      p.phase === "secured"
-        ? `Secured · first achieved ${p.securedAt!.toFixed(1)} s · +${p.penalty} s penalties. Simulation remains live.`
-        : `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
+      p.phase === "holding"
+        ? p.departedAt !== null
+          ? "Monohull leaving — wait to be called"
+          : p.countdown === null
+            ? "Countdown starts inside the holding area"
+            : `Monohull departs in ${p.countdown.toFixed(1)} s`
+        : p.phase === "failed"
+          ? `Mission failed at ${p.elapsed.toFixed(1)} s · press Retry (R)`
+          : p.phase === "secured"
+            ? `Secured · first achieved ${p.securedAt!.toFixed(1)} s · +${p.penalty} s penalties. Simulation remains live.`
+            : `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
+    const latest = g.radio.at(-1);
+    this.el("radio").hidden = !latest;
+    if (latest) {
+      this.el("radio-time").textContent = `${latest.time.toFixed(1)} s`;
+      this.el("radio-message").textContent = latest.message;
+      this.el("radio").classList.toggle("fresh", p.elapsed - latest.time < 6);
+    }
     this.el("time").textContent = `TIME ${p.elapsed.toFixed(1)} s`;
     this.el("penalties").textContent =
       `CONTACTS ${p.collisions} / +${p.penalty} s`;

@@ -5,6 +5,7 @@ import {
   fenderConfig,
   mooringConfig,
   trafficConfig,
+  missionConfig,
 } from "./config";
 import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
 import { initialFenders, type Fenders } from "./fenders";
@@ -24,6 +25,7 @@ export class View {
   camera = new THREE.PerspectiveCamera(48, 1, 0.1, 600);
   vessel = new THREE.Group();
   monohull = new THREE.Group();
+  holdingArea = new THREE.Group();
   fenderMeshes = { port: new THREE.Group(), starboard: new THREE.Group() };
   mooringMeshes = new Map<
     string,
@@ -315,6 +317,53 @@ export class View {
     box(this.monohull, 0, 2.3, 1.6, 0.1, 0.1, 4.6, white);
     this.monohull.visible = false;
     this.scene.add(this.monohull);
+    // Holding area: translucent disc, ring and small buoys; the boat's
+    // centre must stay inside.
+    const hold = missionConfig.holding;
+    const disc = new THREE.Mesh(
+      new THREE.CircleGeometry(hold.radius, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0x8fc4ff,
+        transparent: true,
+        opacity: 0.12,
+        depthWrite: false,
+      }),
+    );
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.y = 0.015;
+    this.holdingArea.add(disc);
+    const ring = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints(
+        Array.from({ length: 64 }, (_, i) => {
+          const a = (i / 64) * Math.PI * 2;
+          return new THREE.Vector3(
+            Math.sin(a) * hold.radius,
+            0.03,
+            Math.cos(a) * hold.radius,
+          );
+        }),
+      ),
+      new THREE.LineBasicMaterial({ color: 0xa8d2ff }),
+    );
+    this.holdingArea.add(ring);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const buoy = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 10, 8),
+        mat(0xa8d2ff),
+      );
+      buoy.position.set(
+        Math.sin(a) * hold.radius,
+        0.2,
+        Math.cos(a) * hold.radius,
+      );
+      this.holdingArea.add(buoy);
+    }
+    this.holdingArea.position.set(hold.x, 0, -hold.y);
+    this.holdingArea.visible = false;
+    this.scene.add(this.holdingArea);
+    // Re-parented so the label hides with the area.
+    this.holdingArea.add(this.label("HOLDING AREA", 0, 2, 0, 7));
     this.resize();
     window.addEventListener("resize", () => this.resize());
   }
@@ -338,6 +387,7 @@ export class View {
     sprite.position.set(x, y, z);
     sprite.scale.set(width, (width * 96) / 1024, 1);
     this.scene.add(sprite);
+    return sprite;
   }
   resize() {
     this.renderer.setSize(innerWidth, innerHeight);
@@ -352,7 +402,9 @@ export class View {
     mooring: Mooring = initialMooring(),
     positionTarget: PositionTarget = "approach",
     traffic: { x: number; y: number; heading: number } | null = null,
+    holding = false,
   ) {
+    this.holdingArea.visible = holding;
     this.monohull.visible = !!traffic;
     if (traffic) {
       this.monohull.position.set(

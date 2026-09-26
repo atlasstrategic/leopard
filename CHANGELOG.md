@@ -7,6 +7,7 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - Added an MIT license for the original repository material and clarified third-party trademark/licensing boundaries. Planned mission stages are listed in the release limitations below.
 - The **Wind strength** slider under Handling & weather now uses knots (0–24 kn, 0.5 kn steps), matching the wind and SOG instruments. The default is unchanged at 3.9 kn (2 m/s). Simulation, recordings and exports still use SI m/s.
 - Added harbour traffic: a scripted monohull starts at the fuel berth, departs after 5 s, stops for your boat if you block its path and leaves the harbour. Contacts with it are measured relative to its motion and penalised like other obstacles. Show me runs without traffic. Scenario configuration is now version **4**. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
+- The fuel mission now starts with **holding and clearance**: harbour-radio announcements, a holding area with a 5 s countdown that resets if you leave, the monohull departing on cue, and the berth called clear before the approach. Entering the fuel berth early costs +10 s per entry. Touching the monohull where no fender covers the hull fails the mission; covered contact is a normal penalty. Scenario version **5**, export schema version **2**. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 
 ## [0.1.0] — 2026-09-25
 
