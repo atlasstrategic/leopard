@@ -98,7 +98,7 @@ Two clean **Raymarine-inspired** screens replace the numeric telemetry strip; th
 - **Wind:** click **APPARENT / TRUE**. AWA/TWA is the wind's **from** angle relative to the bow (0° ahead, 180° astern; P/S identifies the side). AWS/TWS is in knots. Red/green sectors indicate port/starboard. **FROM / TRUE** is the selected wind's compass bearing referenced to true north, not magnetic north.
 - Apparent wind is air velocity minus boat velocity. True wind is air velocity minus water current (the water-relative/STW convention); with zero current it equals earth-referenced wind. At less than 0.05 m/s, direction/needle are blank rather than inventing a calm-wind direction.
 
-Weather tuning now sets **Wind from (° true)**; its strength remains in SI m/s. Internally the physics still stores air travel direction, so the UI converts by 180° without changing the forces. Default wind is **from west (270° T)**. Instrument mode survives retry alongside the camera/settings. No sensor noise, magnetic variation, instrument damping, depth readings or autopilot controls are simulated yet.
+Weather tuning now sets **Wind from (° true)** and **Wind strength in knots** (0–24 kn; default 3.9 kn = 2 m/s). The simulation and exports still store wind in SI m/s. Internally the physics still stores air travel direction, so the UI converts by 180° without changing the forces. Default wind is **from west (270° T)**. Instrument mode survives retry alongside the camera/settings. No sensor noise, magnetic variation, instrument damping, depth readings or autopilot controls are simulated yet.
 
 ## Architecture
 

@@ -1,4 +1,11 @@
-import { boat, degrees, scenario, mooringConfig } from "./config";
+import {
+  boat,
+  degrees,
+  knots,
+  metresPerSecond,
+  scenario,
+  mooringConfig,
+} from "./config";
 import { MooringUI, mooringMarkup } from "./mooring-ui";
 import { Instruments, instrumentsMarkup } from "./instruments";
 import { wrap } from "./instrument-data";
@@ -36,7 +43,7 @@ export class UI {
       ${instrumentsMarkup}
       <aside class="tools"><div class="toolbar"><button id="camera">Camera</button><button id="pause">Pause · P</button><button id="retry">Retry · R</button><button id="show-me">Show me</button></div>
       <details class="panel"><summary>Handling & weather <span>↗</span></summary><p>Experimental coefficients, not certified training.</p>
-      <label>Wind strength <output id="windSpeedValue"></output><input id="windSpeed" type="range" min="0" max="12" step="0.5"></label>
+      <label>Wind strength <output id="windSpeedValue"></output><input id="windSpeed" type="range" min="0" max="24" step="0.5"></label>
       <label>Wind from (° true) <output id="windDirectionValue"></output><input id="windDirection" type="range" min="0" max="360" step="5"></label>
       <label>Engine thrust <output id="maxThrustValue"></output><input id="maxThrust" type="range" min="1500" max="5000" step="100"></label>
       <label>Engine response <output id="engineLagValue"></output><input id="engineLag" type="range" min="0.3" max="3" step="0.1"></label>
@@ -113,7 +120,8 @@ export class UI {
       (this.el(id) as HTMLInputElement).oninput = (e) => {
         if (actions.readOnly()) return;
         const v = Number((e.target as HTMLInputElement).value);
-        if (id === "windSpeed") game.weather.speed = v;
+        // Slider is in knots; simulation stays in m/s.
+        if (id === "windSpeed") game.weather.speed = metresPerSecond(v);
         else if (id === "windDirection")
           game.weather.direction = wrap((v * Math.PI) / 180 + Math.PI);
         else
@@ -139,7 +147,10 @@ export class UI {
     const g = this.game;
     g.observe();
     const values: Record<string, [number, string]> = {
-      windSpeed: [g.weather.speed, `${g.weather.speed.toFixed(1)} m/s`],
+      windSpeed: [
+        knots(g.weather.speed),
+        `${knots(g.weather.speed).toFixed(1)} kn`,
+      ],
       windDirection: [
         degrees(wrap(g.weather.direction + Math.PI)),
         `${degrees(wrap(g.weather.direction + Math.PI)).toFixed(0)}° T`,

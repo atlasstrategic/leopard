@@ -182,5 +182,6 @@ export const recorderConfig = {
 };
 export const STEP = 1 / 60;
 export const knots = (v: number) => v * 1.943844;
+export const metresPerSecond = (kn: number) => kn / 1.943844;
 export const degrees = (v: number) => (v * 180) / Math.PI;
 export const angle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));

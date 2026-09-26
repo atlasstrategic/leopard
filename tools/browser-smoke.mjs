@@ -86,7 +86,7 @@ await page.$eval("#windSpeed", (e) => {
   e.dispatchEvent(new Event("input", { bubbles: true }));
 });
 await delay(150);
-assert.match(await text("windSpeedValue"), /6.0 m\/s/);
+assert.match(await text("windSpeedValue"), /6.0 kn/);
 await page.$eval("#windDirection", (e) => {
   e.value = "45";
   e.dispatchEvent(new Event("input", { bubbles: true }));
@@ -94,7 +94,7 @@ await page.$eval("#windDirection", (e) => {
 await page.click("summary");
 await page.click("#wind-true");
 await delay(150);
-assert.match(await text("wind"), /11.7 kn/);
+assert.match(await text("wind"), /6.0 kn/);
 assert.equal(await text("wind-from"), "045° T");
 assert.equal(await text("wind-speed-label"), "TWS");
 assert.equal(
