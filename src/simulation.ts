@@ -2,6 +2,7 @@ import { boat, scenario, type Tuning, type Box } from "./config";
 import { resolveContacts } from "./contacts";
 import { initialFenders, type Fenders } from "./fenders";
 import { initialMooring, mooringForces, type Mooring } from "./mooring";
+import type { VesselObstacle } from "./traffic";
 export type State = {
   x: number;
   y: number;
@@ -54,6 +55,7 @@ export function step(
   obstacles: Box[] = scenario.obstacles,
   fenders: Fenders = initialFenders(),
   mooring: Mooring = initialMooring(),
+  vessels: VesselObstacle[] = [],
 ) {
   const sn = Math.sin(s.heading),
     cs = Math.cos(s.heading);
@@ -114,5 +116,5 @@ export function step(
   s.heading += s.yaw * dt;
   s.contact = false;
   s.impact = 0;
-  return resolveContacts(s, p, obstacles, fenders, dt);
+  return resolveContacts(s, p, obstacles, fenders, dt, vessels);
 }

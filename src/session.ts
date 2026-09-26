@@ -5,6 +5,7 @@ import {
   fenderConfig,
   recorderConfig,
   mooringConfig,
+  trafficConfig,
   type Tuning,
 } from "./config";
 import { initialFenders, type Side } from "./fenders";
@@ -31,6 +32,13 @@ import {
   type State,
   type Weather,
 } from "./simulation";
+import {
+  advanceVessel,
+  initialMonohull,
+  startDeparture,
+  vesselObstacle,
+  type Vessel,
+} from "./traffic";
 import {
   initialProgress,
   updateProgress,
@@ -66,12 +74,22 @@ export class Session {
   acceptableContact = true;
   fenders = initialFenders();
   mooring = initialMooring();
+  // Harbour traffic; null in the docking-only practice harbour (Show me).
+  traffic: Vessel | null;
+  previousTraffic: Vessel | null;
+  readonly trafficEnabled: boolean;
   recorder = this.newRecorder(1);
   history: Recording[] = [];
   private observed: Record<string, string> = {};
   private loggedHeading = this.state.heading;
-  constructor(weather: Weather = initialWeather()) {
+  constructor(
+    weather: Weather = initialWeather(),
+    options: { traffic?: boolean } = {},
+  ) {
     this.weather = { ...weather };
+    this.trafficEnabled = options.traffic ?? true;
+    this.traffic = this.trafficEnabled ? initialMonohull() : null;
+    this.previousTraffic = this.traffic && { ...this.traffic };
     this.recorder = this.newRecorder(1);
     this.observed = this.observation();
     this.recorder.sample(0, this.telemetry(), true);
@@ -86,8 +104,9 @@ export class Session {
         fenderConfig,
         recorderConfig,
         mooringConfig,
+        trafficConfig,
         fixedStep: STEP,
-        build: "milestone-C-alongside-tending-demo",
+        build: "milestone-C-traffic",
       }),
     );
   }
@@ -127,6 +146,7 @@ export class Session {
       weather: { ...this.weather },
       fenders: this.fenders,
       mooring: this.mooring,
+      traffic: this.traffic && { ...this.traffic },
       acceptableContact: this.acceptableContact,
       course: Math.hypot(s.vx, s.vy) >= 0.15 ? Math.atan2(s.vx, s.vy) : null,
       berthBearing:
@@ -339,8 +359,31 @@ export class Session {
   }
   tick() {
     this.previous = { ...this.state };
+    this.previousTraffic = this.traffic && { ...this.traffic };
     this.observe();
     if (this.paused) return;
+    if (this.traffic) {
+      const events =
+        this.progress.elapsed + 1e-9 >= trafficConfig.monohull.departAt
+          ? startDeparture(this.traffic)
+          : [];
+      events.push(
+        ...advanceVessel(this.traffic, this.state, this.tuning, STEP),
+      );
+      for (const event of events)
+        this.recorder.event(
+          this.progress.elapsed + STEP,
+          event.type,
+          event.message,
+          {
+            vessel: trafficConfig.monohull.id,
+            x: this.traffic.x,
+            y: this.traffic.y,
+            heading: this.traffic.heading,
+          },
+        );
+    }
+    const vessel = this.traffic && vesselObstacle(this.traffic);
     for (const side of ["port", "starboard"] as const) {
       const f = this.fenders[side];
       if (f.remaining > 0) {
@@ -380,6 +423,7 @@ export class Session {
       scenario.obstacles,
       this.fenders,
       this.mooring,
+      vessel ? [vessel] : [],
     );
     this.acceptableContact = contactAcceptable(this.state, samples);
     const impacts = this.recorder.contacts(
@@ -461,11 +505,24 @@ export class Session {
     this.acceptableContact = true;
     this.fenders = initialFenders();
     this.mooring = initialMooring();
+    this.traffic = this.trafficEnabled ? initialMonohull() : null;
+    this.previousTraffic = this.traffic && { ...this.traffic };
     this.recorder = this.newRecorder(nextAttempt);
     this.observed = this.observation();
     this.loggedHeading = this.state.heading;
     this.recorder.sample(0, this.telemetry(), true);
     // User-selected weather/handling settings deliberately persist across attempts.
+  }
+  interpolatedTraffic(alpha: number) {
+    const v = this.traffic,
+      prior = this.previousTraffic;
+    if (!v || v.status === "gone") return null;
+    if (!prior) return { x: v.x, y: v.y, heading: v.heading };
+    return {
+      x: prior.x + (v.x - prior.x) * alpha,
+      y: prior.y + (v.y - prior.y) * alpha,
+      heading: prior.heading + (v.heading - prior.heading) * alpha,
+    };
   }
   interpolated(alpha: number): State {
     const s = { ...this.state };

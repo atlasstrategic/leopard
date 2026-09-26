@@ -8,11 +8,14 @@ Milestone-B local Three.js twin-engine handling, wind/handling tuning and scenar
 
 **Show me:** separate calm-water default-boat run with explanatory steps for fenders, momentum/braking, arrival hold, first-line target switch, paired gradual tending and settling. It uses ordinary session physics, crew commands and objectives; no pose injection. Pause/Repeat/Take over/Return to practice; the original attempt remains preserved, paused. This shows one suitable bow-first method for these conditions, not universal seamanship.
 
+**Harbour traffic (issue #1, step 1):** a scripted 12 m monohull starts at the fuel berth and departs after 5 s (temporary trigger until the holding area arrives), backing off the quay and leaving to the south-west. It stops for the player's boat instead of pushing through. The contact solver now supports moving capsule obstacles using relative velocity; fixed-box contacts are numerically unchanged. Show me runs without traffic.
+
 ## Verified on this machine
 
-- `npm test`: **58 passed** including along-quay screenshot regression, real contact samples, line-tending safety/limits, demo completion and frame-rate equivalence (30/60/144 Hz), preservation, takeover and fail-stop.
+- `npm test`: **63 passed**, including monohull departure/route clearance, moving-hull relative contact, penalties, yielding without contact, retry and 30/60/144 Hz traffic equivalence, plus the existing along-quay screenshot regression, real contact samples, line-tending safety/limits, demo completion and frame-rate equivalence (30/60/144 Hz), preservation, takeover and fail-stop.
 - `npm run typecheck`, `npm run build`, `git diff --check`: passed. Vite reports an informational >500 kB uncompressed chunk warning (~153 kB gzipped JS).
 - Linux Chrome 150 WebGL 2 browser **UI-only** “Show me”: completed normal secured state at **81.0 simulation seconds**, **zero impact penalties**; paused/resumed, read-only lesson controls, takeover and Ease, JSON export, restored the saved practice display, repeated cleanly. Checked 1440×1000 and 1100×760; no captured console/page errors. Evidence: `artifacts/show-me-tending.png`, `show-me-complete.png`, `show-me-compact.png`, `show-me-recording.json`; script `tools/browser-show-me.mjs`. Browser check was run before the small terminal-stage guard added afterward; that guard is covered by the final automated run.
+- Chrome (Playwright) visual check of the monohull departing at 7.8 s and turning out at 50 s, no console errors besides a missing favicon: `artifacts/monohull-departing.png`, `artifacts/monohull-turning-out.png`.
 - Earlier Chrome smoke/contact/fender/mooring checks: UI controls/cameras, deliberate unprotected bow impact and local coverage, exports/history, and original approach/attach/secure/release at **58.3 s**, zero penalties. These earlier results predate the alongside rule and should **not** be interpreted as a fresh browser check of manual alongside securing. Files and scripts in `artifacts/` and `tools/`.
 
 ## Hosting

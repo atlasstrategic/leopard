@@ -32,7 +32,7 @@ export type Box = {
   kind: "dock" | "boundary";
 };
 export const scenario = {
-  version: 3,
+  version: 4,
   name: "North quay · Berth 01",
   area: "Fictional training area",
   start: { x: 0, y: -22, heading: 0 },
@@ -179,6 +179,36 @@ export const recorderConfig = {
   separationSeconds: 0.5,
   impactThreshold: 0.08,
   history: 3,
+};
+// Scripted, kinematic harbour traffic. It follows its legs, never reacts to
+// impacts itself, and stops rather than pushing through the player.
+export const trafficConfig = {
+  monohull: {
+    id: "monohull",
+    name: "Monohull",
+    length: 12,
+    beam: 3.9,
+    // Alongside the east quay at the fuel berth, bow north.
+    start: { x: 4.5, y: 16, heading: 0 },
+    // Interim trigger until the holding-area countdown replaces it (issue #1).
+    departAt: 5,
+    cruiseSpeed: 1,
+    accel: 0.15,
+    brake: 0.4,
+    turnRadius: 8,
+    pivotYaw: 0.03,
+    maxYaw: 0.12,
+    arriveRadius: 3,
+    lookAhead: 6,
+    lateralClearance: 1,
+    legs: [
+      // Back off the quay; the bow swings in as the stern opens, as with a bow spring.
+      { gear: "astern", x: 3.2, y: 2, stop: true },
+      { gear: "ahead", x: -12, y: 6, stop: false },
+      { gear: "ahead", x: -30, y: -8, stop: false },
+      { gear: "ahead", x: -30, y: -46, stop: false },
+    ] as { gear: "ahead" | "astern"; x: number; y: number; stop: boolean }[],
+  },
 };
 export const STEP = 1 / 60;
 export const knots = (v: number) => v * 1.943844;

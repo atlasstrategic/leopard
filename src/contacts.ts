@@ -1,6 +1,7 @@
 import { fenderConfig, type Tuning, type Box, STEP } from "./config";
 import type { State } from "./simulation";
 import { coveredFender, initialFenders, type Fenders } from "./fenders";
+import type { VesselObstacle } from "./traffic";
 export type ContactSample = {
   obstacleId: string;
   obstacleName: string;
@@ -34,6 +35,7 @@ export function resolveContacts(
   boxes: Box[],
   fenders: Fenders = initialFenders(),
   dt = STEP,
+  vessels: VesselObstacle[] = [],
 ): ContactSample[] {
   const key = `${p.length}/${p.beam}/${p.hullRadius}`;
   if (cached?.key !== key) cached = { key, points: hullPoints(p) };
@@ -58,27 +60,69 @@ export function resolveContacts(
         ry = -point.x * sn + point.y * cs;
       const x = s.x + rx,
         y = s.y + ry;
-      for (const [boxIndex, b] of boxes.entries()) {
-        const left = b.x - b.width / 2,
-          right = b.x + b.width / 2;
-        const bottom = b.y - b.length / 2,
-          top = b.y + b.length / 2;
-        const qx = Math.max(left, Math.min(right, x)),
-          qy = Math.max(bottom, Math.min(top, y));
-        let nx = x - qx,
+      for (let index = 0; index < boxes.length + vessels.length; index++) {
+        // Surface normal (obstacle → hull point), separation and the
+        // obstacle's own velocity at this point (zero for fixed boxes).
+        let nx: number,
+          ny: number,
+          depth: number,
+          ovx = 0,
+          ovy = 0,
+          id: string,
+          name: string;
+        if (index < boxes.length) {
+          const b = boxes[index];
+          id = b.id ?? `obstacle-${index}`;
+          name = b.name ?? b.kind;
+          const left = b.x - b.width / 2,
+            right = b.x + b.width / 2;
+          const bottom = b.y - b.length / 2,
+            top = b.y + b.length / 2;
+          const qx = Math.max(left, Math.min(right, x)),
+            qy = Math.max(bottom, Math.min(top, y));
+          nx = x - qx;
           ny = y - qy;
-        const dist = Math.hypot(nx, ny);
-        if (dist >= p.hullRadius + fenderConfig.thickness) continue;
-        let depth = p.hullRadius - dist;
-        if (dist > 1e-8) {
-          nx /= dist;
-          ny /= dist;
+          const dist = Math.hypot(nx, ny);
+          if (dist >= p.hullRadius + fenderConfig.thickness) continue;
+          depth = p.hullRadius - dist;
+          if (dist > 1e-8) {
+            nx /= dist;
+            ny /= dist;
+          } else {
+            const edges = [x - left, right - x, y - bottom, top - y];
+            const i = edges.indexOf(Math.min(...edges));
+            nx = i === 0 ? -1 : i === 1 ? 1 : 0;
+            ny = i === 2 ? -1 : i === 3 ? 1 : 0;
+            depth = p.hullRadius + edges[i];
+          }
         } else {
-          const edges = [x - left, right - x, y - bottom, top - y];
-          const i = edges.indexOf(Math.min(...edges));
-          nx = i === 0 ? -1 : i === 1 ? 1 : 0;
-          ny = i === 2 ? -1 : i === 3 ? 1 : 0;
-          depth = p.hullRadius + edges[i];
+          const v = vessels[index - boxes.length];
+          id = v.id;
+          name = v.name;
+          const ax = Math.sin(v.heading),
+            ay = Math.cos(v.heading);
+          const ox = x - v.x,
+            oy = y - v.y;
+          const along = Math.max(
+            -v.halfLength,
+            Math.min(v.halfLength, ox * ax + oy * ay),
+          );
+          nx = ox - ax * along;
+          ny = oy - ay * along;
+          const dist = Math.hypot(nx, ny);
+          if (dist - v.radius >= p.hullRadius + fenderConfig.thickness)
+            continue;
+          depth = p.hullRadius + v.radius - dist;
+          if (dist > 1e-8) {
+            nx /= dist;
+            ny /= dist;
+          } else {
+            nx = ay;
+            ny = -ax;
+          }
+          // Kinematic point velocity, same clockwise yaw convention as the boat.
+          ovx = v.vx + v.yaw * oy;
+          ovy = v.vy - v.yaw * ox;
         }
         const cover = coveredFender(
           point.x,
@@ -91,14 +135,17 @@ export function resolveContacts(
         s.contact = true;
         const arm = ry * nx - rx * ny,
           effective = 1 / p.mass + (arm * arm) / p.inertia;
-        const vn = (s.vx + s.yaw * ry) * nx + (s.vy - s.yaw * rx) * ny;
+        const obstacleVn = ovx * nx + ovy * ny;
+        const vn =
+          (s.vx + s.yaw * ry) * nx + (s.vy - s.yaw * rx) * ny - obstacleVn;
         const incomingRx = point.x * incoming.cs + point.y * incoming.sn;
         const incomingRy = -point.x * incoming.sn + point.y * incoming.cs;
         const speed = Math.max(
           0,
           -(
             (incoming.vx + incoming.yaw * incomingRy) * nx +
-            (incoming.vy - incoming.yaw * incomingRx) * ny
+            (incoming.vy - incoming.yaw * incomingRx) * ny -
+            obstacleVn
           ),
         );
         s.impact = Math.max(s.impact, speed);
@@ -138,7 +185,10 @@ export function resolveContacts(
           const tx = -ny,
             ty = nx,
             ta = ry * tx - rx * ty;
-          const vt = (s.vx + s.yaw * ry) * tx + (s.vy - s.yaw * rx) * ty;
+          const vt =
+            (s.vx + s.yaw * ry) * tx +
+            (s.vy - s.yaw * rx) * ty -
+            (ovx * tx + ovy * ty);
           const friction = Math.max(
             -impulse * 0.18,
             Math.min(
@@ -151,8 +201,8 @@ export function resolveContacts(
           s.yaw += (friction * ta) / p.inertia;
         }
         samples.push({
-          obstacleId: b.id ?? `obstacle-${boxIndex}`,
-          obstacleName: b.name ?? b.kind,
+          obstacleId: id,
+          obstacleName: name,
           side: point.x < 0 ? "port" : "starboard",
           worldX: x - nx * p.hullRadius,
           worldY: y - ny * p.hullRadius,

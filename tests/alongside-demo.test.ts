@@ -12,7 +12,10 @@ import { lineIds, lineGeometry } from "../src/mooring";
 import { advanceTending } from "../src/tending";
 import { resolveContacts, type ContactSample } from "../src/contacts";
 function alongside(x = 2.5, y = 16) {
-  const g = new Session({ speed: 0, direction: 0, currentX: 0, currentY: 0 });
+  const g = new Session(
+    { speed: 0, direction: 0, currentX: 0, currentY: 0 },
+    { traffic: false },
+  );
   Object.assign(g.state, { x, y });
   g.progress.phase = "securing";
   g.fenders.starboard.deployed = g.fenders.starboard.target = true;

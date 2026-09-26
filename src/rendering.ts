@@ -1,5 +1,11 @@
 import * as THREE from "three";
-import { boat, scenario, fenderConfig, mooringConfig } from "./config";
+import {
+  boat,
+  scenario,
+  fenderConfig,
+  mooringConfig,
+  trafficConfig,
+} from "./config";
 import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
 import { initialFenders, type Fenders } from "./fenders";
 import type { State } from "./simulation";
@@ -17,6 +23,7 @@ export class View {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(48, 1, 0.1, 600);
   vessel = new THREE.Group();
+  monohull = new THREE.Group();
   fenderMeshes = { port: new THREE.Group(), starboard: new THREE.Group() };
   mooringMeshes = new Map<
     string,
@@ -280,6 +287,34 @@ export class View {
       this.vessel.add(group);
     }
     this.scene.add(this.vessel);
+    // Monohull: capsule waterline matches its contact footprint.
+    const mono = trafficConfig.monohull,
+      radius = mono.beam / 2;
+    const monoHull = new THREE.Mesh(
+      new THREE.CapsuleGeometry(radius, mono.length - mono.beam, 8, 16),
+      mat(0x2b4f73),
+    );
+    monoHull.rotation.x = Math.PI / 2;
+    monoHull.scale.z = 0.42;
+    monoHull.position.y = 0.45;
+    monoHull.castShadow = true;
+    this.monohull.add(monoHull);
+    box(
+      this.monohull,
+      0,
+      1.2,
+      0.4,
+      mono.beam - 0.7,
+      0.14,
+      mono.length - 3.4,
+      white,
+    );
+    box(this.monohull, 0, 1.65, 0.6, 2.2, 0.75, 3.6, white);
+    box(this.monohull, 0, 1.7, -0.6, 2.0, 0.5, 0.9, glass);
+    box(this.monohull, 0, 8.4, -0.9, 0.14, 14.2, 0.14, white);
+    box(this.monohull, 0, 2.3, 1.6, 0.1, 0.1, 4.6, white);
+    this.monohull.visible = false;
+    this.scene.add(this.monohull);
     this.resize();
     window.addEventListener("resize", () => this.resize());
   }
@@ -316,7 +351,17 @@ export class View {
     fenders: Fenders = initialFenders(),
     mooring: Mooring = initialMooring(),
     positionTarget: PositionTarget = "approach",
+    traffic: { x: number; y: number; heading: number } | null = null,
   ) {
+    this.monohull.visible = !!traffic;
+    if (traffic) {
+      this.monohull.position.set(
+        traffic.x,
+        Math.sin(time * 1.1 + 1) * 0.03,
+        -traffic.y,
+      );
+      this.monohull.rotation.y = -traffic.heading;
+    }
     const target = positioningTarget(positionTarget);
     this.targetGroup.position.set(target.x, 0, -target.y);
     this.targetGroup.scale.set(

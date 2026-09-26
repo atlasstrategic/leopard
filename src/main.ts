@@ -112,6 +112,7 @@ if (!hasWebGL2()) {
         game.fenders,
         game.mooring,
         game.progress.positionTarget,
+        game.interpolatedTraffic(alpha),
       );
       uiTime += dt;
       if (uiTime > 1 / 15) {

@@ -47,6 +47,12 @@ Levers go from reverse through neutral to forward. On-screen sliders and −REV/
 
 Blur/tab hiding **pauses and clears held keys**, without silently moving persistent levers or the rudder. Explicit resume is required. Retry clears position, velocity, rotation, actual/commanded engines, wheel, interpolation, timer, dwell, success, contact history and penalties; it deliberately **keeps chosen weather/tuning and camera** for repeatable practice. Restore tuning defaults is separate.
 
+## Harbour traffic (milestone C, in progress)
+
+A 12 m **monohull** lies alongside the east quay at the fuel berth when the attempt starts. After **5 simulation seconds** it departs: it backs off the quay, turns and motors out to the south-west. This fixed start is temporary; the holding-area countdown replaces it next ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)).
+
+The monohull is scripted and kinematic: it follows its route with limited acceleration and turn rate, and does not react to impacts. If your boat is in the corridor ahead of it, it **stops and waits** rather than pushing through, then carries on once you clear it. Its collision shape is a capsule that matches the visible hull. Contact speed is measured **relative to the moving hull**, so a boat that is struck while stationary still logs an impact. Contacts with it are penalised like any other obstacle (+5 s above 0.08 m/s) and appear in the voyage log. Departure, yielding and leaving the harbour are logged as `traffic.*` events, and its state is in 1 Hz telemetry and exports. Retry puts it back at the fuel berth. **Show me** uses a harbour without traffic.
+
 ## Guided “Show me” example
 
 Click **Show me** (also available on the paused overlay) to start a separate **calm-water, default-boat** demonstration. Your current practice attempt, controls, weather/tuning, lines, clock and log remain in memory and are preserved **paused** when you return. The guide deploys starboard fenders, approaches and brakes with the regular twin-engine controls, holds the mint arrival target, attaches bow then stern, tends both lines in bounded steps, and waits for the ordinary amber alongside securing checks. Explanatory steps and highlighted controls show why each action matters. It does **not** insert a pose, award a shortcut or copy results into your original attempt. This is **one suitable example in stated conditions**, not a universal attachment order or certified skipper procedure.

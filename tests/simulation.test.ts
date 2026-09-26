@@ -183,7 +183,7 @@ test("dock contact withstands sustained forward thrust without penetration or en
   assert.ok(Math.abs(s.yaw) < 0.01);
 });
 test("calm approach reaches live securing phase using only 20% lever steps, no pose snapping", () => {
-  const g = new Session();
+  const g = new Session(undefined, { traffic: false });
   g.weather.speed = 0;
   for (let i = 0; i < 7200 && g.progress.phase === "approach"; i++) {
     const desiredSpeed = Math.max(
@@ -204,7 +204,7 @@ test("calm approach reaches live securing phase using only 20% lever steps, no p
   assert.ok(Math.abs(g.state.y - scenario.target.y) < 1.2);
 });
 test("session collision penalties match recorded contact episodes, not frames", () => {
-  const g = new Session();
+  const g = new Session(undefined, { traffic: false });
   g.weather.speed = 0;
   g.state.y = 24;
   g.state.vy = 0.5;
