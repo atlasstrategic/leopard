@@ -53,6 +53,7 @@ Write titles, hints and radio calls in terms of these:
 | `scene.zones` | Named `circle` or `rect` areas that steps and rules refer to, with an optional floating `label` |
 | `scene.gates` | Harbour entrances: centre, `width` between the two lights and the `outward` direction when leaving (`north`, `east`, `south`, `west`). The lights are placed at the ends; the buoyage decides which is red |
 | `scene.labels` | Floating signs `{ text, x, y, height, width }` |
+| `scene.moored` | Optional boats moored in the scene, e.g. the neighbours at a berth (see below) |
 | `conditions` | `wind { speed, from }` and `current { x, y }` |
 | `traffic` | At most **one** scripted vessel (see below), or none |
 | `mission` | The berth used, the steps, the rules, completion texts and optional scoring |
@@ -64,6 +65,10 @@ Write titles, hints and radio calls in terms of these:
 - `alongside` is the envelope the boat must settle in once the first line is on. Put it against the quay face, with the **starboard side to the quay**: a boat heading north lies against a quay to its east; heading south, against a quay to its west.
 - The quay **face** is worked out from where the alongside envelope sits relative to its quay. Lines attach only from that face, and fender posts are drawn along it.
 - Place the bow and stern bollards within 6.5 m of the fairleads when the boat lies about 1 m off the face: roughly level with the boat's bow and stern, 0.5–1 m in from the quay edge. The validator checks this.
+
+### Moored boats
+
+`{ id, name, kind, x, y, heading, length, beam }`, where `kind` is `monohull` (a modern cruising monohull after the Oceanis 38.1, typically 11.5 × 3.99 m) or `catamaran` (after the Leopard 42, 12.67 × 7.04 m). Each is drawn, and collides, with its deck-edge outline scaled to `length` and `beam`; the catamaran's is closed straight across the bows. Moored boats never move. Touching one where no fender covers the hull fails the mission, as with a `protectedContact` vessel, so the player needs fenders out on the side that meets it. Their ids share one list with structures and traffic (contacts name what was touched), and their `name` is used mid-sentence in the failure message ("Contact with the moored catamaran on the starboard hull …"). Use them instead of a fake structure or a traffic vessel that is never released.
 
 ### Traffic
 
@@ -96,7 +101,7 @@ Checklist items, done in order (each has a `label`; all but `enginesOn` have a `
 - `confirm`: a single button.
 - `enginesOn`: always allowed once the engines are off (safety); completes the checklist when everything else is done.
 
-`mission.rules` apply across steps: `keepOut` (a `penalty` and `radio` call for each entry into a zone until the step named in `until` completes; `check` is the objective line shown meanwhile) and `protectedContact` (contact with the vessel where no fender covers the hull fails the mission).
+`mission.rules` apply across steps: `keepOut` (a `penalty` and `radio` call for each entry into a zone until the step named in `until` completes; `check` is the objective line shown meanwhile) and `protectedContact` (contact with the traffic vessel where no fender covers the hull fails the mission; moored boats are always protected and need no rule).
 
 Texts may use `{placeholders}`: `{penalty}` in penalty calls, `{time}` and `{penalty}` in the completion call, `{total} {unit}` and `{amount} {unit}` in timed items. The schema's descriptions list which apply where.
 
@@ -194,14 +199,15 @@ Stage "west-quay" is invalid:
 - **Schema:** fields, types, units and allowed values, with the path of each problem.
 - **References:** bollards on quays, berths' bollards on their quay, zones, gates and vessels named by steps and rules, `secureAlongside` directly after `arriveAtBerth`, a `requiresSecured` checklist after securing, one correct option per choice, rectangle zones for `waitForClear`, unique ids.
 - **Geometry** (`stage:validate` only):
-  - the start pose clear of structures;
-  - the boat fitting its approach target;
-  - the alongside pose (1 m off the face) inside the envelope, starboard side to the quay, clear of other structures, with both lines attachable (face, side, reach and route);
+  - moored boats clear of structures and of each other;
+  - the start pose clear of structures and moored boats;
+  - the boat fitting its approach target, clear of structures and moored boats;
+  - the alongside pose (1 m off the face) inside the envelope, starboard side to the quay, clear of other structures and moored boats, with both lines attachable (face, side, reach and route);
   - hold zones clear of structures;
-  - reachability from the start for a boat 7 m wide on a 1 m grid: the berth, zones and both sides of every gate (a gap narrower than the boat fails);
-  - the traffic route simulated for 600 s (it must finish and stay clear of structures; within 0.3 m is a warning).
+  - reachability from the start for a boat 7 m wide on a 1 m grid, round structures and moored boats: the berth, zones and both sides of every gate (a gap narrower than the boat fails);
+  - the traffic route simulated for 600 s (it must finish and stay clear of structures and moored boats; within 0.3 m is a warning). The message names what it hit or passed closest to, the leg and the time.
 
-`stage:test` plays each step with the real engine: it deploys starboard fenders, parks in hold zones, waits (up to 300 s) for traffic to clear, holds the approach target, attaches lines and secures, works through the checklist, and motors out through the gate on the correct side. It moves the boat between steps rather than steering there, and lets traffic leave the harbour before moving onto the berth or to the exit. So it proves that **each step can be completed**; the reachability check covers getting between them, and a human playtest is still the judge of whether the stage is fun and fair.
+`stage:test` plays each step with the real engine: it deploys starboard fenders, parks in hold zones, waits (up to 300 s) for traffic to clear, holds the approach target, attaches lines and secures, works through the checklist, and motors out through the gate on the correct side. It moves the boat between steps rather than steering there, and lets traffic under way leave the harbour before moving onto the berth or to the exit (traffic that was never released stays where it is). So it proves that **each step can be completed**; the reachability check covers getting between them, and a human playtest is still the judge of whether the stage is fun and fair.
 
 ## Limits
 

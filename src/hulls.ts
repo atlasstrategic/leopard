@@ -28,6 +28,41 @@ export function monohullOutline(length: number, beam: number): Outline {
     ...side.reverse().map(([x, y]): [number, number] => [-x, y]),
   ];
 }
+// Leopard 42 hulls, from the transom (f = 0) to the stem (f = 1): half width
+// as a fraction of the hull radius, and sheer in metres above the waterline.
+export const catamaranForm = [
+  { f: 0, w: 0.72, sheer: 1.28 },
+  { f: 0.1, w: 0.92, sheer: 1.32 },
+  { f: 0.3, w: 1, sheer: 1.36 },
+  { f: 0.7, w: 1, sheer: 1.42 },
+  { f: 0.86, w: 0.76, sheer: 1.5 },
+  { f: 0.95, w: 0.4, sheer: 1.58 },
+  { f: 1, w: 0.03, sheer: 1.62 },
+];
+// Hull half width over beam of the Leopard 42 (0.72 m of 7.04 m), for a
+// moored catamaran given only its length and beam.
+export const catamaranHullShare = 0.72 / 7.04;
+// Where the catamaran model's hulls start and end along its length: the
+// transom 0.25 m inside the stern, the stem 0.05 m short of the bow.
+export const catamaranStation = (length: number, f: number) =>
+  f === 1 ? length / 2 - 0.05 : -(length / 2 - 0.25) + (length - 0.25) * f;
+// Plan outline round the outer sides of both hulls, closed straight across
+// the bows (over the trampoline) and the transoms, in the vessel's frame.
+export function catamaranOutline(
+  length: number,
+  beam: number,
+  hullRadius = beam * catamaranHullShare,
+): Outline {
+  const hullX = beam / 2 - hullRadius;
+  const side = catamaranForm.map((s): [number, number] => [
+    hullX + s.w * hullRadius,
+    catamaranStation(length, s.f),
+  ]);
+  return [
+    ...side,
+    ...side.reverse().map(([x, y]): [number, number] => [-x, y]),
+  ];
+}
 // World point into a vessel's frame (heading clockwise from north).
 export function toLocal(
   v: { x: number; y: number; heading: number },

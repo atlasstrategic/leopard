@@ -1,4 +1,5 @@
 import { stageSchema, type StageFile } from "./schema";
+import { catamaranOutline, monohullOutline, type Outline } from "../hulls";
 
 // Engine form of a stage: SI units, radians, headings as the engine uses them.
 export type Box = {
@@ -9,6 +10,22 @@ export type Box = {
   width: number;
   length: number;
   kind: "dock" | "breakwater" | "boundary";
+};
+// A moored boat as the contact solver sees it: a vessel that never moves.
+export type MooredBoat = {
+  id: string;
+  name: string;
+  kind: "monohull" | "catamaran";
+  x: number;
+  y: number;
+  heading: number;
+  length: number;
+  beam: number;
+  vx: number;
+  vy: number;
+  yaw: number;
+  outline: Outline;
+  reach: number;
 };
 export type Stage = ReturnType<typeof toStage>;
 export class StageError extends Error {
@@ -39,6 +56,17 @@ function problems(s: StageFile) {
   unique(scene.zones, "zone");
   unique(scene.gates, "gate");
   unique(s.traffic, "vessel");
+  unique(scene.moored ?? [], "moored boat");
+  // Contacts name what was touched by id, so these share one namespace.
+  const solid = new Set([
+    ...scene.structures.map((b) => b.id),
+    ...s.traffic.map((v) => v.id),
+  ]);
+  for (const m of scene.moored ?? [])
+    if (solid.has(m.id))
+      found.push(
+        `Moored boat ${m.id}: id is already used by a structure or vessel`,
+      );
   const quays = new Set(
     scene.structures.filter((b) => b.kind === "quay").map((b) => b.id),
   );
@@ -289,6 +317,21 @@ function toStage(s: StageFile) {
       },
       lines: { bow: line("bow"), stern: line("stern") },
     },
+    moored: (scene.moored ?? []).map((m): MooredBoat => {
+      const outline =
+        m.kind === "monohull"
+          ? monohullOutline(m.length, m.beam)
+          : catamaranOutline(m.length, m.beam);
+      return {
+        ...m,
+        heading: radians(m.heading),
+        vx: 0,
+        vy: 0,
+        yaw: 0,
+        outline,
+        reach: Math.max(...outline.map(([x, y]) => Math.hypot(x, y))),
+      };
+    }),
     zones: Object.fromEntries(scene.zones.map((z) => [z.id, z])),
     gates: Object.fromEntries(
       scene.gates.map((g) => {

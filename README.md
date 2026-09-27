@@ -97,7 +97,7 @@ A **stage** is a self-contained data file, `stages/<id>/stage.json`, describing 
 A stage file currently defines:
 
 - **Manifest:** `id` (matching its folder), semantic `version`, name, description, author, setting (`area`) and `buoyage` (`IALA-A` or `IALA-B`, which decides which entrance light is red).
-- **Scene:** start pose; solid `structures` (quay, breakwater, training barrier); `bollards` on quays; `berths` with their approach target, alongside envelope and bow/stern bollards; named `zones` (circles or rectangles); entrance `gates` with an outward direction; floating `labels`.
+- **Scene:** start pose; solid `structures` (quay, breakwater, training barrier); `bollards` on quays; `berths` with their approach target, alongside envelope and bow/stern bollards; named `zones` (circles or rectangles); entrance `gates` with an outward direction; floating `labels`; optional `moored` boats (monohull or catamaran) that never move.
 - **Conditions:** wind (speed and the direction it blows **from**) and current.
 - **Traffic:** scripted vessels with dimensions, handling limits, a route of ahead/astern waypoints and an optional radio call when they give way. The engine supports one vessel for now.
 - **Mission:** the berth used, an ordered list of **steps**, **rules** that apply across steps, the completion texts and optional **scoring**.
@@ -113,7 +113,7 @@ Each step is one of the engine's building blocks, with its own eyebrow `label`, 
 | `checklist` | every item is done, in order | items: `enginesOff`, `choice` (one right answer, refusals for the others), `timed` (e.g. fuelling), `confirm`, `enginesOn`; `requiresSecured` stops timed items if securing is lost |
 | `exitThroughGate` | the boat crosses the gate outward | `keepSide` with a `sidePenalty` |
 
-Rules: `keepOut` (a penalty and radio call for each entry into a zone until a named step completes) and `protectedContact` (contact with a vessel where no fender covers the hull fails the mission). Radio calls and other texts may use `{placeholders}` such as `{penalty}`, `{time}` or `{total} {unit}`. Scoring weights, thresholds, ratings and debrief tips can be set per stage; anything left out uses the engine defaults. The last step completes the mission. **Show me** runs only a stage's `arriveAtBerth` and `secureAlongside` steps, without traffic, rules or radio.
+Rules: `keepOut` (a penalty and radio call for each entry into a zone until a named step completes) and `protectedContact` (contact with a traffic vessel where no fender covers the hull fails the mission; moored boats are always protected this way). Radio calls and other texts may use `{placeholders}` such as `{penalty}`, `{time}` or `{total} {unit}`. Scoring weights, thresholds, ratings and debrief tips can be set per stage; anything left out uses the engine defaults. The last step completes the mission. **Show me** runs only a stage's `arriveAtBerth` and `secureAlongside` steps, without traffic, rules or radio.
 
 Units are metres, m/s, headings in degrees true and yaw rates in rad/s; x is east and y is north. The loader converts to the engine's internal units and checks references (bollards on the berth's quay, zones, gates and vessels named by steps and rules, step order, one correct option per choice, unique ids and so on), listing every problem with its path.
 

@@ -112,6 +112,22 @@ const label = point
   })
   .describe("Floating sign in the scene");
 
+const moored = pose
+  .extend({
+    id,
+    name: z.string(),
+    kind: z
+      .enum(["monohull", "catamaran"])
+      .describe(
+        "monohull: a modern cruising monohull (after the Oceanis 38.1); catamaran: a cruising catamaran (after the Leopard 42). Drawn and colliding with its deck-edge outline, scaled to length and beam",
+      ),
+    length: positive,
+    beam: positive,
+  })
+  .describe(
+    "Boat moored in the scene. It never moves; touching it where no fender covers the hull fails the mission",
+  );
+
 const leg = point
   .extend({
     gear: z.enum(["ahead", "astern"]),
@@ -308,9 +324,11 @@ const rule = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.literal("protectedContact"),
-      vessel: id,
+      vessel: id.describe("Traffic vessel id"),
     })
-    .describe("Contact with the vessel where no fender covers the hull fails"),
+    .describe(
+      "Contact with the traffic vessel where no fender covers the hull fails (moored boats are always protected)",
+    ),
 ]);
 const tips = z
   .object({
@@ -415,6 +433,10 @@ export const stageSchema = z
       zones: z.array(zone),
       gates: z.array(gate),
       labels: z.array(label),
+      moored: z
+        .array(moored)
+        .optional()
+        .describe("Boats moored in the scene, e.g. neighbours at a berth"),
     }),
     conditions: z.object({
       wind: z.object({

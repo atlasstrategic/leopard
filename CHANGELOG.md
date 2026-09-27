@@ -25,6 +25,7 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - ↑ / ↓ now move both levers, like W / S.
 - The debrief now states the **wind and current** the run was sailed in, and flags a wind changed during the attempt with its range. Figures a stage cannot produce are left out.
 - Fixed an empty "Restart from" row showing in the objective panel before any checkpoint was reached.
+- Stages can place **moored boats** (a monohull or a catamaran) that are drawn and collide with their outline; touching one where no fender covers the hull fails the mission. The stage checker treats them as obstacles and now says which structure or boat, which leg and when a traffic route hits. ([#4](https://github.com/atlasstrategic/leopard/issues/4))
 
 ## [0.1.0] — 2026-09-25
 

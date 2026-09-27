@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { monohullForm } from "./hulls";
+import { catamaranForm, catamaranStation, monohullForm } from "./hulls";
 
 // Procedural boat models. Local frame: x starboard, y up (waterline at 0),
 // z aft (the bow points to −z). Waterlines stay inside each boat's collision
@@ -508,23 +508,14 @@ export function leopard42(length: number, beam: number, hullRadius: number) {
     bow = -length / 2,
     stern = length / 2 - 0.25;
   const at = (f: number) => stern - (stern - bow) * f;
-  const hullStations = (w: number): Station[] =>
-    [
-      { f: 0, w: 0.72, sheer: 1.28 },
-      { f: 0.1, w: 0.92, sheer: 1.32 },
-      { f: 0.3, w: 1, sheer: 1.36 },
-      { f: 0.7, w: 1, sheer: 1.42 },
-      { f: 0.86, w: 0.76, sheer: 1.5 },
-      { f: 0.95, w: 0.4, sheer: 1.58 },
-      { f: 1, w: 0.03, sheer: 1.62 },
-    ].map((s) => ({
-      z: s.f === 1 ? bow + 0.05 : at(s.f),
-      deck: s.w * w,
-      water: s.w * w,
-      depth: 0.6,
-      sheer: s.sheer,
-    }));
-  const stations = hullStations(hullRadius);
+  // The same hull form a moored catamaran's collision outline uses (hulls.ts).
+  const stations: Station[] = catamaranForm.map((s) => ({
+    z: -catamaranStation(length, s.f),
+    deck: s.w * hullRadius,
+    water: s.w * hullRadius,
+    depth: 0.6,
+    sheer: s.sheer,
+  }));
   for (const side of [1, -1] as const) {
     loftHull(group, stations, side * hullX);
     // Long hull windows and a sheer stripe on the outboard side.

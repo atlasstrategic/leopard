@@ -4,6 +4,7 @@ import type { Episode } from "./recorder";
 import type { Session } from "./session";
 import type { Weather } from "./simulation";
 import { checkpointMarkup } from "./checkpoint-ui";
+import { outlineWorld } from "./hulls";
 import "./debrief.css";
 export const debriefMarkup = () =>
   `<dialog id="debrief" aria-labelledby="debrief-title"><div class="log-header"><div><div class="eyebrow">DEBRIEF · ${stage.name.toUpperCase()}</div><h2 id="debrief-title"></h2></div><button id="close-debrief" aria-label="Close debrief">Close ×</button></div><div class="debrief-body"><div class="debrief-summary"><p class="debrief-score"><strong id="debrief-total"></strong><span id="debrief-rating"></span></p><p class="debrief-conditions" id="debrief-conditions"></p><div id="debrief-categories"></div><p class="debrief-tip"><b>One thing to try:</b> <span id="debrief-tip"></span></p><dl id="debrief-figures"></dl><div id="debrief-penalties"></div><p class="debrief-note">Game score with provisional weights (40% impact & clearance, 25% position & speed, 20% procedure, 15% smoothness). Not a skipper assessment.</p><div class="debrief-actions"><button id="debrief-retry">Retry · R</button>${checkpointMarkup("debrief-restart")}</div></div><figure class="debrief-track"><svg id="debrief-svg" role="img" aria-label="Overhead trace of your track and the monohull's"></svg><figcaption><span class="key-boat"></span>Your track <span class="key-mono"></span>Monohull <span class="key-contact"></span>Contact</figcaption></figure></div></dialog>`;
@@ -28,6 +29,14 @@ function trackSvg(g: Session) {
     .map(
       (b) =>
         `<rect class="${b.kind}" x="${b.x - b.width / 2}" y="${-(b.y + b.length / 2)}" width="${b.width}" height="${b.length}"/>`,
+    )
+    .join("");
+  const moored = stage.moored
+    .map(
+      (m) =>
+        `<polygon class="moored" points="${outlineWorld(m)
+          .map((p) => `${p.x.toFixed(2)},${(-p.y).toFixed(2)}`)
+          .join(" ")}"/>`,
     )
     .join("");
   const t = scenario.target;
@@ -59,7 +68,7 @@ function trackSvg(g: Session) {
     .join("");
   const [sx, sy] = boat[0] ?? [0, 0];
   const v = viewBox();
-  return `<rect class="water" x="${v[0]}" y="${v[1]}" width="${v[2]}" height="${v[3]}"/>${shapes}<rect class="berth" x="${t.x - t.width / 2}" y="${-(t.y + t.length / 2)}" width="${t.width}" height="${t.length}"/>${zones}${lights}${monohull.length > 1 ? `<polyline class="mono" points="${pts(monohull)}"/>` : ""}<polyline class="boat" points="${pts(boat)}"/><circle class="start" cx="${sx.toFixed(1)}" cy="${(-sy).toFixed(1)}" r="1.3"/>${contacts}`;
+  return `<rect class="water" x="${v[0]}" y="${v[1]}" width="${v[2]}" height="${v[3]}"/>${shapes}${moored}<rect class="berth" x="${t.x - t.width / 2}" y="${-(t.y + t.length / 2)}" width="${t.width}" height="${t.length}"/>${zones}${lights}${monohull.length > 1 ? `<polyline class="mono" points="${pts(monohull)}"/>` : ""}<polyline class="boat" points="${pts(boat)}"/><circle class="start" cx="${sx.toFixed(1)}" cy="${(-sy).toFixed(1)}" r="1.3"/>${contacts}`;
 }
 export class DebriefUI {
   private dialog: HTMLDialogElement;

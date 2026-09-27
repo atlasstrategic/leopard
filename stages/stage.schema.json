@@ -530,6 +530,63 @@
             "additionalProperties": false,
             "description": "Floating sign in the scene"
           }
+        },
+        "moored": {
+          "description": "Boats moored in the scene, e.g. neighbours at a berth",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "y": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "heading": {
+                "type": "number",
+                "description": "Degrees true, clockwise from north"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "monohull",
+                  "catamaran"
+                ],
+                "description": "monohull: a modern cruising monohull (after the Oceanis 38.1); catamaran: a cruising catamaran (after the Leopard 42). Drawn and colliding with its deck-edge outline, scaled to length and beam"
+              },
+              "length": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "beam": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "heading",
+              "id",
+              "name",
+              "kind",
+              "length",
+              "beam"
+            ],
+            "additionalProperties": false,
+            "description": "Boat moored in the scene. It never moves; touching it where no fender covers the hull fails the mission"
+          }
         }
       },
       "required": [
@@ -1646,7 +1703,7 @@
                   "vessel": {
                     "type": "string",
                     "pattern": "^[a-z0-9][a-z0-9-]*$",
-                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    "description": "Traffic vessel id"
                   }
                 },
                 "required": [
@@ -1654,7 +1711,7 @@
                   "vessel"
                 ],
                 "additionalProperties": false,
-                "description": "Contact with the vessel where no fender covers the hull fails"
+                "description": "Contact with the traffic vessel where no fender covers the hull fails (moored boats are always protected)"
               }
             ]
           }

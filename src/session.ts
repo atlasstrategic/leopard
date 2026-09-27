@@ -709,16 +709,20 @@ export class Session {
       scenario.obstacles,
       this.fenders,
       this.mooring,
-      vessel ? [vessel] : [],
+      vessel ? [vessel, ...stage.moored] : stage.moored,
     );
     this.acceptableContact = contactAcceptable(this.state, samples);
     this.recordMetrics(vessel);
-    // protectedContact rules: uncovered contact with the vessel fails.
+    // Uncovered contact with a moored boat, or with the vessel under a
+    // protectedContact rule, fails.
     const protectedIds = new Set(
       this.missionEnabled
-        ? stage.mission.rules.flatMap((r) =>
-            r.kind === "protectedContact" ? [r.vessel] : [],
-          )
+        ? [
+            ...stage.moored.map((m) => m.id),
+            ...stage.mission.rules.flatMap((r) =>
+              r.kind === "protectedContact" ? [r.vessel] : [],
+            ),
+          ]
         : [],
     );
     const bareVesselContact = samples.find(
@@ -755,7 +759,7 @@ export class Session {
     }
     if (bareVesselContact) {
       this.progress.phase = "failed";
-      this.progress.failure = `Contact with the ${bareVesselContact.obstacleName.toLowerCase()} on the ${bareVesselContact.side} hull where no fender covered it`;
+      this.progress.failure = `Contact with the ${midSentence(bareVesselContact.obstacleName)} on the ${bareVesselContact.side} hull where no fender covered it`;
     } else if (this.step?.kind === "holdInZone") this.advanceHold(this.step);
     else if (this.step?.kind === "waitForClear") this.advanceClear(this.step);
     if (this.progress.phase !== "failed") this.applyKeepOut();

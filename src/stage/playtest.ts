@@ -11,7 +11,8 @@ import type { Stage } from "./load";
 // would (fenders, lines, checklist, levers). It moves the boat between steps
 // rather than steering there, so it proves each step can be completed; the
 // reachability check in checkStage covers getting between them. Before moving
-// onto the berth or to the exit it lets traffic leave, as the transit would.
+// onto the berth or to the exit it lets traffic under way leave, as the
+// transit would.
 export type StepReport = {
   step: string;
   kind: string;
@@ -45,7 +46,9 @@ export function playtest(stage: Stage): PlaytestResult {
   const runUntil = (done: () => boolean, limit: number) => {
     for (let t = 0; t < limit && !done() && !ended(); t += STEP) g.tick();
   };
-  const trafficGone = () => !g.traffic || g.traffic.status === "gone";
+  // Traffic still moored has not been released and will not leave.
+  const trafficGone = () =>
+    !g.traffic || g.traffic.status === "gone" || g.traffic.status === "moored";
   const refused = (result: { accepted: boolean; message: string }) =>
     result.accepted ? "" : result.message;
   // Starboard fenders go out first, as a careful skipper would.

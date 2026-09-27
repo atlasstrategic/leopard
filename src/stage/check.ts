@@ -9,8 +9,8 @@ import {
   startDeparture,
   vesselObstacle,
 } from "../traffic";
-import type { Box, Stage } from "./load";
-import { outlineWorld } from "../hulls";
+import type { Box, MooredBoat, Stage } from "./load";
+import { outlineDistance, outlineWorld, toLocal } from "../hulls";
 
 // Geometry checks for a stage that already passed the schema and reference
 // checks: does the scene actually work for the boat? Uses the engine's own
@@ -37,7 +37,13 @@ function distanceToBox(b: Box, x: number, y: number) {
 }
 const inside = (b: Box, x: number, y: number) =>
   Math.abs(x - b.x) <= b.width / 2 && Math.abs(y - b.y) <= b.length / 2;
-// Smallest gap between the boat's hull and any structure (negative: overlap).
+// Signed distance from a point to a moored boat's outline (negative inside).
+const distanceToBoat = (m: MooredBoat, x: number, y: number) => {
+  const l = toLocal(m, x, y);
+  return outlineDistance(m.outline, l.x, l.y).distance;
+};
+// Smallest gap between the boat's hull and any structure or moored boat
+// (negative: overlap).
 export function hullClearance(stage: Stage, s: State) {
   const sn = Math.sin(s.heading),
     cs = Math.cos(s.heading);
@@ -52,6 +58,8 @@ export function hullClearance(stage: Stage, s: State) {
           ? -boat.hullRadius
           : distanceToBox(b, x, y) - boat.hullRadius,
       );
+    for (const m of stage.moored)
+      min = Math.min(min, distanceToBoat(m, x, y) - boat.hullRadius);
   }
   return min;
 }
@@ -81,8 +89,10 @@ function reachable(stage: Stage) {
   const free = (i: number, j: number) => {
     const x = minX + i * cell,
       y = minY + j * cell;
-    return stage.obstacles.every(
-      (b) => !inside(b, x, y) && distanceToBox(b, x, y) >= reachClearance,
+    return (
+      stage.obstacles.every(
+        (b) => !inside(b, x, y) && distanceToBox(b, x, y) >= reachClearance,
+      ) && stage.moored.every((m) => distanceToBoat(m, x, y) >= reachClearance)
     );
   };
   const seen = new Uint8Array(nx * ny);
@@ -135,30 +145,44 @@ function trafficRoute(stage: Stage, found: CheckResult) {
   startDeparture(v);
   // The player is parked far away so the vessel never stops for it.
   const away = pose(1e5, 1e5, 0);
+  // The closest pass, and what, where and when it was.
   let closest = Infinity,
+    what = "",
+    leg = 0,
+    at = 0,
     time = 0;
+  const near = (gap: number, name: string) => {
+    if (gap >= closest) return;
+    closest = gap;
+    what = name;
+    leg = v.leg;
+    at = time;
+  };
   for (; time < 600 && v.status !== "gone"; time += STEP) {
     const o = vesselObstacle(v);
     if (o)
-      for (const p of outlineWorld(o, 0.5))
+      for (const p of outlineWorld(o, 0.5)) {
         for (const b of stage.obstacles)
-          closest = Math.min(
-            closest,
+          near(
             inside(b, p.x, p.y) ? -0.01 : distanceToBox(b, p.x, p.y),
+            b.name ?? b.id ?? b.kind,
           );
+        for (const m of stage.moored) near(distanceToBoat(m, p.x, p.y), m.name);
+      }
     advanceVessel(v, away, boat, STEP);
   }
+  const where = `${what}, on leg ${leg + 1} of ${cfg.legs.length} at ${at.toFixed(0)} s`;
   if (v.status !== "gone")
     found.errors.push(
       `Traffic ${cfg.id}: route not finished after 600 s (stuck at leg ${v.leg + 1} of ${cfg.legs.length}; check waypoint spacing and turnRadius)`,
     );
   if (closest < 0)
     found.errors.push(
-      `Traffic ${cfg.id}: route passes through a structure (${closest.toFixed(2)} m)`,
+      `Traffic ${cfg.id}: route passes through a structure or moored boat (${where})`,
     );
   else if (closest < 0.3)
     found.warnings.push(
-      `Traffic ${cfg.id}: route passes within ${closest.toFixed(2)} m of a structure`,
+      `Traffic ${cfg.id}: route passes within ${closest.toFixed(2)} m of a structure or moored boat (${where})`,
     );
 }
 export function checkStage(stage: Stage): CheckResult {
@@ -166,7 +190,7 @@ export function checkStage(stage: Stage): CheckResult {
   const found: CheckResult = { errors: [], warnings: [] };
   const start = pose(stage.start.x, stage.start.y, stage.start.heading);
   if (hullClearance(stage, start) < 0)
-    found.errors.push("Start: the boat overlaps a structure");
+    found.errors.push("Start: the boat overlaps a structure or moored boat");
   // Berth: the approach target and alongside pose must fit the boat.
   const t = stage.berth.approach,
     approach = pose(t.x, t.y, t.heading);
@@ -175,7 +199,9 @@ export function checkStage(stage: Stage): CheckResult {
       "Berth approach: the boat does not fit inside the approach target at its centre",
     );
   if (hullClearance(stage, approach) < 0)
-    found.errors.push("Berth approach: the target overlaps a structure");
+    found.errors.push(
+      "Berth approach: the target overlaps a structure or moored boat",
+    );
   const alongside = alongsidePose(stage);
   const right = {
     x: Math.cos(alongside.heading),
@@ -194,7 +220,9 @@ export function checkStage(stage: Stage): CheckResult {
         `Berth alongside: the boat, ${alongsideGap} m off the ${stage.berth.face} face, is not inside the alongside envelope`,
       );
     if (hullClearance(stage, alongside) < 0)
-      found.errors.push("Berth alongside: the boat overlaps another structure");
+      found.errors.push(
+        "Berth alongside: the boat overlaps another structure or a moored boat",
+      );
     for (const id of lineIds) {
       const check = attachmentCheck(alongside, id, stage.obstacles, true);
       if (!check.ok)
@@ -203,6 +231,19 @@ export function checkStage(stage: Stage): CheckResult {
         );
     }
   }
+  // Moored boats must lie clear of structures and of each other.
+  stage.moored.forEach((m, i) => {
+    const points = outlineWorld(m, 0.5);
+    const hit =
+      stage.obstacles.find((b) => points.some((p) => inside(b, p.x, p.y)))
+        ?.name ??
+      stage.moored
+        .slice(i + 1)
+        .find((other) =>
+          points.some((p) => distanceToBoat(other, p.x, p.y) < 0),
+        )?.name;
+    if (hit) found.errors.push(`Moored boat ${m.id}: overlaps ${hit}`);
+  });
   // Zones the boat must hold in need to be clear of structures; others (such
   // as a keep-out lane up to a quay) may overlap them.
   const holds = new Set(

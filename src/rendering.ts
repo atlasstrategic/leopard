@@ -12,6 +12,7 @@ import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
 import { initialFenders, type Fenders } from "./fenders";
 import type { State } from "./simulation";
 import { positioningTarget, type PositionTarget } from "./scenario";
+import { catamaranHullShare } from "./hulls";
 export type CameraMode = "chase" | "overhead" | "helm";
 export function hasWebGL2() {
   try {
@@ -283,6 +284,16 @@ export class View {
     if (mono) this.monohull.add(oceanis381(mono.length, mono.beam));
     this.monohull.visible = false;
     this.scene.add(this.monohull);
+    // Moored boats, drawn with the outline they collide with.
+    for (const m of stage.moored) {
+      const model =
+        m.kind === "monohull"
+          ? oceanis381(m.length, m.beam)
+          : leopard42(m.length, m.beam, m.beam * catamaranHullShare);
+      model.position.set(m.x, 0, -m.y);
+      model.rotation.y = -m.heading;
+      this.scene.add(model);
+    }
     // Zones: hidden until a step shows them. Circles get a disc, a ring and
     // small buoys; rectangles a tinted area and an outline.
     const zoneMaterial = () =>

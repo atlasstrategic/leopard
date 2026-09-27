@@ -110,6 +110,11 @@
 #debrief-svg .breakwater {
   fill: #b9b5a4;
 }
+#debrief-svg .moored {
+  fill: #e7f1ef;
+  stroke: #8fa9b1;
+  stroke-width: 0.2;
+}
 #debrief-svg .boundary {
   fill: #f1bd6255;
 }
