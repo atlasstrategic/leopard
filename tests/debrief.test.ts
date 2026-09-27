@@ -181,3 +181,58 @@ test("arrival speed and fender readiness are recorded on the way into the berth"
   assert.equal(g.progress.phase, "securing");
   assert.equal(g.progress.metrics.fendersAtArrival, true);
 });
+test("the debrief states the wind and current, and whether the wind changed", () => {
+  const calm = { speed: 0, direction: 0, currentX: 0, currentY: 0 };
+  const breeze = { speed: 2, direction: Math.PI / 2, currentX: 0, currentY: 0 };
+  assert.equal(
+    debrief(completed(), [], { start: calm, end: calm }).conditions,
+    "Conditions: wind calm · no current",
+  );
+  const steady = debrief(completed(), [], { start: breeze, end: breeze });
+  assert.equal(
+    steady.conditions,
+    "Conditions: wind 3.9 kn from 270° T · no current",
+  );
+  const figures = Object.fromEntries(steady.figures);
+  assert.equal(figures.Wind, "3.9 kn from 270° T");
+  assert.equal(figures.Current, "no current");
+  // Changed during the attempt: the range comes from the log.
+  const stronger = { ...breeze, speed: 4 };
+  const events = [
+    {
+      sequence: 1,
+      time: 30,
+      phase: "approach",
+      type: "weather.change",
+      message: "",
+      data: stronger as unknown as Record<string, unknown>,
+    },
+  ];
+  const changed = debrief(completed(), events, { start: breeze, end: breeze });
+  assert.match(
+    changed.conditions,
+    /3\.9 kn from 270° T at the start, changed during the attempt \(3\.9–7\.8 kn\)/,
+  );
+  const current = debrief(completed(), [], {
+    start: { ...calm, currentX: 0.5 },
+    end: { ...calm, currentX: 0.5 },
+  });
+  assert.match(current.conditions, /current 1\.0 kn towards 090° T/);
+});
+test("a session's debrief reports the conditions it was sailed in", () => {
+  const g = new Session({
+    speed: 2,
+    direction: Math.PI / 2,
+    currentX: 0,
+    currentY: 0,
+  });
+  run(g, 1);
+  g.weather.speed = 3;
+  g.observe();
+  run(g, 1);
+  const d = debrief(g.progress, g.recorder.events, {
+    start: g.recorder.metadata.weather as never,
+    end: g.weather,
+  });
+  assert.match(d.conditions, /changed during the attempt \(3\.9–5\.8 kn\)/);
+});

@@ -2,6 +2,7 @@ import { knots, scoreConfig, stage } from "./config";
 import { fill, midSentence } from "./mission";
 import type { LogEvent } from "./recorder";
 import type { Progress } from "./scenario";
+import type { Weather } from "./simulation";
 
 export type CategoryKey = keyof typeof scoreConfig.weights;
 export type Category = {
@@ -12,6 +13,8 @@ export type Category = {
   notes: string[];
 };
 export type Debrief = {
+  // Wind and current: they make a big difference to how hard a run was.
+  conditions: string;
   scored: boolean;
   total: number | null;
   rating: string;
@@ -25,7 +28,51 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 // Each deduction carries the tip it would earn; the tip for the largest
 // weighted loss becomes the debrief's one actionable observation.
 type Deduction = { points: number; note: string; tip: string };
-export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
+// Weather at the start of the attempt and now; changes in between come from
+// the log's weather.change events (the wind can be changed mid-run).
+export type Conditions = { start: Weather; end: Weather };
+const bearing = (radians: number) =>
+  String(
+    Math.round(((((radians * 180) / Math.PI) % 360) + 360) % 360) % 360,
+  ).padStart(3, "0");
+const windText = (w: Weather) =>
+  w.speed < 0.05
+    ? "calm"
+    : `${knots(w.speed).toFixed(1)} kn from ${bearing(w.direction + Math.PI)}° T`;
+const currentText = (w: Weather) => {
+  const speed = Math.hypot(w.currentX, w.currentY);
+  return speed < 0.01
+    ? "no current"
+    : `current ${knots(speed).toFixed(1)} kn towards ${bearing(Math.atan2(w.currentX, w.currentY))}° T`;
+};
+export function conditionsSummary(c: Conditions, events: LogEvent[] = []) {
+  const seen = [
+    c.start,
+    ...events
+      .filter((e) => e.type === "weather.change")
+      .map((e) => e.data as unknown as Weather),
+    c.end,
+  ];
+  const same = (a: Weather, b: Weather) =>
+    a.speed === b.speed &&
+    a.direction === b.direction &&
+    a.currentX === b.currentX &&
+    a.currentY === b.currentY;
+  const changed = seen.some((w) => !same(w, c.start));
+  const speeds = seen.map((w) => knots(w.speed));
+  return {
+    wind: windText(c.start),
+    current: currentText(c.start),
+    changed,
+    range: `${Math.min(...speeds).toFixed(1)}–${Math.max(...speeds).toFixed(1)} kn`,
+  };
+}
+export function debrief(
+  p: Progress,
+  events: LogEvent[] = [],
+  conditions?: Conditions,
+): Debrief {
+  const weather = conditions && conditionsSummary(conditions, events);
   const m = p.metrics,
     c = scoreConfig,
     tips = c.tips,
@@ -182,28 +229,52 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
     : worst
       ? worst.tip
       : tips.clean;
-  const figures: [string, string][] = [
-    ["Mission time", `${elapsed.toFixed(1)} s`],
-    ["Penalty time", `+${p.penalty} s`],
-    ["Penalised contacts", String(p.collisions)],
+  // Only figures the stage can produce: no traffic, keep-out rule, hold or
+  // exit means nothing to report for that line.
+  const steps = stage.file.mission.steps,
+    has = (kind: string) => steps.some((st) => st.kind === kind);
+  const figures = (
     [
-      `Closest to ${vessel}`,
-      m.closestTraffic === null
-        ? "—"
-        : `${Math.max(0, m.closestTraffic).toFixed(1)} m`,
-    ],
-    [
-      "Peak speed near berth",
-      m.arrivalPeakSpeed === null
-        ? "—"
-        : `${knots(m.arrivalPeakSpeed).toFixed(2)} kn`,
-    ],
-    ["Early entries", String(p.earlyEntries)],
-    ["Countdown resets", String(m.countdownResets)],
-    ["Channel side on exit", p.channelSide ?? "—"],
-    ["Lever changes", String(m.leverChanges)],
-    ["Checkpoint restarts", String(m.checkpointRestarts)],
-  ];
+      ["Mission time", `${elapsed.toFixed(1)} s`, true],
+      ["Penalty time", `+${p.penalty} s`, true],
+      ["Penalised contacts", String(p.collisions), true],
+      [
+        `Closest to ${vessel}`,
+        m.closestTraffic === null
+          ? "—"
+          : `${Math.max(0, m.closestTraffic).toFixed(1)} m`,
+        stage.traffic.length > 0,
+      ],
+      [
+        "Peak speed near berth",
+        m.arrivalPeakSpeed === null
+          ? "—"
+          : `${knots(m.arrivalPeakSpeed).toFixed(2)} kn`,
+        has("arriveAtBerth"),
+      ],
+      [
+        "Early entries",
+        String(p.earlyEntries),
+        stage.file.mission.rules.some((r) => r.kind === "keepOut"),
+      ],
+      ["Countdown resets", String(m.countdownResets), has("holdInZone")],
+      ["Channel side on exit", p.channelSide ?? "—", has("exitThroughGate")],
+      ["Lever changes", String(m.leverChanges), true],
+      ["Checkpoint restarts", String(m.checkpointRestarts), true],
+      ...(weather
+        ? [
+            [
+              "Wind",
+              weather.changed ? `${weather.range} (changed)` : weather.wind,
+              true,
+            ],
+            ["Current", weather.current, true],
+          ]
+        : []),
+    ] as [string, string, boolean][]
+  )
+    .filter(([, , shown]) => shown)
+    .map(([label, value]): [string, string] => [label, value]);
   const penalties = events
     .filter((e) =>
       ["penalty", "mission.early_entry", "mission.channel_side"].includes(
@@ -212,6 +283,11 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
     )
     .map((e) => ({ time: e.time, message: e.message }));
   return {
+    conditions: weather
+      ? weather.changed
+        ? `Conditions: wind ${weather.wind} at the start, changed during the attempt (${weather.range}) · ${weather.current}`
+        : `Conditions: wind ${weather.wind} · ${weather.current}`
+      : "",
     scored,
     total,
     rating:

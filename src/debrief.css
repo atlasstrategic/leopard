@@ -33,6 +33,11 @@
   font-size: 15px;
   color: #dcf4e6;
 }
+.debrief-conditions {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  color: #dcf4e6;
+}
 .debrief-category {
   margin: 10px 0;
   font-size: 12px;

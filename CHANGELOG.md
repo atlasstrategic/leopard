@@ -19,6 +19,7 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - Added the stage **authoring kit**: `STAGE_AUTHORING.md`, geometry checks in `npm run stage:validate` (fit, line reach, reachability, traffic routes) and `npm run stage:test`, a step-by-step playtest that names the step a stage cannot complete. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
 - Added a second stage, **Open water · First session**: ahead, astern, turning and stopping at marks, then a stop box. It was written from the authoring guide by an independent author. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
 - Fixed a hold step that directly follows another hold completing immediately.
+- The debrief now states the **wind and current** the run was sailed in, and flags a wind changed during the attempt with its range. Figures a stage cannot produce are left out.
 - Fixed an empty "Restart from" row showing in the objective panel before any checkpoint was reached.
 
 ## [0.1.0] — 2026-09-25

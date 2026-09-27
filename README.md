@@ -153,7 +153,8 @@ When the mission completes (or fails), a **debrief** opens; reopen it from the *
   | Preparation & procedure | 20% | 30 if starboard fenders were not out on arrival; 10 per refused checklist step; 5 per refused line command; 10 per line let go under high load |
   | Smoothness & efficiency | 15% | mission time over 5 min (down to 40% of this share at 10 min); lever changes beyond 60 |
 
-- **Key figures:** mission and penalty time, contacts, closest approach to the monohull, peak speed near the berth, early entries, countdown resets, channel side and lever changes.
+- **Conditions:** the wind (speed and the direction it blows from) and current the run was sailed in, since they change how hard it is. If the wind was changed in Handling & weather during the attempt, the debrief says so and gives the range.
+- **Key figures:** mission and penalty time, contacts, closest approach to traffic, peak speed near the berth, early entries, countdown resets, channel side, lever changes, checkpoint restarts, wind and current. Figures a stage cannot produce (for example traffic clearance on a stage without traffic) are left out.
 - **Penalties** with their reasons and times, taken from the voyage log.
 - **One thing to try:** the tip for the largest weighted loss, or a suggestion for a harder run after a clean one.
 - An **overhead trace** of your track and the monohull's from 1 Hz telemetry, with contact points, the berth, the holding area and the entrance lights.

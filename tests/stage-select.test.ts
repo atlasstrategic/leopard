@@ -104,7 +104,8 @@ test("another stage runs end to end with nothing left over from the fuel dock", 
   );
   const d = debrief(g.progress, g.recorder.events);
   assert.equal(d.scored, true);
-  assert.equal(d.figures.find(([k]) => k.startsWith("Closest"))![1], "—");
+  // No traffic, so no traffic-clearance figure.
+  assert.ok(!d.figures.some(([k]) => k.startsWith("Closest")));
   assert.deepEqual(g.sceneMarks(), { zones: [], gate: null });
 });
 test("the fuel dock is unchanged after switching back", () => {
