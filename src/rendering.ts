@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { leopard42, oceanis381 } from "./boats";
 import {
   boat,
   scenario,
@@ -85,9 +86,7 @@ export class View {
       new THREE.MeshStandardMaterial({ color, roughness: 0.78 });
     const concrete = mat(0xb9b5a4),
       wood = mat(0x8d7861),
-      navy = mat(0x193545),
-      white = mat(0xf1f0e7),
-      glass = mat(0x204858);
+      navy = mat(0x193545);
     const box = (
       parent: THREE.Object3D,
       x: number,
@@ -257,42 +256,8 @@ export class View {
     }
     for (const l of stage.labels)
       this.label(l.text, l.x, l.height, -l.y, l.width);
-    for (const x of [
-      -boat.beam / 2 + boat.hullRadius,
-      boat.beam / 2 - boat.hullRadius,
-    ]) {
-      // Capsule waterline exactly shares the contact envelope's dimensions.
-      const hull = new THREE.Mesh(
-        new THREE.CapsuleGeometry(
-          boat.hullRadius,
-          boat.length - 2 * boat.hullRadius,
-          8,
-          12,
-        ),
-        white,
-      );
-      hull.rotation.x = Math.PI / 2;
-      hull.scale.z = 1.5;
-      hull.position.set(x, 0.5, 0);
-      hull.castShadow = true;
-      this.vessel.add(hull);
-      box(this.vessel, x, 1.22, 0, 1.25, 0.16, 10.7, white);
-      box(this.vessel, x, 0.95, 0, 1.46, 0.12, 9, navy);
-    }
-    box(this.vessel, 0, 1.35, 0.7, 5.55, 0.3, 8.8, white);
-    box(this.vessel, 0, 2.1, 0, 4.6, 1.3, 4.6, glass);
-    box(this.vessel, 0, 2.87, -0.05, 5.2, 0.22, 5.3, white);
-    box(this.vessel, 0, 1.65, 3.6, 4.5, 0.3, 1.2, wood);
-    box(this.vessel, 2.0, 3.0, 1.0, 0.65, 0.7, 0.65, navy);
-    box(this.vessel, 0, 6.2, -0.4, 0.12, 7.3, 0.12, white);
-    // Open foredeck netting and perimeter rails aid scale and orientation.
-    for (let x = -2.1; x < 2.2; x += 0.35)
-      box(this.vessel, x, 1.35, -4.2, 0.035, 0.025, 2.1, navy);
-    for (const x of [-3.3, 3.3]) {
-      box(this.vessel, x, 2.0, -0.3, 0.04, 0.04, 10.8, white);
-      for (const z of [-5.5, -2, 2, 5])
-        box(this.vessel, x, 1.65, z, 0.04, 0.7, 0.04, white);
-    }
+    // Leopard 42: hulls match the contact footprint (see boats.ts).
+    this.vessel.add(leopard42(boat.length, boat.beam, boat.hullRadius));
     for (const side of ["port", "starboard"] as const) {
       const group = this.fenderMeshes[side];
       for (const y of fenderConfig.positions) {
@@ -313,34 +278,9 @@ export class View {
       this.vessel.add(group);
     }
     this.scene.add(this.vessel);
-    // Monohull: capsule waterline matches its contact footprint.
+    // Traffic monohull: an Oceanis 38.1 inside its collision capsule.
     const mono = trafficConfig.monohull;
-    if (mono) {
-      const radius = mono.beam / 2;
-      const monoHull = new THREE.Mesh(
-        new THREE.CapsuleGeometry(radius, mono.length - mono.beam, 8, 16),
-        mat(0x2b4f73),
-      );
-      monoHull.rotation.x = Math.PI / 2;
-      monoHull.scale.z = 0.42;
-      monoHull.position.y = 0.45;
-      monoHull.castShadow = true;
-      this.monohull.add(monoHull);
-      box(
-        this.monohull,
-        0,
-        1.2,
-        0.4,
-        mono.beam - 0.7,
-        0.14,
-        mono.length - 3.4,
-        white,
-      );
-      box(this.monohull, 0, 1.65, 0.6, 2.2, 0.75, 3.6, white);
-      box(this.monohull, 0, 1.7, -0.6, 2.0, 0.5, 0.9, glass);
-      box(this.monohull, 0, 8.4, -0.9, 0.14, 14.2, 0.14, white);
-      box(this.monohull, 0, 2.3, 1.6, 0.1, 0.1, 4.6, white);
-    }
+    if (mono) this.monohull.add(oceanis381(mono.length, mono.beam));
     this.monohull.visible = false;
     this.scene.add(this.monohull);
     // Zones: hidden until a step shows them. Circles get a disc, a ring and

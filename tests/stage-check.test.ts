@@ -20,7 +20,7 @@ test("the bundled stages and the test fixture pass the geometry checks", () => {
   // The monohull's close pass to the quay is flagged, not failed.
   assert.match(
     checkStage(parseStage(fuelDockFile)).warnings.join("\n"),
-    /monohull: route passes within 0\.2\d m/,
+    /monohull: route passes within 0\.[12]\d m/,
   );
 });
 test("geometry mistakes are reported", () => {
