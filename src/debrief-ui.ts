@@ -1,4 +1,4 @@
-import { missionConfig, scenario, stage } from "./config";
+import { scenario, stage } from "./config";
 import { debrief, tracks } from "./debrief";
 import type { Episode } from "./recorder";
 import type { Session } from "./session";
@@ -28,9 +28,25 @@ function trackSvg(g: Session) {
         `<rect class="${b.kind}" x="${b.x - b.width / 2}" y="${-(b.y + b.length / 2)}" width="${b.width}" height="${b.length}"/>`,
     )
     .join("");
-  const t = scenario.target,
-    h = missionConfig.holding,
-    gate = missionConfig.entrance;
+  const t = scenario.target;
+  // Zones the mission shows during play, and every gate's lights.
+  const shown = new Set(
+    stage.file.mission.steps.flatMap((st) => st.show ?? []),
+  );
+  const zones = [...shown]
+    .map((id) => stage.zones[id].shape)
+    .map((z) =>
+      z.kind === "circle"
+        ? `<circle class="holding" cx="${z.x}" cy="${-z.y}" r="${z.radius}"/>`
+        : `<rect class="holding" x="${z.x - z.width / 2}" y="${-(z.y + z.length / 2)}" width="${z.width}" height="${z.length}"/>`,
+    )
+    .join("");
+  const lights = Object.values(stage.gates)
+    .map(
+      (g) =>
+        `<circle class="light-red" cx="${g.red.x}" cy="${-g.red.y}" r="1.1"/><circle class="light-green" cx="${g.green.x}" cy="${-g.green.y}" r="1.1"/>`,
+    )
+    .join("");
   const contacts = recording.events
     .filter((e) => e.type === "contact")
     .map((e) => (e.data as unknown as Episode).peakContact)
@@ -41,7 +57,7 @@ function trackSvg(g: Session) {
     .join("");
   const [sx, sy] = boat[0] ?? [0, 0];
   const v = viewBox();
-  return `<rect class="water" x="${v[0]}" y="${v[1]}" width="${v[2]}" height="${v[3]}"/>${shapes}<rect class="berth" x="${t.x - t.width / 2}" y="${-(t.y + t.length / 2)}" width="${t.width}" height="${t.length}"/><circle class="holding" cx="${h.x}" cy="${-h.y}" r="${h.radius}"/><circle class="light-red" cx="${gate.x - gate.width / 2}" cy="${-gate.y}" r="1.1"/><circle class="light-green" cx="${gate.x + gate.width / 2}" cy="${-gate.y}" r="1.1"/>${monohull.length > 1 ? `<polyline class="mono" points="${pts(monohull)}"/>` : ""}<polyline class="boat" points="${pts(boat)}"/><circle class="start" cx="${sx.toFixed(1)}" cy="${(-sy).toFixed(1)}" r="1.3"/>${contacts}`;
+  return `<rect class="water" x="${v[0]}" y="${v[1]}" width="${v[2]}" height="${v[3]}"/>${shapes}<rect class="berth" x="${t.x - t.width / 2}" y="${-(t.y + t.length / 2)}" width="${t.width}" height="${t.length}"/>${zones}${lights}${monohull.length > 1 ? `<polyline class="mono" points="${pts(monohull)}"/>` : ""}<polyline class="boat" points="${pts(boat)}"/><circle class="start" cx="${sx.toFixed(1)}" cy="${(-sy).toFixed(1)}" r="1.3"/>${contacts}`;
 }
 export class DebriefUI {
   private dialog: HTMLDialogElement;

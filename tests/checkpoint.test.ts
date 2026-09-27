@@ -1,10 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { missionConfig, trafficConfig, boat } from "../src/config";
+import { trafficConfig, boat } from "../src/config";
 import { debrief } from "../src/debrief";
 import { lineIds } from "../src/mooring";
 import { PracticeLab } from "../src/demonstration";
 import { Session } from "../src/session";
+import { fuel } from "./fuel-stage";
 const calm = { speed: 0, direction: 0, currentX: 0, currentY: 0 };
 const run = (g: Session, seconds: number) => {
   for (let i = 0; i < Math.round(seconds * 60); i++) g.tick();
@@ -16,7 +17,7 @@ const place = (g: Session, x: number, y: number) => {
 // Hold until the berth is called clear, which saves the approach checkpoint.
 function cleared() {
   const g = new Session(calm);
-  place(g, missionConfig.holding.x, missionConfig.holding.y);
+  place(g, fuel.holding.x, fuel.holding.y);
   for (let i = 0; i < 60 * 90 && g.progress.phase === "holding"; i++) g.tick();
   assert.equal(g.progress.phase, "approach");
   g.tick();
@@ -59,17 +60,16 @@ test("restarting from a checkpoint is repeatable", () => {
 });
 test("the departure checkpoint restores a secured, serviced boat ready to let go", () => {
   const g = new Session(calm);
-  g.traffic!.status = "gone";
-  Object.assign(g.progress, { phase: "securing", clearedAt: 0 });
+  g.skipTo("secure");
   place(g, 2.5, 16);
   g.fenders.starboard.deployed = g.fenders.starboard.target = true;
   for (const id of lineIds) g.requestLine(id, "attach");
   run(g, 13);
-  for (const action of ["enginesOff", "diesel", "fuel"] as const)
+  for (const action of ["engines-off", "diesel", "fuel"] as const)
     g.requestService(action);
   run(g, 10);
   g.requestService("pay");
-  g.requestService("enginesOn");
+  g.requestService("engines-on");
   assert.ok(g.checkpoints.departure);
   for (const id of lineIds) g.requestLine(id, "release");
   g.controls.port = g.controls.starboard = -0.6;

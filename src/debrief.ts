@@ -1,4 +1,5 @@
-import { knots, scoreConfig } from "./config";
+import { knots, scoreConfig, stage } from "./config";
+import { fill } from "./mission";
 import type { LogEvent } from "./recorder";
 import type { Progress } from "./scenario";
 
@@ -26,27 +27,38 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 type Deduction = { points: number; note: string; tip: string };
 export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
   const m = p.metrics,
-    c = scoreConfig;
+    c = scoreConfig,
+    tips = c.tips,
+    vessel = stage.traffic[0]?.name.toLowerCase() ?? "traffic";
   const impact: Deduction[] = [],
     control: Deduction[] = [],
     procedure: Deduction[] = [],
     smoothness: Deduction[] = [];
+  const refused = (n: number, what: string) => ({
+    count: plural(n, what),
+    verb: n === 1 ? "was" : "were",
+  });
   if (p.collisions > 0)
     impact.push({
       points: c.impact.perContact * p.collisions,
-      note: `${plural(p.collisions, "penalised contact")}`,
-      tip: `You had ${plural(p.collisions, "penalised contact")}. Slow down earlier near quays and breakwaters, and have fenders out before you get close.`,
+      note: plural(p.collisions, "penalised contact"),
+      tip: fill(tips.contacts, {
+        count: plural(p.collisions, "penalised contact"),
+      }),
     });
   if (
-    m.closestMonohull !== null &&
-    m.closestMonohull < c.impact.monohullClearance
+    m.closestTraffic !== null &&
+    m.closestTraffic < c.impact.trafficClearance
   ) {
-    const gap = Math.max(0, m.closestMonohull);
+    const gap = Math.max(0, m.closestTraffic);
     impact.push({
-      points:
-        c.impact.monohullDeduction * (1 - gap / c.impact.monohullClearance),
-      note: `Closest to the monohull ${gap.toFixed(1)} m`,
-      tip: `You came within ${gap.toFixed(1)} m of the monohull. Give moving traffic at least ${c.impact.monohullClearance} m and let it pass before you move in.`,
+      points: c.impact.trafficDeduction * (1 - gap / c.impact.trafficClearance),
+      note: `Closest to the ${vessel} ${gap.toFixed(1)} m`,
+      tip: fill(tips.trafficClearance, {
+        gap: gap.toFixed(1),
+        clearance: c.impact.trafficClearance,
+        vessel,
+      }),
     });
   }
   if (
@@ -62,50 +74,59 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
     control.push({
       points: c.control.arrivalDeduction * share,
       note: `Speed near the berth peaked at ${kn} kn`,
-      tip: `Your speed near the berth peaked at ${kn} kn. Brake earlier with short, equal reverse bursts so you arrive below ${knots(c.control.arrivalGood).toFixed(1)} kn.`,
+      tip: fill(tips.arrivalSpeed, {
+        kn,
+        target: knots(c.control.arrivalGood).toFixed(1),
+      }),
     });
   }
   if (m.countdownResets > 0)
     control.push({
       points: c.control.perCountdownReset * m.countdownResets,
       note: `Holding countdown reset ${m.countdownResets}×`,
-      tip: `You drifted out of the holding area ${m.countdownResets}×. Hold position against the wind with small, early lever corrections.`,
+      tip: fill(tips.countdownResets, { count: m.countdownResets }),
     });
   if (p.earlyEntries > 0)
     control.push({
       points: c.control.perEarlyEntry * p.earlyEntries,
-      note: `${p.earlyEntries} early ${p.earlyEntries === 1 ? "entry" : "entries"} into the fuel berth`,
-      tip: "You entered the fuel berth before it was called clear. Wait in the holding area for the radio call.",
+      note: `${p.earlyEntries} early ${p.earlyEntries === 1 ? "entry" : "entries"} into a keep-out zone`,
+      tip: tips.earlyEntries,
     });
-  if (p.channelSide === "port")
+  const exit = stage.file.mission.steps.find(
+    (st) => st.kind === "exitThroughGate",
+  );
+  if (p.channelSide && exit && p.channelSide !== exit.keepSide)
     control.push({
-      points: c.control.portSide,
-      note: "Left on the port side of the channel",
-      tip: "You left on the port side of the channel. Going out, keep the red light on your starboard side.",
+      points: c.control.wrongSide,
+      note: `Left on the ${p.channelSide} side of the channel`,
+      tip: tips.wrongSide,
     });
   if (m.fendersAtArrival === false)
     procedure.push({
       points: c.procedure.fendersLate,
-      note: "Starboard fenders not out on arrival",
-      tip: "Your starboard fenders were not out when you arrived. Deploy them during the approach: the crew needs 3 seconds.",
+      note: "Fenders not out on arrival",
+      tip: tips.fendersLate,
     });
   if (m.serviceRefusals > 0)
     procedure.push({
-      points: c.procedure.perServiceRefusal * m.serviceRefusals,
+      points: c.procedure.perChecklistRefusal * m.serviceRefusals,
       note: `${plural(m.serviceRefusals, "checklist step")} refused`,
-      tip: `${plural(m.serviceRefusals, "checklist step")} ${m.serviceRefusals === 1 ? "was" : "were"} refused. Follow the order: engines off, fuel type, fuel, pay, engines on.`,
+      tip: fill(
+        tips.checklistRefusals,
+        refused(m.serviceRefusals, "checklist step"),
+      ),
     });
   if (m.lineRefusals > 0)
     procedure.push({
       points: c.procedure.perLineRefusal * m.lineRefusals,
       note: `${plural(m.lineRefusals, "line command")} refused`,
-      tip: `${plural(m.lineRefusals, "line command")} ${m.lineRefusals === 1 ? "was" : "were"} refused. Read the reason (reach, speed, neutral, fenders) before trying again.`,
+      tip: fill(tips.lineRefusals, refused(m.lineRefusals, "line command")),
     });
   if (m.releasesUnderLoad > 0)
     procedure.push({
       points: c.procedure.perReleaseUnderLoad * m.releasesUnderLoad,
       note: `${plural(m.releasesUnderLoad, "line")} let go under high load`,
-      tip: "You let go a line under high load. Ease the boat to take the load off before releasing.",
+      tip: tips.releaseUnderLoad,
     });
   const elapsed = p.exitedAt ?? p.elapsed,
     s = c.smoothness;
@@ -122,14 +143,14 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
     smoothness.push({
       points: (100 - timeScore) * s.timeShare,
       note: `Mission time ${(elapsed / 60).toFixed(1)} min (par ${s.parTime / 60} min)`,
-      tip: `The mission took ${(elapsed / 60).toFixed(1)} minutes. Prepare fenders and plan the approach while you wait, so you are ready as soon as the berth is clear.`,
+      tip: fill(tips.time, { minutes: (elapsed / 60).toFixed(1) }),
     });
   const extraLevers = Math.max(0, m.leverChanges - s.leverPar);
   if (extraLevers > 0)
     smoothness.push({
       points: Math.min(100, extraLevers) * (1 - s.timeShare),
       note: `${m.leverChanges} lever changes (par ${s.leverPar})`,
-      tip: `You made ${m.leverChanges} lever changes. Fewer, earlier corrections are smoother and easier on the engines.`,
+      tip: fill(tips.levers, { count: m.leverChanges }),
     });
   const groups: [CategoryKey, string, Deduction[]][] = [
     ["impact", "Impact & clearance", impact],
@@ -155,20 +176,20 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
     .sort((a, b) => b.loss - a.loss)[0];
   const tip = !scored
     ? p.failure
-      ? `${p.failure}. Deploy starboard fenders before you get near other boats, and keep well clear of the monohull while it manoeuvres.`
+      ? fill(tips.failed, { failure: p.failure })
       : "The mission is not finished yet."
     : worst
       ? worst.tip
-      : "A clean run. Try it again with stronger wind in Handling & weather.";
+      : tips.clean;
   const figures: [string, string][] = [
     ["Mission time", `${elapsed.toFixed(1)} s`],
     ["Penalty time", `+${p.penalty} s`],
     ["Penalised contacts", String(p.collisions)],
     [
-      "Closest to monohull",
-      m.closestMonohull === null
+      `Closest to ${vessel}`,
+      m.closestTraffic === null
         ? "—"
-        : `${Math.max(0, m.closestMonohull).toFixed(1)} m`,
+        : `${Math.max(0, m.closestTraffic).toFixed(1)} m`,
     ],
     [
       "Peak speed near berth",
@@ -197,7 +218,7 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
         ? p.phase === "failed"
           ? "Mission failed — not scored"
           : "Not finished"
-        : c.ratings.find(([min]) => total >= min)![1],
+        : c.ratings.find((r) => total >= r.min)!.label,
     categories,
     figures,
     penalties,

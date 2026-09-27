@@ -5,13 +5,12 @@ import {
   fenderConfig,
   mooringConfig,
   trafficConfig,
-  missionConfig,
   stage,
 } from "./config";
 import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
 import { initialFenders, type Fenders } from "./fenders";
 import type { State } from "./simulation";
-import { positioningTarget, type Phase, type PositionTarget } from "./scenario";
+import { positioningTarget, type PositionTarget } from "./scenario";
 export type CameraMode = "chase" | "overhead" | "helm";
 export function hasWebGL2() {
   try {
@@ -26,8 +25,8 @@ export class View {
   camera = new THREE.PerspectiveCamera(48, 1, 0.1, 600);
   vessel = new THREE.Group();
   monohull = new THREE.Group();
-  holdingArea = new THREE.Group();
-  exitGate = new THREE.Group();
+  zoneGroups = new Map<string, THREE.Group>();
+  gateMarkings = new Map<string, THREE.Group>();
   entranceLights: THREE.MeshStandardMaterial[] = [];
   fenderMeshes = { port: new THREE.Group(), starboard: new THREE.Group() };
   mooringMeshes = new Map<
@@ -333,121 +332,163 @@ export class View {
     box(this.monohull, 0, 2.3, 1.6, 0.1, 0.1, 4.6, white);
     this.monohull.visible = false;
     this.scene.add(this.monohull);
-    // Holding area: translucent disc, ring and small buoys; the boat's
-    // centre must stay inside.
-    const hold = missionConfig.holding;
-    const disc = new THREE.Mesh(
-      new THREE.CircleGeometry(hold.radius, 48),
+    // Zones: hidden until a step shows them. Circles get a disc, a ring and
+    // small buoys; rectangles a tinted area and an outline.
+    const zoneMaterial = () =>
       new THREE.MeshBasicMaterial({
         color: 0x8fc4ff,
         transparent: true,
         opacity: 0.12,
         depthWrite: false,
-      }),
-    );
-    disc.rotation.x = -Math.PI / 2;
-    disc.position.y = 0.015;
-    this.holdingArea.add(disc);
-    const ring = new THREE.LineLoop(
-      new THREE.BufferGeometry().setFromPoints(
-        Array.from({ length: 64 }, (_, i) => {
-          const a = (i / 64) * Math.PI * 2;
-          return new THREE.Vector3(
-            Math.sin(a) * hold.radius,
-            0.03,
-            Math.cos(a) * hold.radius,
-          );
-        }),
-      ),
-      new THREE.LineBasicMaterial({ color: 0xa8d2ff }),
-    );
-    this.holdingArea.add(ring);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      const buoy = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 10, 8),
-        mat(0xa8d2ff),
-      );
-      buoy.position.set(
-        Math.sin(a) * hold.radius,
-        0.2,
-        Math.cos(a) * hold.radius,
-      );
-      this.holdingArea.add(buoy);
-    }
-    // Entrance lights at the gate ends; the stage's buoyage decides which is
-    // red. Flashing is decorative only.
-    const gate = missionConfig.entrance;
-    for (const [end, color] of [
-      [gate.red, 0xe0463c],
-      [gate.green, 0x3fbf6a],
-    ] as const) {
-      const x = end.x;
-      const tower = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.45, 0.6, 4.2, 12),
-        mat(color),
-      );
-      tower.position.set(x, 3.6, -end.y);
-      tower.castShadow = true;
-      this.scene.add(tower);
-      const light = new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: 0.4,
       });
-      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), light);
-      lamp.position.set(x, 6, -end.y);
-      this.scene.add(lamp);
-      this.entranceLights.push(light);
+    for (const zone of Object.values(stage.zones)) {
+      const group = new THREE.Group(),
+        shape = zone.shape;
+      if (shape.kind === "circle") {
+        const disc = new THREE.Mesh(
+          new THREE.CircleGeometry(shape.radius, 48),
+          zoneMaterial(),
+        );
+        disc.rotation.x = -Math.PI / 2;
+        disc.position.y = 0.015;
+        group.add(disc);
+        group.add(
+          new THREE.LineLoop(
+            new THREE.BufferGeometry().setFromPoints(
+              Array.from({ length: 64 }, (_, i) => {
+                const a = (i / 64) * Math.PI * 2;
+                return new THREE.Vector3(
+                  Math.sin(a) * shape.radius,
+                  0.03,
+                  Math.cos(a) * shape.radius,
+                );
+              }),
+            ),
+            new THREE.LineBasicMaterial({ color: 0xa8d2ff }),
+          ),
+        );
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          const buoy = new THREE.Mesh(
+            new THREE.SphereGeometry(0.3, 10, 8),
+            mat(0xa8d2ff),
+          );
+          buoy.position.set(
+            Math.sin(a) * shape.radius,
+            0.2,
+            Math.cos(a) * shape.radius,
+          );
+          group.add(buoy);
+        }
+      } else {
+        const area = new THREE.Mesh(
+          new THREE.PlaneGeometry(shape.width, shape.length),
+          zoneMaterial(),
+        );
+        area.rotation.x = -Math.PI / 2;
+        area.position.y = 0.015;
+        group.add(area);
+        const w = shape.width / 2,
+          l = shape.length / 2;
+        group.add(
+          new THREE.LineLoop(
+            new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(-w, 0.03, -l),
+              new THREE.Vector3(w, 0.03, -l),
+              new THREE.Vector3(w, 0.03, l),
+              new THREE.Vector3(-w, 0.03, l),
+            ]),
+            new THREE.LineBasicMaterial({ color: 0xa8d2ff }),
+          ),
+        );
+      }
+      // Re-parented so the label hides with the zone.
+      if (zone.label) group.add(this.label(zone.label, 0, 2, 0, 7));
+      group.position.set(shape.x, 0, -shape.y);
+      group.visible = false;
+      this.scene.add(group);
+      this.zoneGroups.set(zone.id, group);
     }
-    // Beyond the port-hand end (leaving), clear of boats in the gap.
-    const starboard = { x: Math.cos(gate.heading), y: -Math.sin(gate.heading) };
-    if (gate.label)
-      this.label(
-        gate.label,
-        gate.x - starboard.x * (gate.width / 2 + 7),
-        3,
-        -(gate.y - starboard.y * (gate.width / 2 + 7)),
-        9,
+    // Gates: lights at both ends (the stage's buoyage decides which is red;
+    // flashing is decorative only), a label, and an exit marking shown while
+    // a step leaves through the gate.
+    for (const gate of Object.values(stage.gates)) {
+      for (const [end, color] of [
+        [gate.red, 0xe0463c],
+        [gate.green, 0x3fbf6a],
+      ] as const) {
+        const tower = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.45, 0.6, 4.2, 12),
+          mat(color),
+        );
+        tower.position.set(end.x, 3.6, -end.y);
+        tower.castShadow = true;
+        this.scene.add(tower);
+        const light = new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.4,
+        });
+        const lamp = new THREE.Mesh(
+          new THREE.SphereGeometry(0.42, 12, 8),
+          light,
+        );
+        lamp.position.set(end.x, 6, -end.y);
+        this.scene.add(lamp);
+        this.entranceLights.push(light);
+      }
+      // Beyond the port-hand end (leaving), clear of boats in the gap.
+      const starboard = {
+        x: Math.cos(gate.heading),
+        y: -Math.sin(gate.heading),
+      };
+      if (gate.label)
+        this.label(
+          gate.label,
+          gate.x - starboard.x * (gate.width / 2 + 7),
+          3,
+          -(gate.y - starboard.y * (gate.width / 2 + 7)),
+          9,
+        );
+      const marking = new THREE.Group();
+      const gateLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-gate.width / 2, 0.04, 0),
+          new THREE.Vector3(gate.width / 2, 0.04, 0),
+        ]),
+        new THREE.LineDashedMaterial({
+          color: 0xffe6a8,
+          dashSize: 1,
+          gapSize: 0.7,
+        }),
       );
-    const gateLine = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-gate.width / 2, 0.04, 0),
-        new THREE.Vector3(gate.width / 2, 0.04, 0),
-      ]),
-      new THREE.LineDashedMaterial({
-        color: 0xffe6a8,
-        dashSize: 1,
-        gapSize: 0.7,
-      }),
-    );
-    gateLine.computeLineDistances();
-    this.exitGate.add(gateLine);
-    // Starboard half of the channel when leaving, lightly tinted. Drawn for a
-    // southward exit, then rotated to the gate's outward heading.
-    const lane = new THREE.Mesh(
-      new THREE.PlaneGeometry(gate.width / 2, 8),
-      new THREE.MeshBasicMaterial({
-        color: 0xffe6a8,
-        transparent: true,
-        opacity: 0.1,
-        depthWrite: false,
-      }),
-    );
-    lane.rotation.x = -Math.PI / 2;
-    lane.position.set(-gate.width / 4, 0.02, -2);
-    this.exitGate.add(lane);
-    this.exitGate.position.set(gate.x, 0, -gate.y);
-    this.exitGate.rotation.y = -(gate.heading - Math.PI);
-    this.exitGate.visible = false;
-    this.scene.add(this.exitGate);
-    this.holdingArea.position.set(hold.x, 0, -hold.y);
-    this.holdingArea.visible = false;
-    this.scene.add(this.holdingArea);
-    // Re-parented so the label hides with the area.
-    const holdingLabel = stage.zones.holding?.label;
-    if (holdingLabel)
-      this.holdingArea.add(this.label(holdingLabel, 0, 2, 0, 7));
+      gateLine.computeLineDistances();
+      marking.add(gateLine);
+      // The half of the channel to keep to when leaving, lightly tinted.
+      // Drawn for a southward exit, then rotated to the gate's heading.
+      const exit = stage.file.mission.steps.find(
+        (st) => st.kind === "exitThroughGate" && st.gate === gate.id,
+      );
+      const keepPort =
+        exit?.kind === "exitThroughGate" && exit.keepSide === "port";
+      const lane = new THREE.Mesh(
+        new THREE.PlaneGeometry(gate.width / 2, 8),
+        new THREE.MeshBasicMaterial({
+          color: 0xffe6a8,
+          transparent: true,
+          opacity: 0.1,
+          depthWrite: false,
+        }),
+      );
+      lane.rotation.x = -Math.PI / 2;
+      lane.position.set(((keepPort ? 1 : -1) * gate.width) / 4, 0.02, -2);
+      marking.add(lane);
+      marking.position.set(gate.x, 0, -gate.y);
+      marking.rotation.y = -(gate.heading - Math.PI);
+      marking.visible = false;
+      this.scene.add(marking);
+      this.gateMarkings.set(gate.id, marking);
+    }
     this.resize();
     window.addEventListener("resize", () => this.resize());
   }
@@ -486,10 +527,15 @@ export class View {
     mooring: Mooring = initialMooring(),
     positionTarget: PositionTarget = "approach",
     traffic: { x: number; y: number; heading: number } | null = null,
-    phase: Phase = "approach",
+    marks: { zones: string[]; gate: string | null } = {
+      zones: [],
+      gate: null,
+    },
   ) {
-    this.holdingArea.visible = phase === "holding";
-    this.exitGate.visible = phase === "departure";
+    for (const [id, group] of this.zoneGroups)
+      group.visible = marks.zones.includes(id);
+    for (const [id, marking] of this.gateMarkings)
+      marking.visible = marks.gate === id;
     // Flashing every 4 s: red and green offset by half a period.
     this.entranceLights.forEach((light, i) => {
       light.emissiveIntensity = (time / 4 + i / 2) % 1 < 0.2 ? 2.2 : 0.25;

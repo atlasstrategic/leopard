@@ -1,11 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boat, missionConfig, scenario, trafficConfig } from "../src/config";
+import { boat, scenario, trafficConfig } from "../src/config";
 import { lineIds } from "../src/mooring";
 import { Session } from "../src/session";
+import { fuel } from "./fuel-stage";
 import { startDeparture, vesselObstacle } from "../src/traffic";
 const calm = { speed: 0, direction: 0, currentX: 0, currentY: 0 };
-const gate = missionConfig.entrance;
+const gate = fuel.entrance;
 const run = (g: Session, seconds: number) => {
   for (let i = 0; i < Math.round(seconds * 60); i++) g.tick();
 };
@@ -13,8 +14,7 @@ const types = (g: Session) => g.recorder.events.map((e) => e.type);
 // Departure phase with lines already let go, heading out towards the gate.
 function leaving(x: number) {
   const g = new Session(calm);
-  g.traffic!.status = "gone";
-  Object.assign(g.progress, { phase: "departure", clearedAt: 0 });
+  g.skipTo("departure");
   Object.assign(g.state, { x, y: gate.y + 8, heading: Math.PI, vy: -1 });
   g.previous = { ...g.state };
   g.controls.port = g.controls.starboard = 0.4;
@@ -30,18 +30,17 @@ test("breakwaters leave exactly the entrance gap between the lights", () => {
 });
 test("completing the service starts the departure; letting go no longer unsecures", () => {
   const g = new Session(calm);
-  g.traffic!.status = "gone";
-  Object.assign(g.progress, { phase: "securing", clearedAt: 0 });
+  g.skipTo("secure");
   Object.assign(g.state, { x: 2.5, y: 16 });
   g.previous = { ...g.state };
   g.fenders.starboard.deployed = g.fenders.starboard.target = true;
   for (const id of lineIds) g.requestLine(id, "attach");
   run(g, 13);
-  for (const action of ["enginesOff", "diesel", "fuel"] as const)
+  for (const action of ["engines-off", "diesel", "fuel"] as const)
     assert.equal(g.requestService(action).accepted, true);
   run(g, 10);
   assert.equal(g.requestService("pay").accepted, true);
-  assert.equal(g.requestService("enginesOn").accepted, true);
+  assert.equal(g.requestService("engines-on").accepted, true);
   assert.equal(g.progress.phase, "departure");
   assert.equal(g.recorder.phase, "departure");
   assert.ok(types(g).includes("mission.departure"));
@@ -71,7 +70,7 @@ test("leaving on the port side of the channel costs a penalty", () => {
   run(g, 12);
   assert.equal(g.progress.phase, "complete");
   assert.equal(g.progress.channelSide, "port");
-  assert.equal(g.progress.penalty, missionConfig.channelSidePenalty);
+  assert.equal(g.progress.penalty, fuel.channelSidePenalty);
   assert.ok(types(g).includes("mission.channel_side"));
   assert.ok(
     g.radio.some((m) => /starboard side of the channel/.test(m.message)),
@@ -79,7 +78,7 @@ test("leaving on the port side of the channel costs a penalty", () => {
 });
 test("crossing the gate before departure does not end the mission", () => {
   const g = leaving(gate.x - gate.width / 4);
-  g.progress.phase = "holding";
+  g.skipTo("hold");
   run(g, 12);
   assert.ok(g.state.y < gate.y, "the boat did cross the gate line");
   assert.notEqual(g.progress.phase, "complete");

@@ -61,11 +61,146 @@ function problems(s: StageFile) {
         );
     }
   }
+  const mission = s.mission,
+    stepIds = mission.steps.map((st) => st.id);
+  unique(mission.steps, "step");
+  const zones = new Map(scene.zones.map((z) => [z.id, z]));
+  const gates = new Set(scene.gates.map((g) => g.id));
+  const vessels = new Set(s.traffic.map((v) => v.id));
+  const needZone = (where: string, zone: string) => {
+    if (!zones.has(zone)) found.push(`${where}: zone "${zone}" does not exist`);
+  };
+  const needVessel = (where: string, vessel: string) => {
+    if (!vessels.has(vessel))
+      found.push(`${where}: vessel "${vessel}" does not exist`);
+  };
+  if (!scene.berths.some((b) => b.id === mission.berth))
+    found.push(`Mission: berth "${mission.berth}" does not exist`);
+  mission.steps.forEach((st, i) => {
+    const where = `Step ${st.id}`;
+    for (const zone of st.show ?? []) needZone(where, zone);
+    if (st.bearing?.zone) needZone(where, st.bearing.zone);
+    if (st.bearing?.gate && !gates.has(st.bearing.gate))
+      found.push(`${where}: gate "${st.bearing.gate}" does not exist`);
+    const previous = mission.steps[i - 1];
+    if (st.kind === "holdInZone") {
+      needZone(where, st.zone);
+      for (const v of st.releases) needVessel(where, v);
+    } else if (st.kind === "waitForClear") {
+      needZone(where, st.zone);
+      needVessel(where, st.vessel);
+      if (zones.get(st.zone)?.shape.kind === "circle")
+        found.push(`${where}: zone "${st.zone}" must be a rectangle`);
+    } else if (st.kind === "secureAlongside") {
+      if (previous?.kind !== "arriveAtBerth")
+        found.push(`${where}: must directly follow an arriveAtBerth step`);
+    } else if (st.kind === "checklist") {
+      unique(st.items, `${where} item`);
+      if (
+        st.requiresSecured &&
+        !mission.steps.slice(0, i).some((p) => p.kind === "secureAlongside")
+      )
+        found.push(
+          `${where}: requiresSecured needs an earlier secureAlongside step`,
+        );
+      for (const it of st.items)
+        if (
+          it.action === "choice" &&
+          it.options.filter((o) => !o.refusal).length !== 1
+        )
+          found.push(
+            `${where}: choice ${it.id} needs exactly one option without a refusal`,
+          );
+    } else if (st.kind === "exitThroughGate" && !gates.has(st.gate))
+      found.push(`${where}: gate "${st.gate}" does not exist`);
+  });
+  for (const rule of mission.rules) {
+    if (rule.kind === "keepOut") {
+      needZone("keepOut rule", rule.zone);
+      if (!stepIds.includes(rule.until))
+        found.push(`keepOut rule: step "${rule.until}" does not exist`);
+    } else needVessel("protectedContact rule", rule.vessel);
+  }
   return found;
 }
+// Engine defaults for anything a stage's scoring leaves out.
+export const defaultScoring = {
+  weights: { impact: 0.4, control: 0.25, procedure: 0.2, smoothness: 0.15 },
+  impact: { perContact: 25, trafficClearance: 3, trafficDeduction: 30 },
+  control: {
+    arrivalRadius: 12,
+    arrivalGood: 0.3,
+    arrivalPoor: 0.8,
+    arrivalDeduction: 50,
+    perCountdownReset: 10,
+    perEarlyEntry: 25,
+    wrongSide: 30,
+  },
+  procedure: {
+    fendersLate: 30,
+    perChecklistRefusal: 10,
+    perLineRefusal: 5,
+    perReleaseUnderLoad: 10,
+  },
+  smoothness: {
+    parTime: 300,
+    slowTime: 600,
+    slowTimeScore: 40,
+    leverPar: 60,
+    timeShare: 0.6,
+  },
+  ratings: [
+    { min: 90, label: "Excellent" },
+    { min: 75, label: "Good" },
+    { min: 60, label: "Fair" },
+    { min: 0, label: "Needs practice" },
+  ],
+  tips: {
+    contacts:
+      "You had {count}. Slow down earlier near quays and breakwaters, and have fenders out before you get close.",
+    trafficClearance:
+      "You came within {gap} m of the {vessel}. Give moving traffic at least {clearance} m.",
+    arrivalSpeed:
+      "Your speed near the berth peaked at {kn} kn. Brake earlier with short, equal reverse bursts so you arrive below {target} kn.",
+    countdownResets:
+      "You drifted out of the holding zone {count}×. Hold position with small, early lever corrections.",
+    earlyEntries:
+      "You entered a zone before you were cleared. Wait for the radio call.",
+    wrongSide:
+      "You left on the wrong side of the channel. Keep to the starboard side of a channel.",
+    fendersLate:
+      "Your fenders were not out when you arrived. Deploy them during the approach: the crew needs 3 seconds.",
+    checklistRefusals: "{count} {verb} refused. Follow the checklist in order.",
+    lineRefusals:
+      "{count} {verb} refused. Read the reason (reach, speed, neutral, fenders) before trying again.",
+    releaseUnderLoad:
+      "You let go a line under high load. Ease the boat to take the load off before releasing.",
+    time: "The mission took {minutes} minutes. Prepare while you wait, so you are ready when cleared.",
+    levers:
+      "You made {count} lever changes. Fewer, earlier corrections are smoother and easier on the engines.",
+    clean:
+      "A clean run. Try it again with stronger wind in Handling & weather.",
+    failed: "{failure}. Deploy fenders before you get near other boats.",
+  },
+};
+export type Scoring = typeof defaultScoring;
+function scoring(s: StageFile["mission"]["scoring"]): Scoring {
+  const d = defaultScoring;
+  return {
+    weights: s?.weights ?? d.weights,
+    impact: { ...d.impact, ...s?.impact },
+    control: { ...d.control, ...s?.control },
+    procedure: { ...d.procedure, ...s?.procedure },
+    smoothness: { ...d.smoothness, ...s?.smoothness },
+    ratings: [...(s?.ratings ?? d.ratings)].sort((a, b) => b.min - a.min),
+    tips: { ...d.tips, ...s?.tips },
+  };
+}
+export type Step = StageFile["mission"]["steps"][number];
+export type Rule = StageFile["mission"]["rules"][number];
 function toStage(s: StageFile) {
   const scene = s.scene,
-    berth = scene.berths[0];
+    berth = scene.berths.find((b) => b.id === s.mission.berth)!;
   const bollard = (id: string) => scene.bollards.find((b) => b.id === id)!;
   const line = (end: "bow" | "stern") => ({
     bollard: berth.lines[end],
@@ -106,6 +241,7 @@ function toStage(s: StageFile) {
     berth: {
       id: berth.id,
       name: berth.name,
+      label: berth.label ?? "",
       approach: {
         x: berth.approach.x,
         y: berth.approach.y,
@@ -167,6 +303,10 @@ function toStage(s: StageFile) {
       ...v,
       start: { ...v.start, heading: radians(v.start.heading) },
     })),
+    mission: {
+      ...s.mission,
+      scoring: scoring(s.mission.scoring),
+    },
   };
 }
 // Validate a stage file (schema, then references) and convert it for the engine.

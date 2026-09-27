@@ -1,7 +1,7 @@
-import { angle, boat, scenario, mooringConfig, missionConfig } from "./config";
+import { angle, boat, scenario, mooringConfig } from "./config";
+import { missionSteps, phaseFor } from "./mission";
 import type { State } from "./simulation";
 import { hullPoints, type ContactSample } from "./contacts";
-import type { VesselObstacle } from "./traffic";
 export type PositionTarget = "approach" | "alongside";
 export function contactAcceptable(s: State, samples: ContactSample[]) {
   if (!s.contact) return true;
@@ -18,23 +18,7 @@ export function contactAcceptable(s: State, samples: ContactSample[]) {
 }
 export const positioningTarget = (mode: PositionTarget) =>
   mode === "alongside" ? scenario.alongside : scenario.target;
-export const insideHolding = (s: State) =>
-  Math.hypot(s.x - missionConfig.holding.x, s.y - missionConfig.holding.y) <=
-  missionConfig.holding.radius;
-const zone = missionConfig.fuelZone;
-export const insideFuelZone = (s: State) =>
-  Math.abs(s.x - zone.x) <= zone.width / 2 &&
-  Math.abs(s.y - zone.y) <= zone.length / 2;
-// Any part of the vessel's capsule (by bounding box) inside the fuel zone.
-export function vesselInFuelZone(v: VesselObstacle) {
-  const dx = Math.abs(Math.sin(v.heading)) * v.halfLength + v.radius,
-    dy = Math.abs(Math.cos(v.heading)) * v.halfLength + v.radius;
-  return (
-    Math.abs(v.x - zone.x) < zone.width / 2 + dx &&
-    Math.abs(v.y - zone.y) < zone.length / 2 + dy
-  );
-}
-// Smallest gap between the boat's hull and the east quay.
+// Smallest gap between the boat's hull and the berth's quay.
 export function quayClearance(s: State) {
   const quay = scenario.obstacles.find(
     (b) => b.id === scenario.alongside.obstacleId,
@@ -57,19 +41,6 @@ export function quayClearance(s: State) {
   }
   return min;
 }
-// Outward crossing of the entrance gate line between the lights, and which
-// half of the channel it was in, relative to a boat leaving (starboard =
-// the red side under IALA A).
-export function gateCrossing(previous: State, s: State) {
-  const gate = missionConfig.entrance;
-  const out = { x: Math.sin(gate.heading), y: Math.cos(gate.heading) },
-    starboard = { x: Math.cos(gate.heading), y: -Math.sin(gate.heading) };
-  const along = (p: State) => (p.x - gate.x) * out.x + (p.y - gate.y) * out.y;
-  if (!(along(previous) < 0 && along(s) >= 0)) return null;
-  const across = (s.x - gate.x) * starboard.x + (s.y - gate.y) * starboard.y;
-  if (Math.abs(across) > gate.width / 2) return null;
-  return across >= 0 ? "starboard" : "port";
-}
 export type Phase =
   | "holding"
   | "approach"
@@ -88,11 +59,15 @@ export type Progress = {
   success: boolean;
   collisions: number;
   penalty: number;
-  // Holding stage: countdown remaining while inside (null when not counting).
+  // Index of the current mission step.
+  step: number;
+  // Hold step: countdown remaining while inside (null when not counting).
   countdown: number | null;
-  monohullDepartedAt: number | null;
+  // When a hold released its traffic, and when a wait-for-clear completed.
+  releasedAt: number | null;
   clearedAt: number | null;
-  inFuelZone: boolean;
+  // Keep-out rules: whether the boat is inside each zone, and entries made.
+  insideKeepOut: Record<string, boolean>;
   earlyEntries: number;
   failure: string | null;
   service: Service;
@@ -103,8 +78,8 @@ export type Progress = {
 };
 // Recorded during the attempt for the debrief.
 export type Metrics = {
-  // Hull-to-hull, while the monohull is in the harbour.
-  closestMonohull: number | null;
+  // Hull-to-hull, while traffic is in the harbour.
+  closestTraffic: number | null;
   // m/s, near the berth before first securing.
   arrivalPeakSpeed: number | null;
   countdownResets: number;
@@ -117,7 +92,7 @@ export type Metrics = {
   checkpointRestarts: number;
 };
 export const initialMetrics = (): Metrics => ({
-  closestMonohull: null,
+  closestTraffic: null,
   arrivalPeakSpeed: null,
   countdownResets: 0,
   fendersAtArrival: null,
@@ -127,29 +102,29 @@ export const initialMetrics = (): Metrics => ({
   releasesUnderLoad: 0,
   checkpointRestarts: 0,
 });
-// Fuel service checklist, in order: engines off → fuel type → fuel → pay →
-// engines on. Engines may be restarted at any time for safety.
+// Checklist step state. Items complete in order; engines may be restarted at
+// any time for safety, after which they must be switched off again.
 export type Service = {
   enginesOff: boolean;
-  fuelConfirmed: boolean;
-  litres: number;
-  fuelling: boolean;
-  paid: boolean;
+  // Completed choice and confirm items, by id.
+  done: string[];
+  // Timed item progress and the id of the item running, if any.
+  amount: number;
+  running: string | null;
   completedAt: number | null;
 };
 export const initialService = (): Service => ({
   enginesOff: false,
-  fuelConfirmed: false,
-  litres: 0,
-  fuelling: false,
-  paid: false,
+  done: [],
+  amount: 0,
+  running: null,
   completedAt: null,
 });
 // The fuel mission starts by waiting for the fuel berth; the docking-only
 // practice harbour (Show me) starts at the approach.
 export const initialProgress = (mission = false): Progress => ({
   elapsed: 0,
-  phase: mission ? "holding" : "approach",
+  phase: phaseFor(missionSteps(mission)[0]) ?? "approach",
   positionTarget: "approach",
   arrivalAt: null,
   securedAt: null,
@@ -157,10 +132,11 @@ export const initialProgress = (mission = false): Progress => ({
   success: false,
   collisions: 0,
   penalty: 0,
+  step: 0,
   countdown: null,
-  monohullDepartedAt: null,
+  releasedAt: null,
   clearedAt: null,
-  inFuelZone: false,
+  insideKeepOut: {},
   earlyEntries: 0,
   failure: null,
   service: initialService(),

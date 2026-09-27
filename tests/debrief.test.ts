@@ -1,9 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boat, missionConfig, scoreConfig, trafficConfig } from "../src/config";
+import { boat, scoreConfig, trafficConfig } from "../src/config";
 import { debrief, tracks } from "../src/debrief";
 import { initialProgress, type Progress } from "../src/scenario";
 import { Session } from "../src/session";
+import { fuel } from "./fuel-stage";
 const calm = { speed: 0, direction: 0, currentX: 0, currentY: 0 };
 const run = (g: Session, seconds: number) => {
   for (let i = 0; i < Math.round(seconds * 60); i++) g.tick();
@@ -54,12 +55,12 @@ test("arrival speed, monohull clearance and lever changes deduct proportionally"
   const p = completed();
   p.metrics.arrivalPeakSpeed =
     (c.control.arrivalGood + c.control.arrivalPoor) / 2;
-  p.metrics.closestMonohull = c.impact.monohullClearance / 2;
+  p.metrics.closestTraffic = c.impact.trafficClearance / 2;
   p.metrics.leverChanges = c.smoothness.leverPar + 20;
   const d = debrief(p);
   const score = Object.fromEntries(d.categories.map((c) => [c.key, c.score]));
   assert.equal(score.control, 100 - c.control.arrivalDeduction / 2);
-  assert.equal(score.impact, 100 - c.impact.monohullDeduction / 2);
+  assert.equal(score.impact, 100 - c.impact.trafficDeduction / 2);
   assert.equal(score.smoothness, 100 - 20 * (1 - c.smoothness.timeShare));
   assert.match(d.tip, /Brake earlier/);
 });
@@ -138,7 +139,7 @@ test("the session records debrief metrics and retry clears them", () => {
   g.observe();
   assert.equal(g.progress.metrics.leverChanges, 2);
   g.requestLine("bow", "attach");
-  g.requestService("enginesOff");
+  g.requestService("engines-off");
   assert.equal(g.progress.metrics.lineRefusals, 1);
   assert.equal(g.progress.metrics.serviceRefusals, 1);
   // Beside the moored monohull: closest hull-to-hull gap is tracked.
@@ -152,11 +153,11 @@ test("the session records debrief metrics and retry clears them", () => {
   });
   g.previous = { ...g.state };
   run(g, 0.5);
-  assert.ok(Math.abs(g.progress.metrics.closestMonohull! - 2) < 0.1);
+  assert.ok(Math.abs(g.progress.metrics.closestTraffic! - 2) < 0.1);
   // Holding: leaving during the countdown is counted.
   Object.assign(g.state, {
-    x: missionConfig.holding.x,
-    y: missionConfig.holding.y,
+    x: fuel.holding.x,
+    y: fuel.holding.y,
   });
   g.previous = { ...g.state };
   run(g, 1);

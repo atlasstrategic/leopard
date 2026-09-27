@@ -14,6 +14,7 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - Added **restart checkpoints**: restart from the approach (berth called clear) or the departure (service complete) instead of repeating the whole mission. The debrief counts restarts. This completes the milestone C mission loop. ([#1](https://github.com/atlasstrategic/leopard/issues/1))
 - The harbour layout, conditions and traffic now come from a validated **stage file** (`stages/fuel-dock/stage.json`) with a generated JSON Schema, the first step towards stages as plugins. No change to play. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
 - Widened the harbour entrance from 18 m to 24 m (stage version 6.1.0).
+- The fuel mission itself (objectives, radio calls, rules, checklist, scoring and checkpoints) now comes from the stage file as reusable building blocks, so other stages can define their own missions. No change to play; checklist events in exports are named after item ids. Stage version 7.0.0. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
 - Fixed an empty "Restart from" row showing in the objective panel before any checkpoint was reached.
 
 ## [0.1.0] — 2026-09-25

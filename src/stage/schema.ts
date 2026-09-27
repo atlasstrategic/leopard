@@ -50,6 +50,10 @@ const berth = z
   .object({
     id,
     name: z.string(),
+    label: z
+      .string()
+      .optional()
+      .describe("Short code for the instruments' bearing caption, e.g. 01"),
     side: z.literal("starboard").describe("Side of the boat against the quay"),
     structure: id.describe("Quay the boat lies against"),
     lines: z
@@ -133,9 +137,254 @@ const vessel = z
     lookAhead: positive.describe("Metres ahead it keeps clear of the player"),
     lateralClearance: z.number().nonnegative().describe("Metres"),
     legs: z.array(leg).min(1),
+    radio: z
+      .object({
+        yield: z
+          .string()
+          .optional()
+          .describe("Announced when it stops for the player"),
+      })
+      .optional(),
   })
   .describe("Scripted traffic that follows its route and yields to the player");
 
+// Mission: an ordered list of steps built from the engine's building blocks,
+// plus rules that apply across steps. Texts may use {placeholders} where
+// noted.
+const text = z.string();
+const stepBase = z.object({
+  id,
+  label: z
+    .string()
+    .describe(
+      "Eyebrow label; consecutive steps with the same label share a number",
+    ),
+  title: text,
+  hint: text,
+  checkpoint: z
+    .string()
+    .optional()
+    .describe(
+      "Save a restart point when this step starts, with this button label",
+    ),
+  show: z
+    .array(id)
+    .optional()
+    .describe("Zone ids drawn in the scene during this step"),
+  bearing: z
+    .object({
+      label: z.string(),
+      zone: id.optional(),
+      gate: id.optional(),
+    })
+    .optional()
+    .describe("Instrument bearing target; defaults to the berth"),
+  linesRefused: text
+    .optional()
+    .describe("Refusal shown for line attachment during this step"),
+});
+const radio = <T extends z.ZodRawShape>(shape: T) =>
+  z.object(shape).partial().optional();
+const holdInZone = stepBase.extend({
+  kind: z.literal("holdInZone"),
+  zone: id,
+  seconds: positive,
+  resetOnExit: z.boolean(),
+  releases: z
+    .array(id)
+    .describe("Traffic vessel ids that depart when the hold completes"),
+  radio: radio({ start: text, enter: text, reset: text, done: text }),
+});
+const waitForClear = stepBase.extend({
+  kind: z.literal("waitForClear"),
+  vessel: id,
+  zone: id.describe("Rectangle zone the vessel must leave completely"),
+  radio: radio({ start: text, done: text }),
+});
+const arriveAtBerth = stepBase.extend({
+  kind: z.literal("arriveAtBerth"),
+  radio: radio({ start: text, done: text }),
+});
+const secureAlongside = stepBase.extend({
+  kind: z.literal("secureAlongside"),
+  hintAlongside: text.describe("Hint once the first line is attached"),
+  radio: radio({ start: text, done: text }),
+});
+const item = z.discriminatedUnion("action", [
+  z.object({
+    id,
+    action: z.literal("enginesOff"),
+    label: text,
+    pending: text.describe("Refusal when a later item is tried first"),
+    done: text,
+  }),
+  z.object({
+    id,
+    action: z.literal("choice"),
+    label: text,
+    pending: text,
+    options: z
+      .array(
+        z.object({
+          id,
+          label: text,
+          refusal: text
+            .optional()
+            .describe("Present on wrong options: why it is refused"),
+        }),
+      )
+      .min(2),
+    alreadyDone: text,
+    done: text,
+  }),
+  z.object({
+    id,
+    action: z.literal("timed"),
+    label: text,
+    button: text,
+    pending: text,
+    total: positive,
+    unit: z.string(),
+    rate: positive.describe("Units per simulation second"),
+    running: text,
+    alreadyDone: text,
+    started: text.describe("{total} {unit}"),
+    done: text.describe("{total} {unit}"),
+    interrupted: text.describe("{amount} {unit}"),
+  }),
+  z.object({
+    id,
+    action: z.literal("confirm"),
+    label: text,
+    button: text,
+    pending: text,
+    alreadyDone: text,
+    done: text,
+  }),
+  z.object({
+    id,
+    action: z.literal("enginesOn"),
+    label: text,
+  }),
+]);
+const checklist = stepBase.extend({
+  kind: z.literal("checklist"),
+  requiresSecured: z.boolean(),
+  items: z.array(item).min(1),
+  notReady: text.describe("Refusal before this step is reached"),
+  unsecured: text.describe("Refusal while no longer secured"),
+  radio: radio({ start: text, done: text }),
+});
+const exitThroughGate = stepBase.extend({
+  kind: z.literal("exitThroughGate"),
+  gate: id,
+  keepSide: z.enum(["starboard", "port"]),
+  sidePenalty: z.number().nonnegative().describe("Seconds for the wrong side"),
+  radio: radio({ start: text, wrongSide: text.describe("{penalty}") }),
+});
+const step = z.discriminatedUnion("kind", [
+  holdInZone,
+  waitForClear,
+  arriveAtBerth,
+  secureAlongside,
+  checklist,
+  exitThroughGate,
+]);
+const rule = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("keepOut"),
+      zone: id,
+      until: id.describe("Step id; the rule ends when that step completes"),
+      penalty: z.number().nonnegative(),
+      radio: text.describe("{penalty}"),
+      check: text.describe("Objective line while the rule applies"),
+    })
+    .describe("Penalty for each entry into a zone"),
+  z
+    .object({
+      kind: z.literal("protectedContact"),
+      vessel: id,
+    })
+    .describe("Contact with the vessel where no fender covers the hull fails"),
+]);
+const tips = z
+  .object({
+    contacts: text.describe("{count}"),
+    trafficClearance: text.describe("{gap} {clearance} {vessel}"),
+    arrivalSpeed: text.describe("{kn} {target}"),
+    countdownResets: text.describe("{count}"),
+    earlyEntries: text,
+    wrongSide: text,
+    fendersLate: text,
+    checklistRefusals: text.describe("{count} {verb}"),
+    lineRefusals: text.describe("{count} {verb}"),
+    releaseUnderLoad: text,
+    time: text.describe("{minutes}"),
+    levers: text.describe("{count}"),
+    clean: text,
+    failed: text.describe("{failure}"),
+  })
+  .partial();
+const scoring = z
+  .object({
+    weights: z.object({
+      impact: z.number().nonnegative(),
+      control: z.number().nonnegative(),
+      procedure: z.number().nonnegative(),
+      smoothness: z.number().nonnegative(),
+    }),
+    impact: z
+      .object({
+        perContact: z.number().nonnegative(),
+        trafficClearance: positive.describe("Metres hull to hull"),
+        trafficDeduction: z.number().nonnegative(),
+      })
+      .partial(),
+    control: z
+      .object({
+        arrivalRadius: positive,
+        arrivalGood: positive.describe("m/s"),
+        arrivalPoor: positive.describe("m/s"),
+        arrivalDeduction: z.number().nonnegative(),
+        perCountdownReset: z.number().nonnegative(),
+        perEarlyEntry: z.number().nonnegative(),
+        wrongSide: z.number().nonnegative(),
+      })
+      .partial(),
+    procedure: z
+      .object({
+        fendersLate: z.number().nonnegative(),
+        perChecklistRefusal: z.number().nonnegative(),
+        perLineRefusal: z.number().nonnegative(),
+        perReleaseUnderLoad: z.number().nonnegative(),
+      })
+      .partial(),
+    smoothness: z
+      .object({
+        parTime: positive.describe("Seconds"),
+        slowTime: positive.describe("Seconds"),
+        slowTimeScore: z.number().min(0).max(100),
+        leverPar: z.number().nonnegative(),
+        timeShare: z.number().min(0).max(1),
+      })
+      .partial(),
+    ratings: z.array(z.object({ min: z.number(), label: z.string() })).min(1),
+    tips,
+  })
+  .partial()
+  .describe("Debrief score; anything left out uses the engine defaults");
+const mission = z.object({
+  berth: id.describe("Berth used by the arrive and secure steps"),
+  steps: z.array(step).min(1),
+  rules: z.array(rule),
+  complete: z.object({
+    title: text,
+    hint: text.describe("{penalty}"),
+    radio: text.describe("{time} {penalty}"),
+  }),
+  scoring: scoring.optional(),
+});
 export const stageSchema = z
   .object({
     $schema: z.string().optional(),
@@ -172,7 +421,11 @@ export const stageSchema = z
         .object({ x: z.number(), y: z.number() })
         .describe("Water current, m/s east and north"),
     }),
-    traffic: z.array(vessel),
+    traffic: z
+      .array(vessel)
+      .max(1)
+      .describe("Scripted traffic; the engine supports one vessel for now"),
+    mission,
   })
   .describe("Leopard / Handling Lab stage");
 export type StageFile = z.infer<typeof stageSchema>;

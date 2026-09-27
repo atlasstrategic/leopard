@@ -170,6 +170,10 @@
               "name": {
                 "type": "string"
               },
+              "label": {
+                "description": "Short code for the instruments' bearing caption, e.g. 01",
+                "type": "string"
+              },
               "side": {
                 "type": "string",
                 "const": "starboard",
@@ -586,6 +590,7 @@
       "additionalProperties": false
     },
     "traffic": {
+      "maxItems": 1,
       "type": "array",
       "items": {
         "type": "object",
@@ -713,6 +718,16 @@
               "additionalProperties": false,
               "description": "Route waypoint"
             }
+          },
+          "radio": {
+            "type": "object",
+            "properties": {
+              "yield": {
+                "description": "Announced when it stops for the player",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "required": [
@@ -735,7 +750,1163 @@
         ],
         "additionalProperties": false,
         "description": "Scripted traffic that follows its route and yields to the player"
-      }
+      },
+      "description": "Scripted traffic; the engine supports one vessel for now"
+    },
+    "mission": {
+      "type": "object",
+      "properties": {
+        "berth": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Berth used by the arrive and secure steps"
+        },
+        "steps": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Eyebrow label; consecutive steps with the same label share a number"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  },
+                  "checkpoint": {
+                    "description": "Save a restart point when this step starts, with this button label",
+                    "type": "string"
+                  },
+                  "show": {
+                    "description": "Zone ids drawn in the scene during this step",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$",
+                      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    }
+                  },
+                  "bearing": {
+                    "description": "Instrument bearing target; defaults to the berth",
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "zone": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      },
+                      "gate": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "linesRefused": {
+                    "description": "Refusal shown for line attachment during this step",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "holdInZone"
+                  },
+                  "zone": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "seconds": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "resetOnExit": {
+                    "type": "boolean"
+                  },
+                  "releases": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$",
+                      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    },
+                    "description": "Traffic vessel ids that depart when the hold completes"
+                  },
+                  "radio": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string"
+                      },
+                      "enter": {
+                        "type": "string"
+                      },
+                      "reset": {
+                        "type": "string"
+                      },
+                      "done": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "title",
+                  "hint",
+                  "kind",
+                  "zone",
+                  "seconds",
+                  "resetOnExit",
+                  "releases"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Eyebrow label; consecutive steps with the same label share a number"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  },
+                  "checkpoint": {
+                    "description": "Save a restart point when this step starts, with this button label",
+                    "type": "string"
+                  },
+                  "show": {
+                    "description": "Zone ids drawn in the scene during this step",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$",
+                      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    }
+                  },
+                  "bearing": {
+                    "description": "Instrument bearing target; defaults to the berth",
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "zone": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      },
+                      "gate": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "linesRefused": {
+                    "description": "Refusal shown for line attachment during this step",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "waitForClear"
+                  },
+                  "vessel": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "zone": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Rectangle zone the vessel must leave completely"
+                  },
+                  "radio": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string"
+                      },
+                      "done": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "title",
+                  "hint",
+                  "kind",
+                  "vessel",
+                  "zone"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Eyebrow label; consecutive steps with the same label share a number"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  },
+                  "checkpoint": {
+                    "description": "Save a restart point when this step starts, with this button label",
+                    "type": "string"
+                  },
+                  "show": {
+                    "description": "Zone ids drawn in the scene during this step",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$",
+                      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    }
+                  },
+                  "bearing": {
+                    "description": "Instrument bearing target; defaults to the berth",
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "zone": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      },
+                      "gate": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "linesRefused": {
+                    "description": "Refusal shown for line attachment during this step",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "arriveAtBerth"
+                  },
+                  "radio": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string"
+                      },
+                      "done": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "title",
+                  "hint",
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Eyebrow label; consecutive steps with the same label share a number"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  },
+                  "checkpoint": {
+                    "description": "Save a restart point when this step starts, with this button label",
+                    "type": "string"
+                  },
+                  "show": {
+                    "description": "Zone ids drawn in the scene during this step",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$",
+                      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    }
+                  },
+                  "bearing": {
+                    "description": "Instrument bearing target; defaults to the berth",
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "zone": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      },
+                      "gate": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "linesRefused": {
+                    "description": "Refusal shown for line attachment during this step",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "secureAlongside"
+                  },
+                  "hintAlongside": {
+                    "type": "string",
+                    "description": "Hint once the first line is attached"
+                  },
+                  "radio": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string"
+                      },
+                      "done": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "title",
+                  "hint",
+                  "kind",
+                  "hintAlongside"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Eyebrow label; consecutive steps with the same label share a number"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  },
+                  "checkpoint": {
+                    "description": "Save a restart point when this step starts, with this button label",
+                    "type": "string"
+                  },
+                  "show": {
+                    "description": "Zone ids drawn in the scene during this step",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$",
+                      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    }
+                  },
+                  "bearing": {
+                    "description": "Instrument bearing target; defaults to the berth",
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "zone": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      },
+                      "gate": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "linesRefused": {
+                    "description": "Refusal shown for line attachment during this step",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "checklist"
+                  },
+                  "requiresSecured": {
+                    "type": "boolean"
+                  },
+                  "items": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9][a-z0-9-]*$",
+                              "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                            },
+                            "action": {
+                              "type": "string",
+                              "const": "enginesOff"
+                            },
+                            "label": {
+                              "type": "string"
+                            },
+                            "pending": {
+                              "type": "string",
+                              "description": "Refusal when a later item is tried first"
+                            },
+                            "done": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "action",
+                            "label",
+                            "pending",
+                            "done"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9][a-z0-9-]*$",
+                              "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                            },
+                            "action": {
+                              "type": "string",
+                              "const": "choice"
+                            },
+                            "label": {
+                              "type": "string"
+                            },
+                            "pending": {
+                              "type": "string"
+                            },
+                            "options": {
+                              "minItems": 2,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "refusal": {
+                                    "description": "Present on wrong options: why it is refused",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "label"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "alreadyDone": {
+                              "type": "string"
+                            },
+                            "done": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "action",
+                            "label",
+                            "pending",
+                            "options",
+                            "alreadyDone",
+                            "done"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9][a-z0-9-]*$",
+                              "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                            },
+                            "action": {
+                              "type": "string",
+                              "const": "timed"
+                            },
+                            "label": {
+                              "type": "string"
+                            },
+                            "button": {
+                              "type": "string"
+                            },
+                            "pending": {
+                              "type": "string"
+                            },
+                            "total": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "rate": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "description": "Units per simulation second"
+                            },
+                            "running": {
+                              "type": "string"
+                            },
+                            "alreadyDone": {
+                              "type": "string"
+                            },
+                            "started": {
+                              "type": "string",
+                              "description": "{total} {unit}"
+                            },
+                            "done": {
+                              "type": "string",
+                              "description": "{total} {unit}"
+                            },
+                            "interrupted": {
+                              "type": "string",
+                              "description": "{amount} {unit}"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "action",
+                            "label",
+                            "button",
+                            "pending",
+                            "total",
+                            "unit",
+                            "rate",
+                            "running",
+                            "alreadyDone",
+                            "started",
+                            "done",
+                            "interrupted"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9][a-z0-9-]*$",
+                              "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                            },
+                            "action": {
+                              "type": "string",
+                              "const": "confirm"
+                            },
+                            "label": {
+                              "type": "string"
+                            },
+                            "button": {
+                              "type": "string"
+                            },
+                            "pending": {
+                              "type": "string"
+                            },
+                            "alreadyDone": {
+                              "type": "string"
+                            },
+                            "done": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "action",
+                            "label",
+                            "button",
+                            "pending",
+                            "alreadyDone",
+                            "done"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9][a-z0-9-]*$",
+                              "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                            },
+                            "action": {
+                              "type": "string",
+                              "const": "enginesOn"
+                            },
+                            "label": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "action",
+                            "label"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "notReady": {
+                    "type": "string",
+                    "description": "Refusal before this step is reached"
+                  },
+                  "unsecured": {
+                    "type": "string",
+                    "description": "Refusal while no longer secured"
+                  },
+                  "radio": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string"
+                      },
+                      "done": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "title",
+                  "hint",
+                  "kind",
+                  "requiresSecured",
+                  "items",
+                  "notReady",
+                  "unsecured"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Eyebrow label; consecutive steps with the same label share a number"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  },
+                  "checkpoint": {
+                    "description": "Save a restart point when this step starts, with this button label",
+                    "type": "string"
+                  },
+                  "show": {
+                    "description": "Zone ids drawn in the scene during this step",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$",
+                      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                    }
+                  },
+                  "bearing": {
+                    "description": "Instrument bearing target; defaults to the berth",
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "zone": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      },
+                      "gate": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "linesRefused": {
+                    "description": "Refusal shown for line attachment during this step",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "exitThroughGate"
+                  },
+                  "gate": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "keepSide": {
+                    "type": "string",
+                    "enum": [
+                      "starboard",
+                      "port"
+                    ]
+                  },
+                  "sidePenalty": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Seconds for the wrong side"
+                  },
+                  "radio": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string"
+                      },
+                      "wrongSide": {
+                        "type": "string",
+                        "description": "{penalty}"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "title",
+                  "hint",
+                  "kind",
+                  "gate",
+                  "keepSide",
+                  "sidePenalty"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "keepOut"
+                  },
+                  "zone": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  },
+                  "until": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Step id; the rule ends when that step completes"
+                  },
+                  "penalty": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "radio": {
+                    "type": "string",
+                    "description": "{penalty}"
+                  },
+                  "check": {
+                    "type": "string",
+                    "description": "Objective line while the rule applies"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "zone",
+                  "until",
+                  "penalty",
+                  "radio",
+                  "check"
+                ],
+                "additionalProperties": false,
+                "description": "Penalty for each entry into a zone"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "protectedContact"
+                  },
+                  "vessel": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$",
+                    "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "vessel"
+                ],
+                "additionalProperties": false,
+                "description": "Contact with the vessel where no fender covers the hull fails"
+              }
+            ]
+          }
+        },
+        "complete": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "hint": {
+              "type": "string",
+              "description": "{penalty}"
+            },
+            "radio": {
+              "type": "string",
+              "description": "{time} {penalty}"
+            }
+          },
+          "required": [
+            "title",
+            "hint",
+            "radio"
+          ],
+          "additionalProperties": false
+        },
+        "scoring": {
+          "type": "object",
+          "properties": {
+            "weights": {
+              "type": "object",
+              "properties": {
+                "impact": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "control": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "procedure": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "smoothness": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "impact",
+                "control",
+                "procedure",
+                "smoothness"
+              ],
+              "additionalProperties": false
+            },
+            "impact": {
+              "type": "object",
+              "properties": {
+                "perContact": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "trafficClearance": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "Metres hull to hull"
+                },
+                "trafficDeduction": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "control": {
+              "type": "object",
+              "properties": {
+                "arrivalRadius": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "arrivalGood": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "m/s"
+                },
+                "arrivalPoor": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "m/s"
+                },
+                "arrivalDeduction": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "perCountdownReset": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "perEarlyEntry": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "wrongSide": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "procedure": {
+              "type": "object",
+              "properties": {
+                "fendersLate": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "perChecklistRefusal": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "perLineRefusal": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "perReleaseUnderLoad": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "smoothness": {
+              "type": "object",
+              "properties": {
+                "parTime": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "Seconds"
+                },
+                "slowTime": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "Seconds"
+                },
+                "slowTimeScore": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "leverPar": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "timeShare": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "ratings": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "min",
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "tips": {
+              "type": "object",
+              "properties": {
+                "contacts": {
+                  "type": "string",
+                  "description": "{count}"
+                },
+                "trafficClearance": {
+                  "type": "string",
+                  "description": "{gap} {clearance} {vessel}"
+                },
+                "arrivalSpeed": {
+                  "type": "string",
+                  "description": "{kn} {target}"
+                },
+                "countdownResets": {
+                  "type": "string",
+                  "description": "{count}"
+                },
+                "earlyEntries": {
+                  "type": "string"
+                },
+                "wrongSide": {
+                  "type": "string"
+                },
+                "fendersLate": {
+                  "type": "string"
+                },
+                "checklistRefusals": {
+                  "type": "string",
+                  "description": "{count} {verb}"
+                },
+                "lineRefusals": {
+                  "type": "string",
+                  "description": "{count} {verb}"
+                },
+                "releaseUnderLoad": {
+                  "type": "string"
+                },
+                "time": {
+                  "type": "string",
+                  "description": "{minutes}"
+                },
+                "levers": {
+                  "type": "string",
+                  "description": "{count}"
+                },
+                "clean": {
+                  "type": "string"
+                },
+                "failed": {
+                  "type": "string",
+                  "description": "{failure}"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "description": "Debrief score; anything left out uses the engine defaults"
+        }
+      },
+      "required": [
+        "berth",
+        "steps",
+        "rules",
+        "complete"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
@@ -749,7 +1920,8 @@
     "buoyage",
     "scene",
     "conditions",
-    "traffic"
+    "traffic",
+    "mission"
   ],
   "additionalProperties": false,
   "description": "Leopard / Handling Lab stage",

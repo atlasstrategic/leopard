@@ -1,16 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  boat,
-  missionConfig,
-  scenario,
-  STEP,
-  trafficConfig,
-} from "../src/config";
+import { boat, scenario, STEP, trafficConfig } from "../src/config";
 import { resolveContacts } from "../src/contacts";
 import { initialFenders } from "../src/fenders";
 import { initialState } from "../src/simulation";
 import { Session } from "../src/session";
+import { fuel } from "./fuel-stage";
 import { PracticeLab } from "../src/demonstration";
 import {
   initialMonohull,
@@ -29,8 +24,7 @@ const place = (g: Session, x: number, y: number) => {
   Object.assign(g.state, { x, y, vx: 0, vy: 0, yaw: 0 });
   g.previous = { ...g.state };
 };
-const hold = (g: Session) =>
-  place(g, missionConfig.holding.x, missionConfig.holding.y);
+const hold = (g: Session) => place(g, fuel.holding.x, fuel.holding.y);
 // Smallest gap between the monohull's capsule and any dock or breakwater.
 function dockClearance(o: VesselObstacle) {
   let min = Infinity;
@@ -65,8 +59,7 @@ test("monohull waits until the holding countdown, then leaves the harbour clear 
   const types = g.recorder.events.map((e) => e.type);
   const depart = g.recorder.events.find((e) => e.type === "traffic.depart")!;
   assert.ok(
-    Math.abs(depart.time - entered - missionConfig.holding.countdown) <
-      2 * STEP,
+    Math.abs(depart.time - entered - fuel.holding.countdown) < 2 * STEP,
   );
   assert.ok(types.includes("traffic.clear"));
   assert.ok(!types.includes("traffic.yield"));
@@ -107,7 +100,7 @@ test("moving hull contact uses relative velocity and pushes the boat", () => {
 test("monohull stops for a boat in its path without pushing it, then resumes", () => {
   const g = new Session(calm);
   hold(g);
-  run(g, missionConfig.holding.countdown + 1);
+  run(g, fuel.holding.countdown + 1);
   assert.equal(g.traffic!.status, "departing");
   // Directly astern of the monohull's reversing leg.
   place(g, mono.start.x - 2, 0);

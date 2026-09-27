@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boat, missionConfig, STEP, trafficConfig } from "../src/config";
+import { boat, STEP, trafficConfig } from "../src/config";
 import { Session } from "../src/session";
+import { fuel } from "./fuel-stage";
 import { PracticeLab } from "../src/demonstration";
 const calm = { speed: 0, direction: 0, currentX: 0, currentY: 0 };
 const mono = trafficConfig.monohull;
@@ -12,8 +13,7 @@ const place = (g: Session, x: number, y: number, vx = 0) => {
   Object.assign(g.state, { x, y, vx, vy: 0, yaw: 0 });
   g.previous = { ...g.state };
 };
-const hold = (g: Session) =>
-  place(g, missionConfig.holding.x, missionConfig.holding.y);
+const hold = (g: Session) => place(g, fuel.holding.x, fuel.holding.y);
 const types = (g: Session) => g.recorder.events.map((e) => e.type);
 test("attempt starts holding with a radio briefing; Show me starts at the approach", () => {
   const g = new Session(calm);
@@ -33,7 +33,7 @@ test("countdown runs only inside the holding area and restarts if the boat leave
   hold(g);
   run(g, 3);
   assert.ok(Math.abs(g.progress.countdown! - 2) < 2 * STEP);
-  place(g, missionConfig.holding.x + missionConfig.holding.radius + 1, -22);
+  place(g, fuel.holding.x + fuel.holding.radius + 1, -22);
   run(g, 1);
   assert.equal(g.progress.countdown, null);
   assert.ok(types(g).includes("mission.countdown_reset"));
@@ -43,7 +43,7 @@ test("countdown runs only inside the holding area and restarts if the boat leave
   assert.equal(g.traffic!.status, "moored", "restarted from the full 5 s");
   run(g, 0.6);
   assert.equal(g.traffic!.status, "departing");
-  assert.notEqual(g.progress.monohullDepartedAt, null);
+  assert.notEqual(g.progress.releasedAt, null);
   assert.ok(g.radio.some((m) => /departing/.test(m.message)));
 });
 test("berth is called clear once the monohull leaves the fuel zone; then the approach begins", () => {
@@ -65,11 +65,11 @@ test("berth is called clear once the monohull leaves the fuel zone; then the app
 });
 test("entering the fuel berth before clearance costs a penalty once per entry", () => {
   const g = new Session(calm);
-  const zone = missionConfig.fuelZone;
+  const zone = fuel.fuelZone;
   place(g, zone.x, zone.y - zone.length / 2 + 1);
   run(g, 1);
   assert.equal(g.progress.earlyEntries, 1);
-  assert.equal(g.progress.penalty, missionConfig.earlyEntryPenalty);
+  assert.equal(g.progress.penalty, fuel.earlyEntryPenalty);
   run(g, 2);
   assert.equal(g.progress.earlyEntries, 1, "staying inside is one entry");
   assert.ok(g.radio.some((m) => /not clear/.test(m.message)));
@@ -78,7 +78,7 @@ test("entering the fuel berth before clearance costs a penalty once per entry", 
   place(g, zone.x, zone.y - zone.length / 2 + 1);
   run(g, 0.5);
   assert.equal(g.progress.earlyEntries, 2);
-  assert.equal(g.progress.penalty, 2 * missionConfig.earlyEntryPenalty);
+  assert.equal(g.progress.penalty, 2 * fuel.earlyEntryPenalty);
   assert.equal(
     g.recorder.events.filter((e) => e.type === "mission.early_entry").length,
     2,

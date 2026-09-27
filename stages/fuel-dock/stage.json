@@ -2,7 +2,7 @@
   "$schema": "../stage.schema.json",
   "schemaVersion": 1,
   "id": "fuel-dock",
-  "version": "6.1.0",
+  "version": "7.0.0",
   "name": "Fuel dock · North quay",
   "description": "Wait for a monohull to leave the fuel berth, come alongside the east quay, refuel and leave through the harbour entrance.",
   "author": "Leopard / Handling Lab",
@@ -28,6 +28,7 @@
       {
         "id": "berth-01",
         "name": "Berth 01",
+        "label": "01",
         "side": "starboard",
         "structure": "east-quay",
         "lines": { "bow": "B01", "stern": "B02" },
@@ -92,7 +93,207 @@
         { "gear": "ahead", "x": -12, "y": 6, "stop": false },
         { "gear": "ahead", "x": -33, "y": -8, "stop": false },
         { "gear": "ahead", "x": -33, "y": -64, "stop": false }
-      ]
+      ],
+      "radio": { "yield": "Monohull holding position: you are in its path. Give way." }
     }
-  ]
+  ],
+  "mission": {
+    "berth": "berth-01",
+    "steps": [
+      {
+        "id": "hold",
+        "kind": "holdInZone",
+        "label": "HOLD",
+        "title": "Wait for the fuel berth.",
+        "hint": "The monohull is refuelling. Keep your boat's centre inside the blue holding area south-east of the quay; it leaves 5 seconds after you are in position.",
+        "zone": "holding",
+        "seconds": 5,
+        "resetOnExit": true,
+        "releases": [
+          "monohull"
+        ],
+        "show": [
+          "holding"
+        ],
+        "bearing": {
+          "label": "HOLD",
+          "zone": "holding"
+        },
+        "linesRefused": "Wait until the fuel berth is called clear",
+        "radio": {
+          "start": "Fuel berth occupied. Proceed to the holding area south-east of the quay and wait until called.",
+          "enter": "Holding area reached. Monohull departs in 5 seconds. Stay inside.",
+          "reset": "You left the holding area. The countdown restarts when you are back inside.",
+          "done": "Monohull departing the fuel berth. Keep clear and wait to be called."
+        }
+      },
+      {
+        "id": "clearance",
+        "kind": "waitForClear",
+        "label": "HOLD",
+        "title": "Wait for the fuel berth.",
+        "hint": "The monohull is leaving. Keep clear of the fuel berth and its approach lane until the radio calls it clear.",
+        "vessel": "monohull",
+        "zone": "fuel-berth",
+        "show": [
+          "holding"
+        ],
+        "bearing": {
+          "label": "HOLD",
+          "zone": "holding"
+        },
+        "linesRefused": "Wait until the fuel berth is called clear",
+        "radio": {
+          "done": "Fuel berth clear. Proceed to Berth 01, bow north, starboard side to."
+        }
+      },
+      {
+        "id": "approach",
+        "kind": "arriveAtBerth",
+        "label": "APPROACH",
+        "checkpoint": "Approach",
+        "title": "Approach North quay.",
+        "hint": "Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines.",
+        "radio": {
+          "done": "Arrival confirmed. Deploy starboard fenders and make fast bow and stern lines."
+        }
+      },
+      {
+        "id": "secure",
+        "kind": "secureAlongside",
+        "label": "SECURE THE BOAT",
+        "title": "Make fast, without rushing.",
+        "hint": "Attach the first line to activate the amber alongside area. Use Crew & lines; either attachment order is allowed.",
+        "hintAlongside": "Amber area: settle alongside, not at the old centre point. Tend slack with Take in / Ease. Gentle covered fender contact is allowed.",
+        "radio": {
+          "done": "Secured alongside the fuel berth. Switch the engines off to begin the fuel service."
+        }
+      },
+      {
+        "id": "service",
+        "kind": "checklist",
+        "label": "SECURED · FUEL SERVICE",
+        "title": "Fuel service alongside.",
+        "hint": "Work through the checklist in order. Stay secured: fuelling stops if a line, fender or position requirement is lost.",
+        "requiresSecured": true,
+        "notReady": "Secure the boat alongside first",
+        "unsecured": "Boat no longer secured — re-secure it to continue the service",
+        "items": [
+          {
+            "id": "engines-off",
+            "action": "enginesOff",
+            "label": "Engines off",
+            "pending": "Switch both engines off first",
+            "done": "Engines off. Confirm the fuel type."
+          },
+          {
+            "id": "fuel-type",
+            "action": "choice",
+            "label": "Fuel type",
+            "pending": "Confirm the fuel type first",
+            "options": [
+              {
+                "id": "diesel",
+                "label": "Diesel"
+              },
+              {
+                "id": "petrol",
+                "label": "Petrol",
+                "refusal": "This Leopard 42 has diesel engines — petrol would damage them. Choose diesel"
+              }
+            ],
+            "alreadyDone": "Diesel is already confirmed",
+            "done": "Diesel confirmed. Start fuelling when ready."
+          },
+          {
+            "id": "fuel",
+            "action": "timed",
+            "label": "Fuel",
+            "button": "Start fuelling",
+            "pending": "Finish fuelling first",
+            "total": 180,
+            "unit": "L",
+            "rate": 20,
+            "running": "Already fuelling",
+            "alreadyDone": "Tank is already full",
+            "started": "Fuelling started — {total} {unit}, accelerated.",
+            "done": "Fuelling complete: {total} {unit}. Please pay.",
+            "interrupted": "Fuelling stopped at {amount} {unit}: boat no longer secured. Re-secure, then start fuelling again."
+          },
+          {
+            "id": "pay",
+            "action": "confirm",
+            "label": "Pay",
+            "button": "Pay",
+            "pending": "Pay first",
+            "alreadyDone": "Already paid",
+            "done": "Payment received. Start the engines when ready."
+          },
+          {
+            "id": "engines-on",
+            "action": "enginesOn",
+            "label": "Engines on"
+          }
+        ],
+        "radio": {
+          "done": "Service complete. Let go your lines and depart through the harbour entrance, keeping to the starboard side of the channel."
+        }
+      },
+      {
+        "id": "departure",
+        "kind": "exitThroughGate",
+        "label": "DEPART",
+        "checkpoint": "Departure",
+        "title": "Leave through the harbour entrance.",
+        "hint": "Let go both lines, ease off the quay and exit between the lights at the south-west gap. Keep to the starboard (west) side of the channel: red light on your starboard side going out.",
+        "gate": "entrance",
+        "keepSide": "starboard",
+        "sidePenalty": 5,
+        "bearing": {
+          "label": "EXIT",
+          "gate": "entrance"
+        },
+        "radio": {
+          "wrongSide": "Keep to the starboard side of the channel: red light on your starboard side going out. +{penalty} s"
+        }
+      }
+    ],
+    "rules": [
+      {
+        "kind": "keepOut",
+        "zone": "fuel-berth",
+        "until": "clearance",
+        "penalty": 10,
+        "radio": "Fuel berth not clear. Return to the holding area. +{penalty} s",
+        "check": "Stay out of the fuel berth until called"
+      },
+      {
+        "kind": "protectedContact",
+        "vessel": "monohull"
+      }
+    ],
+    "complete": {
+      "title": "Clear of the harbour.",
+      "hint": "Fuel mission complete with +{penalty} s penalties. Open the debrief for your score and one thing to try; Retry (R) to go again.",
+      "radio": "Clear of the harbour. Fuel mission complete in {time} s with +{penalty} s penalties."
+    },
+    "scoring": {
+      "weights": {
+        "impact": 0.4,
+        "control": 0.25,
+        "procedure": 0.2,
+        "smoothness": 0.15
+      },
+      "tips": {
+        "trafficClearance": "You came within {gap} m of the {vessel}. Give moving traffic at least {clearance} m and let it pass before you move in.",
+        "countdownResets": "You drifted out of the holding area {count}×. Hold position against the wind with small, early lever corrections.",
+        "earlyEntries": "You entered the fuel berth before it was called clear. Wait in the holding area for the radio call.",
+        "wrongSide": "You left on the port side of the channel. Going out, keep the red light on your starboard side.",
+        "fendersLate": "Your starboard fenders were not out when you arrived. Deploy them during the approach: the crew needs 3 seconds.",
+        "checklistRefusals": "{count} {verb} refused. Follow the order: engines off, fuel type, fuel, pay, engines on.",
+        "time": "The mission took {minutes} minutes. Prepare fenders and plan the approach while you wait, so you are ready as soon as the berth is clear.",
+        "failed": "{failure}. Deploy starboard fenders before you get near other boats, and keep well clear of the monohull while it manoeuvres."
+      }
+    }
+  }
 }

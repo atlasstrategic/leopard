@@ -6,10 +6,20 @@ import {
   recorderConfig,
   mooringConfig,
   trafficConfig,
-  missionConfig,
   scoreConfig,
+  stage,
   type Tuning,
 } from "./config";
+import {
+  fill,
+  gateCrossing,
+  insideZone,
+  missionSteps,
+  phaseFor,
+  vesselInZone,
+  zoneShape,
+} from "./mission";
+import type { Step } from "./stage/load";
 import { initialFenders, type Fenders, type Side } from "./fenders";
 import {
   initialMooring,
@@ -53,17 +63,10 @@ import {
   updateProgress,
   contactAcceptable,
   positioningTarget,
-  insideHolding,
-  insideFuelZone,
-  gateCrossing,
-  vesselInFuelZone,
 } from "./scenario";
 export type RadioMessage = { time: number; message: string };
-export type CheckpointId = "approach" | "departure";
-export const checkpointLabels: Record<CheckpointId, string> = {
-  approach: "Approach",
-  departure: "Departure",
-};
+// Checkpoints are named after the step they restart; see the stage's steps.
+export type CheckpointId = string;
 // Everything needed to continue an attempt from a saved moment. Weather and
 // tuning are not included: like Retry, restarts keep the current settings.
 type Checkpoint = {
@@ -77,12 +80,13 @@ type Checkpoint = {
   traffic: Vessel | null;
   radio: RadioMessage[];
   acceptableContact: boolean;
-  announcedSecured: boolean;
   loggedHeading: number;
   recorder: Recorder;
 };
-export type ServiceAction =
-  "enginesOff" | "diesel" | "petrol" | "fuel" | "pay" | "enginesOn";
+type Checklist = Extract<Step, { kind: "checklist" }>;
+type ChecklistItem = Checklist["items"][number];
+// A checklist item id, or a choice option id.
+export type ServiceAction = string;
 export class FixedClock {
   accumulator = 0;
   advance(delta: number, tick: () => void) {
@@ -112,17 +116,19 @@ export class Session {
   acceptableContact = true;
   fenders = initialFenders();
   mooring = initialMooring();
-  // Fuel mission (traffic, holding, service); off in the docking-only
-  // practice harbour (Show me), where traffic is null.
+  // The stage's full mission (traffic, rules, radio, checklist); off in the
+  // docking-only practice harbour (Show me), which runs just the berth steps.
   readonly missionEnabled: boolean;
+  readonly steps: Step[];
   traffic: Vessel | null;
   previousTraffic: Vessel | null;
   // Harbour radio: short instructions telling the skipper what to do next.
   radio: RadioMessage[] = [];
-  // Saved automatically when the berth is called clear and when the service
-  // completes; kept across retries until reached again.
+  // Saved automatically when a step marked as a checkpoint starts; kept across
+  // retries until reached again.
   checkpoints: Partial<Record<CheckpointId, Checkpoint>> = {};
   private pendingCheckpoint: CheckpointId | null = null;
+  private inTick = false;
   recorder = this.newRecorder(1);
   history: Recording[] = [];
   private observed: Record<string, string> = {};
@@ -133,21 +139,35 @@ export class Session {
   ) {
     this.weather = { ...weather };
     this.missionEnabled = options.mission ?? true;
-    this.traffic = this.missionEnabled ? initialMonohull() : null;
+    this.steps = missionSteps(this.missionEnabled);
+    this.traffic = this.newTraffic();
     this.previousTraffic = this.traffic && { ...this.traffic };
     this.progress = initialProgress(this.missionEnabled);
     this.recorder = this.newRecorder(1);
     this.observed = this.observation();
     this.recorder.sample(0, this.telemetry(), true);
-    this.briefing();
+    this.startStep(0);
   }
-  private briefing() {
-    if (this.missionEnabled)
-      this.announce(
-        "Fuel berth occupied. Proceed to the holding area south-east of the quay and wait until called.",
-      );
+  private newTraffic() {
+    return this.missionEnabled && stage.traffic.length
+      ? initialMonohull()
+      : null;
   }
+  get step(): Step | undefined {
+    return this.steps[this.progress.step];
+  }
+  // Zones and exit marking drawn in the scene for the current step.
+  sceneMarks() {
+    const step = this.step,
+      live = !["complete", "failed"].includes(this.progress.phase);
+    return {
+      zones: live ? (step?.show ?? []) : [],
+      gate: live && step?.kind === "exitThroughGate" ? step.gate : null,
+    };
+  }
+  // The practice harbour has no radio.
   announce(message: string, time = this.progress.elapsed) {
+    if (!this.missionEnabled) return;
     this.radio.push({ time, message });
     this.radio = this.radio.slice(-10);
     this.recorder.event(time, "radio", message);
@@ -171,9 +191,9 @@ export class Session {
         recorderConfig,
         mooringConfig,
         trafficConfig,
-        missionConfig,
+        stage: stage.file,
         fixedStep: STEP,
-        build: "milestone-C-holding",
+        build: "stage-plugins",
       }),
       this.progress.phase,
     );
@@ -307,7 +327,8 @@ export class Session {
     else if (action === "attach") {
       if (line.attached) reason = "Line already attached";
       else if (this.progress.phase === "holding")
-        reason = "Wait until the fuel berth is called clear";
+        reason =
+          this.step?.linesRefused ?? "Follow the current objective first";
       else if (this.progress.phase === "approach")
         reason = "First hold the marked berth for 3 seconds";
       else if (!this.securingRequirements().fenders)
@@ -392,51 +413,80 @@ export class Session {
       message: `${def.name} attached to ${def.bollard} with ${mooringConfig.slack.toFixed(2)} m slack. Use gradual Take in / Ease; attachment does not move the boat.`,
     };
   }
+  // The checklist a request applies to: the current step, or the next one.
+  private checklist(): { step: Checklist; index: number } | null {
+    for (let i = this.progress.step; i < this.steps.length; i++) {
+      const st = this.steps[i];
+      if (st.kind === "checklist") return { step: st, index: i };
+    }
+    for (let i = this.progress.step - 1; i >= 0; i--) {
+      const st = this.steps[i];
+      if (st.kind === "checklist") return { step: st, index: i };
+    }
+    return null;
+  }
+  itemComplete(item: ChecklistItem) {
+    const service = this.progress.service;
+    switch (item.action) {
+      case "enginesOff":
+        return service.enginesOff;
+      case "timed":
+        return service.amount >= item.total;
+      case "enginesOn":
+        return service.completedAt !== null;
+      default:
+        return service.done.includes(item.id);
+    }
+  }
   requestService(action: ServiceAction): {
     accepted: boolean;
     message: string;
   } {
     const p = this.progress,
       service = p.service,
-      cfg = missionConfig.service;
+      found = this.checklist();
     const neutral =
       Math.abs(this.controls.port) < 0.01 &&
       Math.abs(this.controls.starboard) < 0.01;
-    const full = service.litres >= cfg.litres;
+    const item = found?.step.items.find(
+      (it) =>
+        it.id === action ||
+        (it.action === "choice" && it.options.some((o) => o.id === action)),
+    );
     let reason = this.failedReason();
     if (reason) {
-      // Failed attempts refuse every command.
+      // Ended attempts refuse every command.
     } else if (this.paused) reason = "Paused — resume (P) first";
-    else if (!this.missionEnabled)
-      reason = "No fuel service in this practice harbour";
-    else if (service.completedAt !== null)
-      reason = "Fuel service is already complete";
-    else if (action === "enginesOn") {
+    else if (!found) reason = "No checklist in this practice harbour";
+    else if (found.index < p.step || service.completedAt !== null)
+      reason = "Checklist is already complete";
+    else if (!item) reason = `Unknown checklist action "${action}"`;
+    else if (item.action === "enginesOn") {
       // Always allowed for safety, e.g. if the boat breaks free.
       if (!service.enginesOff) reason = "Engines are already running";
       else if (!neutral)
         reason = "Put both levers in neutral before starting the engines";
-    } else if (p.phase !== "secured")
-      reason =
-        p.securedAt === null
-          ? "Secure the boat alongside first"
-          : "Boat no longer secured — re-secure it to continue the service";
-    else if (action === "enginesOff") {
+    } else if (found.index !== p.step) reason = found.step.notReady;
+    else if (found.step.requiresSecured && p.phase !== "secured")
+      reason = found.step.unsecured;
+    else if (item.action === "enginesOff") {
       if (service.enginesOff) reason = "Engines are already off";
       else if (!neutral) reason = "Put both levers in neutral first";
-    } else if (!service.enginesOff) reason = "Switch both engines off first";
-    else if (action === "petrol")
-      reason =
-        "This Leopard 42 has diesel engines — petrol would damage them. Choose diesel";
-    else if (action === "diesel") {
-      if (service.fuelConfirmed) reason = "Diesel is already confirmed";
-    } else if (action === "fuel") {
-      if (!service.fuelConfirmed) reason = "Confirm the fuel type first";
-      else if (service.fuelling) reason = "Already fuelling";
-      else if (full) reason = "Tank is already full";
-    } else if (action === "pay") {
-      if (!full) reason = "Finish fuelling first";
-      else if (service.paid) reason = "Already paid";
+    } else {
+      // Items complete in order: name the first one still to do.
+      const earlier = found.step.items
+        .slice(0, found.step.items.indexOf(item))
+        .find((it) => it.action !== "enginesOn" && !this.itemComplete(it));
+      if (earlier && "pending" in earlier) reason = earlier.pending;
+      else if (item.action === "choice") {
+        const option = item.options.find((o) => o.id === action);
+        if (option?.refusal) reason = option.refusal;
+        else if (this.itemComplete(item) || !option) reason = item.alreadyDone;
+      } else if (item.action === "timed") {
+        if (service.running === item.id) reason = item.running;
+        else if (this.itemComplete(item)) reason = item.alreadyDone;
+      } else if (item.action === "confirm" && this.itemComplete(item))
+        reason = item.alreadyDone;
     }
     if (reason) {
       p.metrics.serviceRefusals++;
@@ -446,51 +496,50 @@ export class Session {
       });
       return { accepted: false, message: reason };
     }
-    let message = "";
-    if (action === "enginesOff") {
+    const list = found!.step,
+      it = item!;
+    let message = "",
+      completes = false;
+    if (it.action === "enginesOff") {
       service.enginesOff = true;
-      message = "Engines off. Confirm the fuel type.";
-    } else if (action === "diesel") {
-      service.fuelConfirmed = true;
-      message = "Diesel confirmed. Start fuelling when ready.";
-    } else if (action === "fuel") {
-      service.fuelling = true;
-      message = `Fuelling started — ${cfg.litres} L, accelerated.`;
-    } else if (action === "pay") {
-      service.paid = true;
-      message = "Payment received. Start the engines when ready.";
+      message = it.done;
+    } else if (it.action === "choice" || it.action === "confirm") {
+      service.done.push(it.id);
+      message = it.done;
+    } else if (it.action === "timed") {
+      service.running = it.id;
+      message = fill(it.started, { total: it.total, unit: it.unit });
     } else {
       service.enginesOff = false;
-      if (service.fuelling) service.fuelling = false;
-      if (service.paid) {
-        service.completedAt = p.elapsed;
-        message =
-          "Service complete. Let go your lines and depart through the harbour entrance, keeping to the starboard side of the channel.";
-        p.phase = "departure";
-        this.recorder.phase = "departure";
-        this.recorder.event(
-          p.elapsed,
-          "mission.departure",
-          "Fuel service complete — depart through the harbour entrance",
-          { phase: "departure" },
-        );
-      } else
-        message =
-          "Engines running. Switch them off again to continue the service.";
+      service.running = null;
+      completes = list.items.every(
+        (other) =>
+          other.action === "enginesOff" ||
+          other.action === "enginesOn" ||
+          this.itemComplete(other),
+      );
+      message = completes
+        ? (list.radio?.done ?? "Checklist complete.")
+        : "Engines running. Switch them off again to continue the service.";
     }
     this.recorder.event(p.elapsed, `service.${action}`, message, {
-      litres: service.litres,
+      amount: service.amount,
     });
-    this.announce(message);
-    if (p.phase === "departure") this.saveCheckpoint("departure");
+    if (completes) {
+      service.completedAt = p.elapsed;
+      this.completeStep(p.elapsed);
+    } else this.announce(message);
     return { accepted: true, message };
+  }
+  checkpointLabel(id: CheckpointId) {
+    return this.steps.find((st) => st.id === id)?.checkpoint ?? id;
   }
   private saveCheckpoint(id: CheckpointId) {
     const time = this.progress.elapsed;
     this.recorder.event(
       time,
       "mission.checkpoint",
-      `Checkpoint saved: ${checkpointLabels[id]}`,
+      `Checkpoint saved: ${this.checkpointLabel(id)}`,
       { checkpoint: id },
     );
     this.checkpoints[id] = structuredClone({
@@ -504,35 +553,37 @@ export class Session {
       traffic: this.traffic,
       radio: this.radio,
       acceptableContact: this.acceptableContact,
-      announcedSecured: this.announcedSecured,
       loggedHeading: this.loggedHeading,
       recorder: null,
     }) as unknown as Checkpoint;
     this.checkpoints[id]!.recorder = this.recorder.fork(this.recorder.attempt);
   }
+  // Timed checklist items run on the game clock and stop if the boat is no
+  // longer secured.
   private advanceService(service: Service) {
-    if (!service.fuelling) return;
-    const time = this.progress.elapsed + STEP,
-      cfg = missionConfig.service;
-    if (this.progress.phase !== "secured") {
-      service.fuelling = false;
-      const message = `Fuelling stopped at ${service.litres.toFixed(0)} L: boat no longer secured. Re-secure, then start fuelling again.`;
-      this.recorder.event(time, "service.interrupted", message, {
-        litres: service.litres,
+    const found = this.checklist(),
+      item = found?.step.items.find((it) => it.id === service.running);
+    if (!found || !item || item.action !== "timed") return;
+    const time = this.progress.elapsed + STEP;
+    if (found.step.requiresSecured && this.progress.phase !== "secured") {
+      service.running = null;
+      const message = fill(item.interrupted, {
+        amount: service.amount.toFixed(0),
+        unit: item.unit,
+      });
+      this.recorder.event(time, `service.${item.id}.interrupted`, message, {
+        amount: service.amount,
       });
       this.announce(message, time);
       return;
     }
-    service.litres = Math.min(
-      cfg.litres,
-      service.litres + cfg.litresPerSecond * STEP,
-    );
-    if (service.litres < cfg.litres - 1e-9) return;
-    service.litres = cfg.litres;
-    service.fuelling = false;
-    const message = `Fuelling complete: ${cfg.litres} L. Please pay.`;
-    this.recorder.event(time, "service.fuelled", message, {
-      litres: service.litres,
+    service.amount = Math.min(item.total, service.amount + item.rate * STEP);
+    if (service.amount < item.total - 1e-9) return;
+    service.amount = item.total;
+    service.running = null;
+    const message = fill(item.done, { total: item.total, unit: item.unit });
+    this.recorder.event(time, `service.${item.id}.done`, message, {
+      amount: service.amount,
     });
     this.announce(message, time);
   }
@@ -584,6 +635,14 @@ export class Session {
     return { accepted: true, message };
   }
   tick() {
+    this.inTick = true;
+    try {
+      this.advance();
+    } finally {
+      this.inTick = false;
+    }
+  }
+  private advance() {
     this.previous = { ...this.state };
     this.previousTraffic = this.traffic && { ...this.traffic };
     this.observe();
@@ -601,11 +660,9 @@ export class Session {
         STEP,
       )) {
         this.trafficEvent(event.type, event.message);
-        if (event.type === "traffic.yield")
-          this.announce(
-            "Monohull holding position: you are in its path. Give way.",
-            this.progress.elapsed + STEP,
-          );
+        const yieldCall = trafficConfig.monohull.radio?.yield;
+        if (event.type === "traffic.yield" && yieldCall)
+          this.announce(yieldCall, this.progress.elapsed + STEP);
       }
     }
     const vessel = this.traffic && vesselObstacle(this.traffic);
@@ -655,8 +712,16 @@ export class Session {
     );
     this.acceptableContact = contactAcceptable(this.state, samples);
     this.recordMetrics(vessel);
+    // protectedContact rules: uncovered contact with the vessel fails.
+    const protectedIds = new Set(
+      this.missionEnabled
+        ? stage.mission.rules.flatMap((r) =>
+            r.kind === "protectedContact" ? [r.vessel] : [],
+          )
+        : [],
+    );
     const bareVesselContact = samples.find(
-      (c) => c.obstacleId === trafficConfig.monohull.id && !c.covered,
+      (c) => protectedIds.has(c.obstacleId) && !c.covered,
     );
     const impacts = this.recorder.contacts(
       this.progress.elapsed + STEP,
@@ -689,31 +754,10 @@ export class Session {
     }
     if (bareVesselContact) {
       this.progress.phase = "failed";
-      this.progress.failure = `Contact with the ${trafficConfig.monohull.name.toLowerCase()} on the ${bareVesselContact.side} hull where no fender covered it`;
-    } else if (this.progress.phase === "holding") this.advanceHolding();
-    if (this.traffic && this.progress.phase !== "failed") {
-      // Entering the fuel berth before it is called clear: once per entry.
-      const inZone = insideFuelZone(this.state);
-      if (
-        inZone &&
-        !this.progress.inFuelZone &&
-        this.progress.clearedAt === null
-      ) {
-        this.progress.earlyEntries++;
-        this.progress.penalty += missionConfig.earlyEntryPenalty;
-        this.recorder.event(
-          this.progress.elapsed + STEP,
-          "mission.early_entry",
-          `Entered the fuel berth before clearance: +${missionConfig.earlyEntryPenalty}s`,
-          { penaltySeconds: missionConfig.earlyEntryPenalty },
-        );
-        this.announce(
-          `Fuel berth not clear. Return to the holding area. +${missionConfig.earlyEntryPenalty} s`,
-          this.progress.elapsed + STEP,
-        );
-      }
-      this.progress.inFuelZone = inZone;
-    }
+      this.progress.failure = `Contact with the ${bareVesselContact.obstacleName.toLowerCase()} on the ${bareVesselContact.side} hull where no fender covered it`;
+    } else if (this.step?.kind === "holdInZone") this.advanceHold(this.step);
+    else if (this.step?.kind === "waitForClear") this.advanceClear(this.step);
+    if (this.progress.phase !== "failed") this.applyKeepOut();
     updateProgress(
       this.progress,
       this.state,
@@ -722,23 +766,22 @@ export class Session {
       this.acceptableContact,
     );
     this.advanceService(this.progress.service);
-    if (this.progress.phase === "departure") this.advanceDeparture();
+    const current = this.step,
+      now = this.progress.phase as Phase;
+    if (current?.kind === "exitThroughGate") this.advanceExit(current);
+    else if (
+      current?.kind === "arriveAtBerth" &&
+      priorPhase === "approach" &&
+      now === "securing"
+    )
+      this.completeStep(this.progress.elapsed);
+    else if (current?.kind === "secureAlongside" && now === "secured")
+      this.completeStep(this.progress.elapsed);
     // Widened: the calls above may have moved the phase on.
     const phase = this.progress.phase as Phase;
     if (phase !== priorPhase) {
       this.recorder.phase = phase;
-      const message =
-        phase === "secured"
-          ? "Secured: both lines, starboard fenders and neutral held for 3s — simulation remains live"
-          : phase === "approach"
-            ? "Fuel berth called clear — approach Berth 01"
-            : phase === "failed"
-              ? `Mission failed: ${this.progress.failure}`
-              : phase === "complete"
-                ? `Cleared the harbour entrance on the ${this.progress.channelSide} side — fuel mission complete`
-                : priorPhase === "approach"
-                  ? "Berth held — attach bow and stern lines"
-                  : "Secured conditions lost — tend lines and regain the berth";
+      const message = this.phaseMessage(phase, priorPhase);
       this.recorder.event(
         this.progress.elapsed,
         `mission.${phase === "securing" && priorPhase === "secured" ? "unsecured" : phase}`,
@@ -754,22 +797,11 @@ export class Session {
         );
       else if (phase === "complete")
         this.announce(
-          `Clear of the harbour. Fuel mission complete in ${this.progress.elapsed.toFixed(1)} s with +${this.progress.penalty} s penalties.`,
+          fill(stage.mission.complete.radio, {
+            time: this.progress.elapsed.toFixed(1),
+            penalty: this.progress.penalty,
+          }),
         );
-      else if (phase === "securing" && priorPhase === "approach")
-        this.announce(
-          "Arrival confirmed. Deploy starboard fenders and make fast bow and stern lines.",
-        );
-      else if (
-        phase === "secured" &&
-        this.missionEnabled &&
-        !this.announcedSecured
-      ) {
-        this.announcedSecured = true;
-        this.announce(
-          "Secured alongside the fuel berth. Switch the engines off to begin the fuel service.",
-        );
-      }
       this.recorder.sample(this.progress.elapsed, this.telemetry(), true);
     }
     if (headingChanged(this.state.heading, this.loggedHeading)) {
@@ -788,14 +820,13 @@ export class Session {
       this.pendingCheckpoint = null;
     }
   }
-  private announcedSecured = false;
   private recordMetrics(vessel: VesselObstacle | null) {
     const m = this.progress.metrics,
       p = this.progress,
       s = this.state;
     if (vessel) {
       const gap = hullGap(vessel, s, this.tuning);
-      m.closestMonohull = Math.min(m.closestMonohull ?? Infinity, gap);
+      m.closestTraffic = Math.min(m.closestTraffic ?? Infinity, gap);
     }
     const target = positioningTarget(p.positionTarget);
     if (
@@ -809,30 +840,6 @@ export class Session {
         Math.hypot(s.vx, s.vy),
       );
   }
-  // Departure ends when the boat crosses the entrance gate outward; leaving on
-  // the port side of the channel costs a penalty.
-  private advanceDeparture() {
-    const side = gateCrossing(this.previous, this.state);
-    if (!side) return;
-    const p = this.progress,
-      time = p.elapsed;
-    p.channelSide = side;
-    p.exitedAt = time;
-    if (side === "port") {
-      p.penalty += missionConfig.channelSidePenalty;
-      this.recorder.event(
-        time,
-        "mission.channel_side",
-        `Left on the port side of the channel: +${missionConfig.channelSidePenalty}s`,
-        { penaltySeconds: missionConfig.channelSidePenalty },
-      );
-      this.announce(
-        `Keep to the starboard side of the channel: red light on your starboard side going out. +${missionConfig.channelSidePenalty} s`,
-        time,
-      );
-    }
-    p.phase = "complete";
-  }
   private trafficEvent(type: string, message: string) {
     const v = this.traffic!;
     this.recorder.event(this.progress.elapsed + STEP, type, message, {
@@ -842,64 +849,190 @@ export class Session {
       heading: v.heading,
     });
   }
-  // Holding: a fixed countdown while the boat's centre is inside the holding
-  // area (restarting if it leaves), then the monohull departs; the berth is
-  // called clear once the monohull is out of the fuel berth and approach lane.
-  private advanceHolding() {
+  private phaseMessage(phase: Phase, prior: Phase) {
+    const berth = stage.berth.name,
+      step = this.step;
+    switch (phase) {
+      case "secured":
+        return "Secured: both lines, fenders and neutral held for 3s — simulation remains live";
+      case "approach":
+        return `Cleared to approach ${berth}`;
+      case "holding":
+        return "Holding";
+      case "departure":
+        return step?.kind === "exitThroughGate"
+          ? `Depart through the ${stage.gates[step.gate].name.toLowerCase()}`
+          : "Depart";
+      case "failed":
+        return `Mission failed: ${this.progress.failure}`;
+      case "complete":
+        return this.progress.channelSide
+          ? `Left on the ${this.progress.channelSide} side of the channel — mission complete`
+          : "Mission complete";
+      default:
+        return prior === "approach"
+          ? "Berth held — attach bow and stern lines"
+          : "Secured conditions lost — tend lines and regain the berth";
+    }
+  }
+  // Start step i: set the phase its kind implies, announce its start call and
+  // save a checkpoint if it is one.
+  private startStep(index: number, time = this.progress.elapsed) {
     const p = this.progress,
-      v = this.traffic!,
-      time = p.elapsed + STEP;
-    if (v.status === "moored") {
-      const inside = insideHolding(this.state);
-      if (!inside) {
-        if (p.countdown !== null) {
-          p.countdown = null;
-          p.metrics.countdownResets++;
-          this.recorder.event(
-            time,
-            "mission.countdown_reset",
-            "Left the holding area — countdown reset",
-          );
-          this.announce(
-            "You left the holding area. The countdown restarts when you are back inside.",
-            time,
-          );
-        }
-        return;
-      }
-      if (p.countdown === null) {
-        p.countdown = missionConfig.holding.countdown;
+      step = this.steps[index];
+    p.step = index;
+    if (!step) return;
+    const phase = phaseFor(step);
+    if (phase && phase !== p.phase) {
+      const prior = p.phase;
+      p.phase = phase;
+      // Inside a tick the phase-change bookkeeping happens at its end.
+      if (!this.inTick) {
+        this.recorder.phase = phase;
         this.recorder.event(
           time,
-          "mission.countdown",
-          "Holding area reached — countdown started",
-        );
-        this.announce(
-          `Holding area reached. Monohull departs in ${missionConfig.holding.countdown} seconds. Stay inside.`,
-          time,
+          `mission.${phase}`,
+          this.phaseMessage(phase, prior),
+          {
+            phase,
+          },
         );
       }
-      p.countdown = Math.max(0, p.countdown - STEP);
-      if (p.countdown > 1e-9) return;
-      p.countdown = 0;
-      p.monohullDepartedAt = time;
-      for (const event of startDeparture(v))
-        this.trafficEvent(event.type, event.message);
-      this.announce(
-        "Monohull departing the fuel berth. Keep clear and wait to be called.",
-        time,
-      );
+    }
+    if (step.radio?.start) this.announce(step.radio.start, time);
+    if (step.checkpoint && index > 0) {
+      if (this.inTick) this.pendingCheckpoint = step.id;
+      else this.saveCheckpoint(step.id);
+    }
+  }
+  // Finish the current step: announce its done call and start the next one.
+  // The last step completes the mission; the practice harbour stays live.
+  private completeStep(time: number) {
+    const p = this.progress,
+      step = this.step;
+    if (!step) return;
+    const last = p.step === this.steps.length - 1;
+    if (last && !this.missionEnabled) return;
+    if (step.radio && "done" in step.radio && step.radio.done)
+      this.announce(step.radio.done, time);
+    if (last) p.phase = "complete";
+    else this.startStep(p.step + 1, time);
+  }
+  // Hold: a fixed countdown while the boat's centre is inside the zone
+  // (restarting if it leaves, when resetOnExit), then release traffic.
+  private advanceHold(step: Extract<Step, { kind: "holdInZone" }>) {
+    const p = this.progress,
+      time = p.elapsed + STEP;
+    if (!insideZone(zoneShape(step.zone), this.state)) {
+      if (p.countdown !== null && step.resetOnExit) {
+        p.countdown = null;
+        p.metrics.countdownResets++;
+        this.recorder.event(
+          time,
+          "mission.countdown_reset",
+          `Left the ${stage.zones[step.zone].name.toLowerCase()} — countdown reset`,
+        );
+        if (step.radio?.reset) this.announce(step.radio.reset, time);
+      }
       return;
     }
-    const o = vesselObstacle(v);
-    if (o && vesselInFuelZone(o)) return;
-    p.clearedAt = time;
-    p.phase = "approach";
-    this.pendingCheckpoint = "approach";
-    this.announce(
-      "Fuel berth clear. Proceed to Berth 01, bow north, starboard side to.",
-      time,
+    if (p.countdown === null) {
+      p.countdown = step.seconds;
+      this.recorder.event(
+        time,
+        "mission.countdown",
+        `${stage.zones[step.zone].name} reached — countdown started`,
+      );
+      if (step.radio?.enter) this.announce(step.radio.enter, time);
+    }
+    p.countdown = Math.max(0, p.countdown - STEP);
+    if (p.countdown > 1e-9) return;
+    p.countdown = 0;
+    p.releasedAt = time;
+    if (this.traffic && step.releases.includes(trafficConfig.monohull.id))
+      for (const event of startDeparture(this.traffic))
+        this.trafficEvent(event.type, event.message);
+    this.completeStep(time);
+  }
+  // Wait until the vessel has left the zone completely.
+  private advanceClear(step: Extract<Step, { kind: "waitForClear" }>) {
+    const v = this.traffic,
+      o = v && v.status !== "gone" ? vesselObstacle(v) : null;
+    if (o && vesselInZone(o, zoneShape(step.zone))) return;
+    const time = this.progress.elapsed + STEP;
+    this.progress.clearedAt = time;
+    this.completeStep(time);
+  }
+  // keepOut rules: a penalty for each entry until the named step completes.
+  private applyKeepOut() {
+    if (!this.missionEnabled) return;
+    const p = this.progress;
+    for (const rule of stage.mission.rules) {
+      if (rule.kind !== "keepOut") continue;
+      const inside = insideZone(zoneShape(rule.zone), this.state);
+      const until = this.steps.findIndex((st) => st.id === rule.until);
+      if (inside && !p.insideKeepOut[rule.zone] && p.step <= until) {
+        const time = p.elapsed + STEP,
+          zone = stage.zones[rule.zone].name.toLowerCase();
+        p.earlyEntries++;
+        p.penalty += rule.penalty;
+        this.recorder.event(
+          time,
+          "mission.early_entry",
+          `Entered the ${zone} before clearance: +${rule.penalty}s`,
+          { penaltySeconds: rule.penalty, zone: rule.zone },
+        );
+        this.announce(fill(rule.radio, { penalty: rule.penalty }), time);
+      }
+      p.insideKeepOut[rule.zone] = inside;
+    }
+  }
+  // Exit: crossing the gate outward completes the step; the wrong side of the
+  // channel costs a penalty.
+  private advanceExit(step: Extract<Step, { kind: "exitThroughGate" }>) {
+    const side = gateCrossing(
+      stage.gates[step.gate],
+      this.previous,
+      this.state,
     );
+    if (!side) return;
+    const p = this.progress,
+      time = p.elapsed;
+    p.channelSide = side;
+    p.exitedAt = time;
+    if (side !== step.keepSide) {
+      p.penalty += step.sidePenalty;
+      this.recorder.event(
+        time,
+        "mission.channel_side",
+        `Left on the ${side} side of the channel: +${step.sidePenalty}s`,
+        { penaltySeconds: step.sidePenalty },
+      );
+      if (step.radio?.wrongSide)
+        this.announce(
+          fill(step.radio.wrongSide, { penalty: step.sidePenalty }),
+          time,
+        );
+    }
+    this.completeStep(time);
+  }
+  // Jump straight to a step, as if the earlier ones were done: for tests and
+  // development only. Traffic that an earlier step waited for is gone.
+  skipTo(id: string) {
+    const index = this.steps.findIndex((st) => st.id === id);
+    if (index < 0) throw new Error(`No step "${id}"`);
+    const p = this.progress;
+    for (const st of this.steps.slice(0, index)) {
+      if (st.kind === "waitForClear" && this.traffic)
+        this.traffic.status = "gone";
+      if (st.kind === "waitForClear") p.clearedAt = p.elapsed;
+    }
+    const step = this.steps[index];
+    p.phase =
+      phaseFor(step) ?? (step.kind === "checklist" ? "secured" : "securing");
+    this.recorder.phase = p.phase;
+    p.step = index;
+    p.countdown = null;
   }
   // Retry the whole mission, or restart from a saved checkpoint.
   retry(from?: CheckpointId) {
@@ -924,15 +1057,14 @@ export class Session {
     this.acceptableContact = true;
     this.fenders = initialFenders();
     this.mooring = initialMooring();
-    this.traffic = this.missionEnabled ? initialMonohull() : null;
+    this.traffic = this.newTraffic();
     this.previousTraffic = this.traffic && { ...this.traffic };
     this.recorder = this.newRecorder(nextAttempt);
     this.observed = this.observation();
     this.loggedHeading = this.state.heading;
     this.recorder.sample(0, this.telemetry(), true);
     this.radio = [];
-    this.announcedSecured = false;
-    this.briefing();
+    this.startStep(0);
     // User-selected weather/handling settings deliberately persist across attempts.
   }
   private restore(c: Checkpoint, attempt: number, id: CheckpointId) {
@@ -947,14 +1079,13 @@ export class Session {
     this.previousTraffic = this.traffic && { ...this.traffic };
     this.radio = copy.radio;
     this.acceptableContact = copy.acceptableContact;
-    this.announcedSecured = copy.announcedSecured;
     this.loggedHeading = copy.loggedHeading;
     this.progress.metrics.checkpointRestarts++;
     this.recorder = c.recorder.fork(attempt);
     this.recorder.event(
       this.progress.elapsed,
       "attempt.checkpoint",
-      `Restarted from checkpoint: ${checkpointLabels[id]} (saved in attempt ${c.attempt} at ${c.time.toFixed(1)} s)`,
+      `Restarted from checkpoint: ${this.checkpointLabel(id)} (saved in attempt ${c.attempt} at ${c.time.toFixed(1)} s)`,
       { checkpoint: id, fromAttempt: c.attempt, savedAt: c.time },
     );
     this.observed = this.observation();

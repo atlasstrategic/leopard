@@ -1,4 +1,4 @@
-import { degrees, missionConfig } from "./config";
+import { degrees, stage } from "./config";
 import { positioningTarget } from "./scenario";
 import { bearingText, instrumentData, type WindMode } from "./instrument-data";
 import type { Session } from "./session";
@@ -77,23 +77,20 @@ export class Instruments {
     return this.elements.get(id)!;
   }
   update(game: Session, camera: CameraMode) {
-    // While holding, the training bearing points at the holding area, and
-    // at the harbour entrance while departing.
-    const phase = game.progress.phase,
-      holding = phase === "holding",
-      leaving = phase === "departure" || phase === "complete";
-    this.el("bearing-target").textContent = holding
-      ? "HOLD"
-      : leaving
-        ? "EXIT"
-        : "01";
+    // The training bearing follows the current step's target (e.g. a holding
+    // area or the harbour entrance), defaulting to the berth. After the
+    // mission it keeps the last step's target.
+    const done = game.progress.phase === "complete",
+      step = done ? game.steps[game.steps.length - 1] : game.step,
+      target = step?.bearing;
+    this.el("bearing-target").textContent = target?.label ?? stage.berth.label;
     const data = instrumentData(
         game.state,
         game.weather,
-        holding
-          ? missionConfig.holding
-          : leaving
-            ? missionConfig.entrance
+        target?.zone
+          ? stage.zones[target.zone].shape
+          : target?.gate
+            ? stage.gates[target.gate]
             : positioningTarget(game.progress.positionTarget),
       ),
       wind = data[this.mode];
