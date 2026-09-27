@@ -28,9 +28,10 @@ export type VesselObstacle = {
   radius: number;
 };
 export type TrafficEvent = { type: string; message: string };
-const cfg = trafficConfig.monohull;
+// Only called when the active stage has traffic.
+const vesselConfig = () => trafficConfig.monohull!;
 export const initialMonohull = (): Vessel => ({
-  ...cfg.start,
+  ...vesselConfig().start,
   speed: 0,
   yaw: 0,
   leg: 0,
@@ -39,16 +40,16 @@ export const initialMonohull = (): Vessel => ({
 export function vesselObstacle(v: Vessel): VesselObstacle | null {
   if (v.status === "gone") return null;
   return {
-    id: cfg.id,
-    name: cfg.name,
+    id: vesselConfig().id,
+    name: vesselConfig().name,
     x: v.x,
     y: v.y,
     heading: v.heading,
     vx: Math.sin(v.heading) * v.speed,
     vy: Math.cos(v.heading) * v.speed,
     yaw: v.yaw,
-    halfLength: cfg.length / 2 - cfg.beam / 2,
-    radius: cfg.beam / 2,
+    halfLength: vesselConfig().length / 2 - vesselConfig().beam / 2,
+    radius: vesselConfig().beam / 2,
   };
 }
 // Smallest hull-to-hull gap between the boat and the vessel's capsule.
@@ -76,19 +77,24 @@ export function startDeparture(v: Vessel): TrafficEvent[] {
   if (v.status !== "moored") return [];
   v.status = "departing";
   return [
-    { type: "traffic.depart", message: `${cfg.name} departing the fuel berth` },
+    {
+      type: "traffic.depart",
+      message: `${vesselConfig().name} departing the fuel berth`,
+    },
   ];
 }
 // True when any part of the player's hull is in the corridor the vessel is
 // about to move through.
 export function pathBlocked(v: Vessel, s: State, p: Tuning) {
-  const direction = cfg.legs[v.leg]?.gear === "astern" ? -1 : 1;
+  const direction = vesselConfig().legs[v.leg]?.gear === "astern" ? -1 : 1;
   const ux = Math.sin(v.heading) * direction,
     uy = Math.cos(v.heading) * direction;
   const sn = Math.sin(s.heading),
     cs = Math.cos(s.heading);
-  const reach = cfg.length / 2 + cfg.lookAhead + p.hullRadius,
-    width = cfg.beam / 2 + cfg.lateralClearance + p.hullRadius;
+  const reach =
+      vesselConfig().length / 2 + vesselConfig().lookAhead + p.hullRadius,
+    width =
+      vesselConfig().beam / 2 + vesselConfig().lateralClearance + p.hullRadius;
   return hullPoints(p).some((point) => {
     const rx = s.x + point.x * cs + point.y * sn - v.x,
       ry = s.y - point.x * sn + point.y * cs - v.y;
@@ -108,21 +114,24 @@ export function advanceVessel(
     return [];
   }
   const events: TrafficEvent[] = [];
-  let leg = cfg.legs[v.leg];
+  let leg = vesselConfig().legs[v.leg];
   let dist = Math.hypot(leg.x - v.x, leg.y - v.y);
   const arrived = leg.stop
-    ? dist < cfg.arriveRadius && Math.abs(v.speed) < 0.02
-    : dist < cfg.arriveRadius;
+    ? dist < vesselConfig().arriveRadius && Math.abs(v.speed) < 0.02
+    : dist < vesselConfig().arriveRadius;
   if (arrived) {
     v.leg++;
-    if (v.leg >= cfg.legs.length) {
+    if (v.leg >= vesselConfig().legs.length) {
       v.status = "gone";
       v.speed = v.yaw = 0;
       return [
-        { type: "traffic.clear", message: `${cfg.name} has left the harbour` },
+        {
+          type: "traffic.clear",
+          message: `${vesselConfig().name} has left the harbour`,
+        },
       ];
     }
-    leg = cfg.legs[v.leg];
+    leg = vesselConfig().legs[v.leg];
     dist = Math.hypot(leg.x - v.x, leg.y - v.y);
   }
   const direction = leg.gear === "astern" ? -1 : 1;
@@ -131,20 +140,23 @@ export function advanceVessel(
   // Rudder authority grows with speed; a little pivot avoids orbiting a
   // waypoint that sits inside the turning circle.
   const maxYaw = Math.min(
-    cfg.maxYaw,
-    Math.abs(v.speed) / cfg.turnRadius + cfg.pivotYaw,
+    vesselConfig().maxYaw,
+    Math.abs(v.speed) / vesselConfig().turnRadius + vesselConfig().pivotYaw,
   );
   const blocked = pathBlocked(v, s, p);
   // Never pivot towards a boat it is waiting for.
   v.yaw = blocked ? 0 : Math.max(-maxYaw, Math.min(maxYaw, error * 0.5));
-  let target = cfg.cruiseSpeed * (0.3 + 0.7 * Math.max(0, Math.cos(error)));
+  let target =
+    vesselConfig().cruiseSpeed * (0.3 + 0.7 * Math.max(0, Math.cos(error)));
   if (leg.stop)
     target =
-      dist < cfg.arriveRadius
+      dist < vesselConfig().arriveRadius
         ? 0
         : Math.min(
             target,
-            Math.sqrt(2 * cfg.accel * (dist - cfg.arriveRadius)),
+            Math.sqrt(
+              2 * vesselConfig().accel * (dist - vesselConfig().arriveRadius),
+            ),
           );
   if (blocked !== (v.status === "yielding")) {
     v.status = blocked ? "yielding" : "departing";
@@ -152,13 +164,16 @@ export function advanceVessel(
       blocked
         ? {
             type: "traffic.yield",
-            message: `${cfg.name} stopping: your boat is in its path`,
+            message: `${vesselConfig().name} stopping: your boat is in its path`,
           }
-        : { type: "traffic.resume", message: `${cfg.name} under way again` },
+        : {
+            type: "traffic.resume",
+            message: `${vesselConfig().name} under way again`,
+          },
     );
   }
   target = blocked ? 0 : target * direction;
-  const rate = blocked ? cfg.brake : cfg.accel;
+  const rate = blocked ? vesselConfig().brake : vesselConfig().accel;
   v.speed += Math.max(-rate * dt, Math.min(rate * dt, target - v.speed));
   v.heading += v.yaw * dt;
   v.x += Math.sin(v.heading) * v.speed * dt;

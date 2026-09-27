@@ -145,11 +145,11 @@ test("the session records debrief metrics and retry clears them", () => {
   // Beside the moored monohull: closest hull-to-hull gap is tracked.
   Object.assign(g.state, {
     x:
-      trafficConfig.monohull.start.x -
-      trafficConfig.monohull.beam / 2 -
+      trafficConfig.monohull!.start.x -
+      trafficConfig.monohull!.beam / 2 -
       boat.beam / 2 -
       2,
-    y: trafficConfig.monohull.start.y,
+    y: trafficConfig.monohull!.start.y,
   });
   g.previous = { ...g.state };
   run(g, 0.5);

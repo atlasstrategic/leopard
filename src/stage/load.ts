@@ -198,6 +198,22 @@ function scoring(s: StageFile["mission"]["scoring"]): Scoring {
 }
 export type Step = StageFile["mission"]["steps"][number];
 export type Rule = StageFile["mission"]["rules"][number];
+export type Face = "west" | "east" | "south" | "north";
+// The quay face a berth lies against: the side facing its alongside envelope.
+function quayFace(
+  quay: { x: number; y: number; width: number; length: number },
+  envelope: { x: number; y: number },
+): Face {
+  const dx = (envelope.x - quay.x) / (quay.width / 2),
+    dy = (envelope.y - quay.y) / (quay.length / 2);
+  return Math.abs(dx) >= Math.abs(dy)
+    ? dx < 0
+      ? "west"
+      : "east"
+    : dy < 0
+      ? "south"
+      : "north";
+}
 function toStage(s: StageFile) {
   const scene = s.scene,
     berth = scene.berths.find((b) => b.id === s.mission.berth)!;
@@ -241,6 +257,10 @@ function toStage(s: StageFile) {
     berth: {
       id: berth.id,
       name: berth.name,
+      face: quayFace(
+        scene.structures.find((b) => b.id === berth.structure)!,
+        berth.alongside,
+      ),
       label: berth.label ?? "",
       approach: {
         x: berth.approach.x,

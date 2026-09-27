@@ -1,5 +1,5 @@
-import fuelDock from "../stages/fuel-dock/stage.json";
-import { parseStage } from "./stage/load";
+import type { Stage } from "./stage/load";
+import { bundledStages } from "./stage/registry";
 // SI throughout. x=east, y=north; heading 0=north, positive clockwise.
 // Manufacturer September 2024 baseline, NOT verified 2026 equipment.
 export const boat = {
@@ -25,22 +25,40 @@ export const boat = {
 };
 export type Tuning = typeof boat;
 export type { Box } from "./stage/load";
-// The active stage: harbour layout, conditions and traffic come from its
-// stage file (stages/<id>/stage.json); the engine constants below stay here.
-export const stage = parseStage(fuelDock);
-export const scenario = {
-  version: stage.version,
-  name: stage.name,
-  area: stage.area,
-  start: stage.start,
-  target: stage.berth.approach,
+// The active stage: harbour layout, conditions, traffic and mission come from
+// its stage file (stages/<id>/stage.json); the engine constants stay here.
+// These bindings are live: useStage() replaces them. The game calls it once at
+// startup, before building the scene; tests call it to run another stage.
+export let stage: Stage;
+const scenarioFor = (s: Stage) => ({
+  version: s.version,
+  name: s.name,
+  area: s.area,
+  start: s.start,
+  target: s.berth.approach,
   // Full waterline footprint envelope beside the quay, not a centre-point target.
-  alongside: stage.berth.alongside,
-  wind: stage.wind, // direction blowing TOWARD, not meteorological FROM
-  current: stage.current,
+  alongside: s.berth.alongside,
+  wind: s.wind, // direction blowing TOWARD, not meteorological FROM
+  current: s.current,
   collisionPenalty: 5,
-  obstacles: stage.obstacles,
-};
+  obstacles: s.obstacles,
+});
+export let scenario: ReturnType<typeof scenarioFor>;
+// Debrief score from the stage's mission, with engine defaults filled in.
+export let scoreConfig: Stage["mission"]["scoring"];
+// The stage's scripted traffic vessel, if it has one (the engine supports
+// one). It follows its legs, never reacts to impacts itself, and stops rather
+// than pushing through the player.
+export const trafficConfig: { monohull: Stage["traffic"][number] | undefined } =
+  { monohull: undefined };
+export function useStage(next: Stage) {
+  stage = next;
+  scenario = scenarioFor(next);
+  scoreConfig = next.mission.scoring;
+  trafficConfig.monohull = next.traffic[0];
+  for (const end of ["bow", "stern"] as const)
+    Object.assign(mooringConfig.lines[end], next.berth.lines[end]);
+}
 // Provisional game equipment and logging limits, not measured hardware specifications.
 export const fenderConfig = {
   positions: [-3, 0, 3],
@@ -74,16 +92,21 @@ export const mooringConfig = {
     maxEaseLoad: 6500,
     maxPointSpeed: 0.25,
   },
-  // Bollards come from the stage's berth; fairleads are fittings on the boat.
+  // Bollards come from the stage's berth (set by useStage); fairleads are
+  // fittings on the boat.
   lines: {
     bow: {
       name: "Bow",
-      ...stage.berth.lines.bow,
+      bollard: "",
+      obstacleId: "",
+      anchor: { x: 0, y: 0 },
       fairlead: { x: 3.3, y: 4.6 },
     },
     stern: {
       name: "Stern",
-      ...stage.berth.lines.stern,
+      bollard: "",
+      obstacleId: "",
+      anchor: { x: 0, y: 0 },
       fairlead: { x: 3.3, y: -4.6 },
     },
   },
@@ -96,19 +119,9 @@ export const recorderConfig = {
   impactThreshold: 0.08,
   history: 3,
 };
-// Debrief score from the stage's mission, with engine defaults filled in.
-export const scoreConfig = stage.mission.scoring;
-// Scripted, kinematic harbour traffic. It follows its legs, never reacts to
-// impacts itself, and stops rather than pushing through the player.
-export const trafficConfig = {
-  monohull: (() => {
-    const v = stage.traffic.find((t) => t.id === "monohull");
-    if (!v) throw new Error(`Stage ${stage.id} needs a "monohull" vessel`);
-    return v;
-  })(),
-};
 export const STEP = 1 / 60;
 export const knots = (v: number) => v * 1.943844;
 export const metresPerSecond = (kn: number) => kn / 1.943844;
 export const degrees = (v: number) => (v * 180) / Math.PI;
 export const angle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+useStage(bundledStages()[0]);

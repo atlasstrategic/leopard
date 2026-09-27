@@ -13,7 +13,7 @@ import {
   type VesselObstacle,
 } from "../src/traffic";
 const calm = { speed: 0, direction: 0, currentX: 0, currentY: 0 };
-const mono = trafficConfig.monohull;
+const mono = trafficConfig.monohull!;
 const run = (g: Session, seconds: number, each = () => {}) => {
   for (let i = 0; i < seconds * 60; i++) {
     g.tick();

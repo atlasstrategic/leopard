@@ -131,27 +131,36 @@ export class View {
           b.length - 0.2,
           wood,
         );
-        for (let y = b.y - b.length / 2 + 2; y < b.y + b.length / 2; y += 4) {
-          box(
-            this.scene,
-            b.x - b.width / 2 - 0.05,
-            0.45,
-            -y,
-            0.15,
-            0.65,
-            0.9,
-            navy,
-          );
-          box(
-            this.scene,
-            b.x - b.width / 2 + 0.8,
-            1.15,
-            -y,
-            0.35,
-            0.32,
-            0.35,
-            navy,
-          );
+        // Fender posts and cleats along the berth's water-facing edge only.
+        const face =
+          b.id === stage.berth.alongside.obstacleId ? stage.berth.face : null;
+        if (face) {
+          const alongX = face === "north" || face === "south",
+            span = alongX ? b.width : b.length,
+            sign = face === "west" || face === "south" ? -1 : 1,
+            edge = alongX
+              ? b.y + (sign * b.length) / 2
+              : b.x + (sign * b.width) / 2;
+          for (let k = -span / 2 + 2; k < span / 2; k += 4) {
+            // [along the face, across it] → world x/y.
+            const at = (across: number) =>
+              alongX
+                ? { x: b.x + k, y: edge + across }
+                : { x: edge + across, y: b.y + k };
+            const post = at(sign * 0.05),
+              cleat = at(-sign * 0.8);
+            box(
+              this.scene,
+              post.x,
+              0.45,
+              -post.y,
+              alongX ? 0.9 : 0.15,
+              0.65,
+              alongX ? 0.15 : 0.9,
+              navy,
+            );
+            box(this.scene, cleat.x, 1.15, -cleat.y, 0.35, 0.32, 0.35, navy);
+          }
         }
       } else {
         box(
@@ -305,31 +314,33 @@ export class View {
     }
     this.scene.add(this.vessel);
     // Monohull: capsule waterline matches its contact footprint.
-    const mono = trafficConfig.monohull,
-      radius = mono.beam / 2;
-    const monoHull = new THREE.Mesh(
-      new THREE.CapsuleGeometry(radius, mono.length - mono.beam, 8, 16),
-      mat(0x2b4f73),
-    );
-    monoHull.rotation.x = Math.PI / 2;
-    monoHull.scale.z = 0.42;
-    monoHull.position.y = 0.45;
-    monoHull.castShadow = true;
-    this.monohull.add(monoHull);
-    box(
-      this.monohull,
-      0,
-      1.2,
-      0.4,
-      mono.beam - 0.7,
-      0.14,
-      mono.length - 3.4,
-      white,
-    );
-    box(this.monohull, 0, 1.65, 0.6, 2.2, 0.75, 3.6, white);
-    box(this.monohull, 0, 1.7, -0.6, 2.0, 0.5, 0.9, glass);
-    box(this.monohull, 0, 8.4, -0.9, 0.14, 14.2, 0.14, white);
-    box(this.monohull, 0, 2.3, 1.6, 0.1, 0.1, 4.6, white);
+    const mono = trafficConfig.monohull;
+    if (mono) {
+      const radius = mono.beam / 2;
+      const monoHull = new THREE.Mesh(
+        new THREE.CapsuleGeometry(radius, mono.length - mono.beam, 8, 16),
+        mat(0x2b4f73),
+      );
+      monoHull.rotation.x = Math.PI / 2;
+      monoHull.scale.z = 0.42;
+      monoHull.position.y = 0.45;
+      monoHull.castShadow = true;
+      this.monohull.add(monoHull);
+      box(
+        this.monohull,
+        0,
+        1.2,
+        0.4,
+        mono.beam - 0.7,
+        0.14,
+        mono.length - 3.4,
+        white,
+      );
+      box(this.monohull, 0, 1.65, 0.6, 2.2, 0.75, 3.6, white);
+      box(this.monohull, 0, 1.7, -0.6, 2.0, 0.5, 0.9, glass);
+      box(this.monohull, 0, 8.4, -0.9, 0.14, 14.2, 0.14, white);
+      box(this.monohull, 0, 2.3, 1.6, 0.1, 0.1, 4.6, white);
+    }
     this.monohull.visible = false;
     this.scene.add(this.monohull);
     // Zones: hidden until a step shows them. Circles get a disc, a ring and

@@ -111,7 +111,7 @@ test("the monohull leaves through the entrance on its starboard side", () => {
   assert.notEqual(crossedAt, null);
   assert.ok(crossedAt! < gate.x, "west (starboard) half going out");
   assert.ok(
-    crossedAt! - trafficConfig.monohull.beam / 2 > gate.x - gate.width / 2,
+    crossedAt! - trafficConfig.monohull!.beam / 2 > gate.x - gate.width / 2,
   );
   assert.equal(g.progress.collisions, 0);
 });

@@ -1,7 +1,8 @@
 import "./style.css";
-import { STEP } from "./config";
+import { STEP, useStage } from "./config";
+import { chooseStage } from "./stage/select";
 import { View, hasWebGL2, type CameraMode } from "./rendering";
-import { PracticeLab } from "./demonstration";
+import { PracticeLab, showMeAvailable } from "./demonstration";
 import { Input } from "./input";
 import { UI } from "./ui";
 import type { CheckpointId } from "./session";
@@ -24,6 +25,9 @@ if (!hasWebGL2()) {
   );
 } else {
   try {
+    // Choose the stage before building anything that reads it.
+    const choice = chooseStage(location.search);
+    useStage(choice.stage);
     const lab = new PracticeLab(),
       view = new View(canvas);
     // Development-only handle for browser checks; absent from production builds.
@@ -47,7 +51,9 @@ if (!hasWebGL2()) {
         if (lab.mode === "practice") lab.active.retry(id);
       },
       readOnly: () => lab.mode === "demo",
+      stageNotice: choice.notice,
       showDemo: () => {
+        if (!showMeAvailable()) return;
         input.clear();
         if (lab.mode === "practice") practiceCamera = view.mode;
         lab.showMe();

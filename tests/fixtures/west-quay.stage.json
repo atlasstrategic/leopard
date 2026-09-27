@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "id": "west-quay",
+  "version": "1.0.0",
+  "name": "Test · West quay",
+  "description": "Test fixture: a mirrored harbour with the quay to the west, bow-south berth, no traffic.",
+  "author": "Leopard tests",
+  "area": "Test harbour",
+  "buoyage": "IALA-A",
+  "scene": {
+    "start": { "x": 0, "y": 30, "heading": 180 },
+    "structures": [
+      {
+        "id": "west-quay",
+        "name": "West quay",
+        "kind": "quay",
+        "x": -12,
+        "y": 0,
+        "width": 10,
+        "length": 42
+      },
+      {
+        "id": "north-limit",
+        "name": "North barrier",
+        "kind": "barrier",
+        "x": 0,
+        "y": 45,
+        "width": 60,
+        "length": 2
+      },
+      {
+        "id": "south-limit",
+        "name": "South barrier",
+        "kind": "barrier",
+        "x": 0,
+        "y": -45,
+        "width": 60,
+        "length": 2
+      },
+      {
+        "id": "east-limit",
+        "name": "East barrier",
+        "kind": "barrier",
+        "x": 30,
+        "y": 0,
+        "width": 2,
+        "length": 92
+      }
+    ],
+    "bollards": [
+      { "id": "W1", "structure": "west-quay", "x": -7.7, "y": -7 },
+      { "id": "W2", "structure": "west-quay", "x": -7.7, "y": 7 }
+    ],
+    "berths": [
+      {
+        "id": "west-berth",
+        "name": "West berth",
+        "label": "W",
+        "side": "starboard",
+        "structure": "west-quay",
+        "lines": { "bow": "W1", "stern": "W2" },
+        "approach": {
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "length": 17,
+          "heading": 180,
+          "headingTolerance": 8,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "positionTolerance": 1.2,
+          "dwell": 3
+        },
+        "alongside": {
+          "x": -2,
+          "y": 0,
+          "width": 10,
+          "length": 20,
+          "heading": 180,
+          "headingTolerance": 10,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "gentleSpeed": 0.08,
+          "boundaryAllowance": 0.02
+        }
+      }
+    ],
+    "zones": [],
+    "gates": [],
+    "labels": []
+  },
+  "conditions": {
+    "wind": { "speed": 0, "from": 90 },
+    "current": { "x": 0, "y": 0 }
+  },
+  "traffic": [],
+  "mission": {
+    "berth": "west-berth",
+    "steps": [
+      {
+        "id": "approach",
+        "kind": "arriveAtBerth",
+        "label": "APPROACH",
+        "title": "Approach the west quay.",
+        "hint": "Bow south, starboard side to.",
+        "radio": {
+          "start": "Proceed to the west berth.",
+          "done": "Arrival confirmed."
+        }
+      },
+      {
+        "id": "secure",
+        "kind": "secureAlongside",
+        "label": "SECURE",
+        "title": "Make fast.",
+        "hint": "Attach the first line.",
+        "hintAlongside": "Settle alongside.",
+        "radio": { "done": "Secured." }
+      }
+    ],
+    "rules": [],
+    "complete": {
+      "title": "Moored.",
+      "hint": "+{penalty} s",
+      "radio": "Moored in {time} s with +{penalty} s penalties."
+    }
+  }
+}

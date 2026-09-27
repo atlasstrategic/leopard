@@ -1,7 +1,11 @@
 import { Session } from "./session";
+import { stage } from "./config";
 import { lineGeometry, lineIds } from "./mooring";
 import { tendingBlock } from "./tending";
 import { clamp } from "./simulation";
+// The Show me lesson is scripted for the fuel dock's berth and approach;
+// other stages have no demonstration yet.
+export const showMeAvailable = () => stage.id === "fuel-dock";
 export const demonstrationConfig = {
   maxSeconds: 180,
   preparationSeconds: 4,

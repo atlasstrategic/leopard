@@ -83,7 +83,7 @@ test("the departure checkpoint restores a secured, serviced boat ready to let go
 });
 test("a failed attempt can restart from the approach checkpoint", () => {
   const g = cleared();
-  const mono = trafficConfig.monohull;
+  const mono = trafficConfig.monohull!;
   // Put the boat against the departing monohull without fenders.
   const v = g.traffic!;
   place(g, v.x - mono.beam / 2 - boat.beam / 2 - 0.1, v.y);

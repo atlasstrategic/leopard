@@ -5,7 +5,7 @@ import { Session } from "../src/session";
 import { fuel } from "./fuel-stage";
 import { PracticeLab } from "../src/demonstration";
 const calm = { speed: 0, direction: 0, currentX: 0, currentY: 0 };
-const mono = trafficConfig.monohull;
+const mono = trafficConfig.monohull!;
 const run = (g: Session, seconds: number) => {
   for (let i = 0; i < Math.round(seconds * 60); i++) g.tick();
 };

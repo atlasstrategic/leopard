@@ -660,7 +660,7 @@ export class Session {
         STEP,
       )) {
         this.trafficEvent(event.type, event.message);
-        const yieldCall = trafficConfig.monohull.radio?.yield;
+        const yieldCall = trafficConfig.monohull?.radio?.yield;
         if (event.type === "traffic.yield" && yieldCall)
           this.announce(yieldCall, this.progress.elapsed + STEP);
       }
@@ -843,7 +843,7 @@ export class Session {
   private trafficEvent(type: string, message: string) {
     const v = this.traffic!;
     this.recorder.event(this.progress.elapsed + STEP, type, message, {
-      vessel: trafficConfig.monohull.id,
+      vessel: trafficConfig.monohull?.id,
       x: v.x,
       y: v.y,
       heading: v.heading,
@@ -949,7 +949,7 @@ export class Session {
     if (p.countdown > 1e-9) return;
     p.countdown = 0;
     p.releasedAt = time;
-    if (this.traffic && step.releases.includes(trafficConfig.monohull.id))
+    if (this.traffic && step.releases.includes(trafficConfig.monohull!.id))
       for (const event of startDeparture(this.traffic))
         this.trafficEvent(event.type, event.message);
     this.completeStep(time);

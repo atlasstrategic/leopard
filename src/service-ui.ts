@@ -2,39 +2,42 @@ import { stage } from "./config";
 import type { Session } from "./session";
 import type { Step } from "./stage/load";
 type Checklist = Extract<Step, { kind: "checklist" }>;
-// The stage's checklist (the fuel service for the fuel dock), if it has one.
-const checklist = stage.file.mission.steps.find(
-  (st): st is Checklist => st.kind === "checklist",
-);
+// The active stage's checklist (the fuel service for the fuel dock), if any.
+const findChecklist = () =>
+  stage.file.mission.steps.find(
+    (st): st is Checklist => st.kind === "checklist",
+  );
 const buttons = (item: Checklist["items"][number]): [string, string][] =>
   item.action === "choice"
     ? item.options.map((o) => [o.id, o.label])
     : [[item.id, "button" in item ? item.button : item.label]];
 // Every step stays clickable so out-of-order requests are explained, not hidden.
-export const serviceMarkup = checklist
-  ? `<section class="service" id="service" aria-label="${checklist.title}" hidden><div class="eyebrow">${checklist.label.split("·").pop()!.trim()} CHECKLIST</div>${checklist.items
-      .map(
-        (item, i) =>
-          `<div class="service-row" id="svc-row-${i}"><span class="service-mark">○</span><span class="service-label">${item.label}${item.action === "timed" ? ` <small id="svc-amount"></small>` : ""}</span><span class="service-buttons">${buttons(
-            item,
-          )
-            .map(
-              ([action, text]) =>
-                `<button type="button" id="svc-${action}" aria-describedby="service-feedback">${text}</button>`,
+export const serviceMarkup = (checklist = findChecklist()) =>
+  checklist
+    ? `<section class="service" id="service" aria-label="${checklist.title}" hidden><div class="eyebrow">${checklist.label.split("·").pop()!.trim()} CHECKLIST</div>${checklist.items
+        .map(
+          (item, i) =>
+            `<div class="service-row" id="svc-row-${i}"><span class="service-mark">○</span><span class="service-label">${item.label}${item.action === "timed" ? ` <small id="svc-amount"></small>` : ""}</span><span class="service-buttons">${buttons(
+              item,
             )
-            .join("")}</span></div>`,
-      )
-      .join(
-        "",
-      )}<p id="service-feedback" role="status">Work through the steps in order.</p></section>`
-  : "";
+              .map(
+                ([action, text]) =>
+                  `<button type="button" id="svc-${action}" aria-describedby="service-feedback">${text}</button>`,
+              )
+              .join("")}</span></div>`,
+        )
+        .join(
+          "",
+        )}<p id="service-feedback" role="status">Work through the steps in order.</p></section>`
+    : "";
 export class ServiceUI {
   private attempt = 0;
+  private checklist = findChecklist();
   constructor(
     private root: HTMLElement,
     private game: Session,
   ) {
-    for (const item of checklist?.items ?? [])
+    for (const item of this.checklist?.items ?? [])
       for (const [action] of buttons(item))
         this.el(`svc-${action}`).onclick = () => {
           const result = game.requestService(action);
@@ -46,6 +49,7 @@ export class ServiceUI {
     return this.root.querySelector<HTMLElement>(`#${id}`)!;
   }
   update() {
+    const checklist = this.checklist;
     if (!checklist) return;
     const g = this.game,
       p = g.progress,

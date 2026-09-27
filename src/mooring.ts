@@ -1,4 +1,12 @@
-import { boat, mooringConfig, scenario, type Box, type Tuning } from "./config";
+import {
+  boat,
+  mooringConfig,
+  scenario,
+  stage,
+  type Box,
+  type Tuning,
+} from "./config";
+import type { Face } from "./stage/load";
 import type { State } from "./simulation";
 export type LineId = keyof typeof mooringConfig.lines;
 export const lineIds: LineId[] = ["bow", "stern"];
@@ -91,6 +99,25 @@ function intersects(
   }
   return true;
 }
+// The fairlead is on the water side of the given quay face, within its extent.
+function onFace(p: { x: number; y: number }, quay: Box, face: Face) {
+  const minX = quay.x - quay.width / 2,
+    maxX = quay.x + quay.width / 2,
+    minY = quay.y - quay.length / 2,
+    maxY = quay.y + quay.length / 2;
+  const alongY = p.y >= minY && p.y <= maxY,
+    alongX = p.x >= minX && p.x <= maxX;
+  switch (face) {
+    case "west":
+      return p.x < minX - 0.05 && alongY;
+    case "east":
+      return p.x > maxX + 0.05 && alongY;
+    case "south":
+      return p.y < minY - 0.05 && alongX;
+    case "north":
+      return p.y > maxY + 0.05 && alongX;
+  }
+}
 export function attachmentCheck(
   s: State,
   id: LineId,
@@ -101,12 +128,8 @@ export function attachmentCheck(
     def = mooringConfig.lines[id];
   const quay = obstacles.find((b) => b.id === def.obstacleId);
   if (!quay) return { ok: false, reason: "Bollard quay unavailable", ...g };
-  // Only the water-facing west edge of this authored quay is an attachment face.
-  if (
-    g.point.x >= quay.x - quay.width / 2 - 0.05 ||
-    g.point.y < quay.y - quay.length / 2 ||
-    g.point.y > quay.y + quay.length / 2
-  )
+  // Only the berth's water-facing edge of the quay is an attachment face.
+  if (!onFace(g.point, quay, stage.berth.face))
     return {
       ok: false,
       reason: "Approach the water-facing side of the quay",

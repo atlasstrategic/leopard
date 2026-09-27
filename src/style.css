@@ -112,6 +112,38 @@ p {
   margin-top: 8px;
   width: 100%;
 }
+.stage-panel label {
+  display: block;
+  margin: 8px 0;
+}
+.stage-panel select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  border: 1px solid #718f9966;
+  background: #254754;
+  color: #e5f1ee;
+  padding: 7px;
+  border-radius: 5px;
+}
+.stage-panel input[type="file"] {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  width: 100%;
+}
+.stage-help {
+  font-size: 10px;
+}
+#stage-notice {
+  white-space: pre-wrap;
+  color: #ffcf99;
+  max-height: 160px;
+  overflow: auto;
+}
+#stage-notice:empty {
+  display: none;
+}
 .checkpoints {
   display: flex;
   align-items: center;
@@ -452,4 +484,7 @@ footer {
     margin-left: 0;
     margin-right: 0;
   }
+}
+.stage-panel summary b {
+  font-weight: inherit;
 }
