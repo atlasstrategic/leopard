@@ -1,5 +1,5 @@
 import { knots, scoreConfig, stage } from "./config";
-import { fill } from "./mission";
+import { fill, midSentence } from "./mission";
 import type { LogEvent } from "./recorder";
 import type { Progress } from "./scenario";
 
@@ -29,7 +29,8 @@ export function debrief(p: Progress, events: LogEvent[] = []): Debrief {
   const m = p.metrics,
     c = scoreConfig,
     tips = c.tips,
-    vessel = stage.traffic[0]?.name.toLowerCase() ?? "traffic";
+    vessel =
+      (stage.traffic[0] && midSentence(stage.traffic[0].name)) ?? "traffic";
   const impact: Deduction[] = [],
     control: Deduction[] = [],
     procedure: Deduction[] = [],

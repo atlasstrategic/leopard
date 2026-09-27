@@ -2,6 +2,7 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import fuelDockFile from "../stages/fuel-dock/stage.json";
 import westQuay from "./fixtures/west-quay.stage.json";
+import openWater from "../stages/open-water/stage.json";
 import { parseStage } from "../src/stage/load";
 import { checkStage } from "../src/stage/check";
 import { playtest } from "../src/stage/playtest";
@@ -60,4 +61,17 @@ test("the playtest names the step that cannot be completed", () => {
     failed.note,
     /had not cleared fuel-berth after 300 s \(yielding\)/,
   );
+});
+test("consecutive holds each take their full time", () => {
+  // Open water has three holds in a row; the countdown must restart for each.
+  const result = playtest(parseStage(openWater));
+  assert.ok(result.ok, JSON.stringify(result.steps));
+  const holds = openWater.mission.steps.filter((s) => s.kind === "holdInZone");
+  for (const hold of holds) {
+    const report = result.steps.find((s) => s.step === hold.id)!;
+    assert.ok(
+      Math.abs(report.seconds - hold.seconds!) < 0.05,
+      `${hold.id}: ${report.seconds} s`,
+    );
+  }
 });

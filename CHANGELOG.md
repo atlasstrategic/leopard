@@ -17,6 +17,8 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - The fuel mission itself (objectives, radio calls, rules, checklist, scoring and checkpoints) now comes from the stage file as reusable building blocks, so other stages can define their own missions. No change to play; checklist events in exports are named after item ids. Stage version 7.0.0. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
 - Added a **Stage** panel: choose a bundled stage or load a stage file from your computer (validated first, with problems listed). `?stage=<id>` selects a stage by URL. Show me stays available on the fuel dock. Lines now attach from whichever quay face a berth lies against. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
 - Added the stage **authoring kit**: `STAGE_AUTHORING.md`, geometry checks in `npm run stage:validate` (fit, line reach, reachability, traffic routes) and `npm run stage:test`, a step-by-step playtest that names the step a stage cannot complete. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
+- Added a second stage, **Open water · First session**: ahead, astern, turning and stopping at marks, then a stop box. It was written from the authoring guide by an independent author. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
+- Fixed a hold step that directly follows another hold completing immediately.
 - Fixed an empty "Restart from" row showing in the objective panel before any checkpoint was reached.
 
 ## [0.1.0] — 2026-09-25

@@ -64,6 +64,10 @@ export function gateCrossing(gate: Gate, previous: State, s: State) {
   if (Math.abs(across) > gate.width / 2) return null;
   return across >= 0 ? "starboard" : "port";
 }
+// Author-given names used mid-sentence: "Holding area" → "holding area",
+// "Mark A" → "mark A", "Harbour entrance" → "harbour entrance".
+export const midSentence = (name: string) =>
+  name.charAt(0).toLowerCase() + name.slice(1);
 // Fill {placeholders} in stage texts; unknown ones are left as written.
 export const fill = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (match, key: string) =>

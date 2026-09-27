@@ -61,6 +61,9 @@ export function playtest(stage: Stage): PlaytestResult {
         place(pose(z.x, z.y, g.state.heading));
         runUntil(done, st.seconds + 5);
         if (!done()) note = `still holding after ${st.seconds + 5} s`;
+        // A hold that ends early points at an engine bug, not the stage.
+        else if (g.progress.elapsed - from < st.seconds - STEP)
+          note = `completed in ${(g.progress.elapsed - from).toFixed(1)} s, before its ${st.seconds} s`;
         break;
       }
       case "waitForClear":

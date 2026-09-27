@@ -1,5 +1,5 @@
 import { degrees, knots, mooringConfig, scenario, stage } from "./config";
-import { fill, insideZone, zoneShape } from "./mission";
+import { fill, insideZone, midSentence, zoneShape } from "./mission";
 import { quayClearance, requirements } from "./scenario";
 import type { Session } from "./session";
 import type { Step } from "./stage/load";
@@ -29,7 +29,7 @@ function numbers(steps: Step[]) {
 }
 const vesselName = (id: string) =>
   stage.traffic.find((v) => v.id === id)?.name ?? id;
-const zoneName = (id: string) => stage.zones[id].name.toLowerCase();
+const zoneName = (id: string) => midSentence(stage.zones[id].name);
 // Docking checks: the approach target, then the alongside envelope once the
 // first line is on, plus the securing requirements after arrival.
 function berthChecks(g: Session): [boolean, string][] {
@@ -177,7 +177,7 @@ export function objective(g: Session): Objective {
             `Boat centre inside the ${zoneName(step.zone)}`,
           ],
           [
-            p.releasedAt !== null,
+            p.countdown === 0,
             released
               ? `${released} departs after ${step.seconds} s in position`
               : `Hold ${step.seconds} s in position`,

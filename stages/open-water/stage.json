@@ -1,0 +1,145 @@
+{
+  "$schema": "../stage.schema.json",
+  "schemaVersion": 1,
+  "id": "open-water",
+  "version": "1.0.0",
+  "name": "Open water · First session",
+  "description": "Familiarisation in a fictional open practice area: go ahead, use neutral and reverse, feel the boat carry its way and stop inside marked areas.",
+  "author": "Leopard / Handling Lab",
+  "area": "Fictional training area",
+  "buoyage": "IALA-A",
+  "scene": {
+    "start": { "x": 0, "y": -40, "heading": 0 },
+    "structures": [
+      { "id": "practice-pontoon", "name": "Practice pontoon", "kind": "quay", "x": 50, "y": 20, "width": 10, "length": 42 },
+      { "id": "north-limit", "name": "North training barrier", "kind": "barrier", "x": 0, "y": 61, "width": 124, "length": 2 },
+      { "id": "south-limit", "name": "South training barrier", "kind": "barrier", "x": 0, "y": -61, "width": 124, "length": 2 },
+      { "id": "west-limit", "name": "West training barrier", "kind": "barrier", "x": -61, "y": 0, "width": 2, "length": 120 },
+      { "id": "east-limit", "name": "East training barrier", "kind": "barrier", "x": 61, "y": 0, "width": 2, "length": 120 }
+    ],
+    "bollards": [
+      { "id": "P1", "structure": "practice-pontoon", "x": 45.7, "y": 27 },
+      { "id": "P2", "structure": "practice-pontoon", "x": 45.7, "y": 13 }
+    ],
+    "berths": [
+      {
+        "id": "stop-box",
+        "name": "Stop box",
+        "label": "STOP",
+        "side": "starboard",
+        "structure": "practice-pontoon",
+        "lines": { "bow": "P1", "stern": "P2" },
+        "approach": {
+          "x": 30, "y": 20, "width": 12, "length": 20,
+          "heading": 0, "headingTolerance": 15,
+          "maxSpeed": 0.2, "maxYawRate": 0.03,
+          "positionTolerance": 2.5, "dwell": 5
+        },
+        "alongside": {
+          "x": 40, "y": 20, "width": 10, "length": 20,
+          "heading": 0, "headingTolerance": 10,
+          "maxSpeed": 0.18, "maxYawRate": 0.025,
+          "gentleSpeed": 0.08, "boundaryAllowance": 0.02
+        }
+      }
+    ],
+    "zones": [
+      { "id": "mark-a", "name": "Mark A", "label": "A", "shape": { "kind": "circle", "x": 0, "y": -5, "radius": 7 } },
+      { "id": "mark-b", "name": "Mark B", "label": "B", "shape": { "kind": "circle", "x": 0, "y": -22, "radius": 7 } },
+      { "id": "mark-c", "name": "Mark C", "label": "C", "shape": { "kind": "circle", "x": -30, "y": 20, "radius": 7 } }
+    ],
+    "gates": [],
+    "labels": [
+      { "text": "FICTIONAL PRACTICE AREA", "x": 0, "y": 52, "height": 2, "width": 19 }
+    ]
+  },
+  "conditions": {
+    "wind": { "speed": 1, "from": 200 },
+    "current": { "x": 0, "y": 0 }
+  },
+  "traffic": [],
+  "mission": {
+    "berth": "stop-box",
+    "steps": [
+      {
+        "id": "ahead-to-a",
+        "kind": "holdInZone",
+        "label": "AHEAD AND STOP",
+        "title": "Motor ahead to Mark A and stop in it.",
+        "hint": "Push both levers gently ahead. About a boat length before the circle, bring them back to neutral: the boat keeps going. If it will overshoot, give a short burst astern. Keep the boat's centre inside A for 5 seconds.",
+        "zone": "mark-a",
+        "seconds": 5,
+        "resetOnExit": true,
+        "releases": [],
+        "show": ["mark-a"],
+        "bearing": { "label": "A", "zone": "mark-a" },
+        "linesRefused": "No lines today: this is an open-water session",
+        "radio": {
+          "start": "Welcome to the practice area. This is a game, not certified training. First: motor slowly ahead to Mark A, dead ahead, and stop inside it.",
+          "enter": "Inside Mark A. Neutral, and let her settle. Hold for 5 seconds.",
+          "reset": "You drifted out of A. Come back in and try a smaller, earlier lever movement.",
+          "done": "Well stopped. Notice how far she carried in neutral."
+        }
+      },
+      {
+        "id": "astern-to-b",
+        "kind": "holdInZone",
+        "label": "REVERSE",
+        "title": "Go astern to Mark B and stop in it.",
+        "hint": "Mark B is behind you. Keep the bow pointing north and ease both levers astern. The boat steers less well going backwards, so go slowly. Neutral before B, a touch ahead to stop, then hold 5 seconds.",
+        "zone": "mark-b",
+        "seconds": 5,
+        "resetOnExit": true,
+        "releases": [],
+        "show": ["mark-b"],
+        "bearing": { "label": "B", "zone": "mark-b" },
+        "linesRefused": "No lines today: this is an open-water session",
+        "radio": {
+          "start": "Now reverse. Without turning, go astern to Mark B, behind you, and stop inside it.",
+          "enter": "Inside Mark B. Stop her there. Hold for 5 seconds.",
+          "reset": "Out of B. Small corrections: ahead to stop sternway, astern to stop headway.",
+          "done": "Good. Reverse is how you brake as well as how you back up."
+        }
+      },
+      {
+        "id": "turn-to-c",
+        "kind": "holdInZone",
+        "label": "TURN AND STOP",
+        "title": "Turn to port and stop in Mark C.",
+        "hint": "Mark C is to the north-west. Turn with one lever ahead and the other in neutral or astern, then motor to C and stop. Hold 8 seconds: the light breeze will try to push you out.",
+        "zone": "mark-c",
+        "seconds": 8,
+        "resetOnExit": true,
+        "releases": [],
+        "show": ["mark-c"],
+        "bearing": { "label": "C", "zone": "mark-c" },
+        "linesRefused": "No lines today: this is an open-water session",
+        "radio": {
+          "start": "Next, turn towards Mark C, north-west of you, and stop inside it.",
+          "enter": "Inside Mark C. Hold for 8 seconds, correcting for the breeze.",
+          "reset": "You drifted out of C. Come back and hold with small, early corrections.",
+          "done": "Nicely held. Last exercise: a proper stop in the box."
+        }
+      },
+      {
+        "id": "stop-in-box",
+        "kind": "arriveAtBerth",
+        "label": "STOP BOX",
+        "checkpoint": "Stop box",
+        "title": "Stop in the box, bow north.",
+        "hint": "Motor to the marked box east of Mark C, well clear of the pontoon. Line up bow north, slow right down and stop with the whole boat inside the box. Hold still for 5 seconds.",
+        "linesRefused": "No lines today: just stop in the box",
+        "radio": {
+          "start": "Final exercise: stop inside the box west of the pontoon, bow north, and hold still for 5 seconds. You do not need to go alongside.",
+          "done": "Stopped and held. That is the whole first session."
+        }
+      }
+    ],
+    "rules": [],
+    "complete": {
+      "title": "First session complete.",
+      "hint": "Session complete with +{penalty} s penalties. Open the debrief for your score; Retry (R) to go again.",
+      "radio": "Session complete in {time} s. Remember: this is a game, not a substitute for real training on the water."
+    }
+  }
+}

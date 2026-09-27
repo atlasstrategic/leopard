@@ -12,6 +12,7 @@ import {
 } from "./config";
 import {
   fill,
+  midSentence,
   gateCrossing,
   insideZone,
   missionSteps,
@@ -861,7 +862,7 @@ export class Session {
         return "Holding";
       case "departure":
         return step?.kind === "exitThroughGate"
-          ? `Depart through the ${stage.gates[step.gate].name.toLowerCase()}`
+          ? `Depart through the ${midSentence(stage.gates[step.gate].name)}`
           : "Depart";
       case "failed":
         return `Mission failed: ${this.progress.failure}`;
@@ -881,6 +882,8 @@ export class Session {
     const p = this.progress,
       step = this.steps[index];
     p.step = index;
+    // Each step starts afresh: a hold's countdown never carries into the next.
+    p.countdown = null;
     if (!step) return;
     const phase = phaseFor(step);
     if (phase && phase !== p.phase) {
@@ -930,7 +933,7 @@ export class Session {
         this.recorder.event(
           time,
           "mission.countdown_reset",
-          `Left the ${stage.zones[step.zone].name.toLowerCase()} — countdown reset`,
+          `Left the ${midSentence(stage.zones[step.zone].name)} — countdown reset`,
         );
         if (step.radio?.reset) this.announce(step.radio.reset, time);
       }
@@ -973,7 +976,7 @@ export class Session {
       const until = this.steps.findIndex((st) => st.id === rule.until);
       if (inside && !p.insideKeepOut[rule.zone] && p.step <= until) {
         const time = p.elapsed + STEP,
-          zone = stage.zones[rule.zone].name.toLowerCase();
+          zone = midSentence(stage.zones[rule.zone].name);
         p.earlyEntries++;
         p.penalty += rule.penalty;
         this.recorder.event(

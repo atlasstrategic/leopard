@@ -2,7 +2,7 @@
 
 A **stage** is one JSON file, `stages/<id>/stage.json`, that describes a harbour, its traffic and a mission for the Leopard 42. It is data, not code: the game validates it before playing it, and a stage cannot change the physics. This guide is written for people and for AI agents building stages.
 
-The fuel dock (`stages/fuel-dock/stage.json`) is the full example. The worked example below builds the much smaller `tests/fixtures/west-quay.stage.json`.
+Examples: the fuel dock (`stages/fuel-dock/stage.json`) uses every part of the format; open water (`stages/open-water/stage.json`) is a lesson with no mooring, written from this guide by an independent author; the worked example below builds the small `tests/fixtures/west-quay.stage.json`.
 
 ## Workflow
 
@@ -27,8 +27,19 @@ The fuel dock (`stages/fuel-dock/stage.json`) is the full example. The worked ex
 - Metres; **x is east, y is north**. The harbour can sit anywhere; the game frames the camera on the boat and the debrief map on your structures.
 - **Headings in degrees true**, clockwise from north: 0 = north, 90 = east, 180 = south.
 - Speeds in m/s; **yaw rates in rad/s** (0.025 rad/s ≈ 1.4°/s); times in seconds.
-- Wind is given as the direction it blows **from**, like a forecast.
+- Wind is given as the direction it blows **from**, like a forecast. For scale: the fuel dock uses 2 m/s (about 4 kn) from the west, a noticeable push on a 42-foot catamaran; 1 m/s is gentle. Players can change the wind in Handling & weather.
 - The boat is a Leopard 42: 12.67 m long and 7.04 m wide. Its lines lead from starboard fairleads 3.3 m out from the centreline and 4.6 m forward and aft of the centre, and a crew member can reach a bollard up to **6.5 m** away.
+
+## What the player sees and uses
+
+Write titles, hints and radio calls in terms of these:
+
+- **Controls:** two engine levers, **port** and **starboard**, each from full astern through **neutral** to full ahead in 20% steps (keys Q/A and E/D, W/S for both, Space for both neutral), and a persistent **wheel** (arrow keys, X to centre). One lever ahead with the other in neutral or astern turns the boat. Engines respond with a delay; neutral is not a brake.
+- **Crew & lines** tab: port and starboard **fenders** (3 seconds to deploy), and **bow** and **stern** lines with Attach/Release and Take in/Ease.
+- **Objective panel:** your step's `label` (numbered), `title` and `hint`, the step's checks and a progress bar.
+- **Harbour radio** panel: the latest radio call.
+- **Scene:** zones listed in a step's `show` are drawn as translucent blue areas (circles with small buoys, rectangles with an outline) with their `label`, only during that step. The berth's approach target is a mint box with an arrow; after the first line is attached it turns amber and shows the alongside envelope. Gates have red and green lights, and a dashed gate line during an exit step.
+- **Instruments:** the bearing caption reads `◆ BRG <label> 090° T · 19.9 m`. It follows the step's `bearing`; **without one it points at the berth**, so set `bearing` on every step that is not about the berth.
 
 ## File structure
 
@@ -48,7 +59,8 @@ The fuel dock (`stages/fuel-dock/stage.json`) is the full example. The worked ex
 
 ### Berths
 
-- `approach` is the arrival target: the whole hull must be inside the rectangle, the boat's centre within `positionTolerance` of its centre, heading within `headingTolerance`, below `maxSpeed` and `maxYawRate`, for `dwell` seconds. Make it at least 10 × 17 m; the boat is 7 × 12.7 m.
+- Every stage needs one berth (and so a quay with two bollards), named by `mission.berth`, even if the mission never moors (see [Limits](#limits)).
+- `approach` is the arrival target: the whole hull must be inside the rectangle, the boat's centre within `positionTolerance` of its centre, heading within `headingTolerance`, below `maxSpeed` and `maxYawRate`, for `dwell` seconds. Make it at least 10 × 17 m; the boat is 7 × 12.7 m. It does not have to touch the quay: on its own in open water it works as a "stop box" (the open-water stage ends with one).
 - `alongside` is the envelope the boat must settle in once the first line is on. Put it against the quay face, with the **starboard side to the quay**: a boat heading north lies against a quay to its east; heading south, against a quay to its west.
 - The quay **face** is worked out from where the alongside envelope sits relative to its quay. Lines attach only from that face, and fender posts are drawn along it.
 - Place the bow and stern bollards within 6.5 m of the fairleads when the boat lies about 1 m off the face: roughly level with the boat's bow and stern, 0.5–1 m in from the quay edge. The validator checks this.
@@ -59,7 +71,7 @@ One vessel with `length`, `beam`, a `start` pose, handling limits (`cruiseSpeed`
 
 ## Mission
 
-`mission.steps` run in order; the last one completes the mission. Each step has an `id`, an eyebrow `label` (consecutive steps with the same label share a number), a `title` and `hint` for the objective panel, and optionally:
+`mission.steps` run in order; the last one completes the mission, whatever its kind (an `arriveAtBerth` last ends the mission once the arrival hold is done). Each step has an `id`, an eyebrow `label` (consecutive steps with the same label share a number), a `title` and `hint` for the objective panel, and optionally:
 
 - `radio`: calls made at the step's `start`, on `done`, and kind-specific moments (below);
 - `show`: zone ids drawn in the scene during the step;
@@ -69,7 +81,7 @@ One vessel with `length`, `beam`, a `start` pose, handling limits (`cruiseSpeed`
 
 | Block | Completes when | Specific fields |
 | --- | --- | --- |
-| `holdInZone` | the boat's centre has stayed in `zone` for `seconds` | `resetOnExit`, `releases` (vessel ids), radio `enter`, `reset` |
+| `holdInZone` | the boat's centre has stayed in `zone` for `seconds` | `resetOnExit`, `releases` (vessel ids), radio `enter`, `reset`. Position only: it does not check speed, heading or gear. A small zone and a longer hold encourage stopping; for a real stop, use an `arriveAtBerth` stop box |
 | `waitForClear` | `vessel` has left the rectangle `zone` completely | |
 | `arriveAtBerth` | the berth's approach target is held | |
 | `secureAlongside` | both lines on, fenders out, neutral, in the envelope | must directly follow `arriveAtBerth`; `hintAlongside` once the first line is on |
@@ -193,6 +205,8 @@ Stage "west-quay" is invalid:
 
 ## Limits
 
+- Every stage needs a berth, and so a quay with two bollards, even when the mission never moors.
+- `holdInZone` checks position only; there is no block that requires a stop, a heading or a gear (such as going astern) in open water other than the berth's approach target.
 - Structures are axis-aligned rectangles: no angled quays, curves or pontoon fingers yet.
 - Berths are starboard side to, and a mission uses one berth.
 - At most one traffic vessel.

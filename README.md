@@ -92,7 +92,7 @@ On completion the simulation stops, the radio reports the total time and penalti
 
 ## Stages
 
-A **stage** is a self-contained data file, `stages/<id>/stage.json`, describing a harbour, its traffic and its mission. The fuel mission is the first one, `stages/fuel-dock/stage.json`. The game loads it through a validator (`src/stage/`); neither the layout nor the mission is hard-coded.
+A **stage** is a self-contained data file, `stages/<id>/stage.json`, describing a harbour, its traffic and its mission. Two are bundled: the fuel mission, `stages/fuel-dock/stage.json`, and **Open water · First session** (`stages/open-water/stage.json`), a first lesson in ahead, neutral, astern, turning and stopping at marks, written from the authoring guide by an independent author. The game loads it through a validator (`src/stage/`); neither the layout nor the mission is hard-coded.
 
 A stage file currently defines:
 
@@ -129,7 +129,7 @@ npm run stage:schema    # regenerate stages/stage.schema.json after changing the
 
 A stage may have no traffic, zones or gates. The quay face a berth lies against (west, east, south or north) is worked out from where its alongside envelope sits; lines attach only from that face and the quay's fender posts are drawn along it. **Show me** is scripted for the fuel dock and is hidden on other stages.
 
-Next: a second stage authored independently from the guide ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)).
+Known format gaps, found by that independent author: every stage still needs a berth even when the mission never moors, and `holdInZone` checks position only (no stop, heading or gear requirement).
 
 ## Restart checkpoints
 
@@ -282,4 +282,4 @@ The scripts target only the local game tab. Dock automation uses DOM lever input
 
 The production bundle is approximately **153 kB gzipped JS** plus approximately 3.4 kB CSS; Vite warns that Three.js makes the uncompressed JS chunk exceed 500 kB. No external assets download at runtime.
 
-Milestone C's mission loop ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) is complete: holding → clearance → approach → secured → service → departure → debrief, with restart checkpoints. Next: **stages as data plugins** ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)) so other authors (including agents) can build stages: (1) stage file format with layout and traffic ✔; (2) an objective engine with reusable building blocks, porting the fuel mission onto it ✔; (3) stage loading and a picker ✔; (4) validation, an automated completability runner and an authoring guide ✔; (5) a second stage authored independently. Then milestone D's Croatian harbour becomes a stage package. Calibrate low-speed response and scoring with experienced operators before claiming training fidelity. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
+Milestone C's mission loop ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) is complete: holding → clearance → approach → secured → service → departure → debrief, with restart checkpoints. Next: **stages as data plugins** ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)) so other authors (including agents) can build stages: (1) stage file format with layout and traffic ✔; (2) an objective engine with reusable building blocks, porting the fuel mission onto it ✔; (3) stage loading and a picker ✔; (4) validation, an automated completability runner and an authoring guide ✔; (5) a second stage authored independently ✔. Then milestone D's Croatian harbour becomes a stage package. Calibrate low-speed response and scoring with experienced operators before claiming training fidelity. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
