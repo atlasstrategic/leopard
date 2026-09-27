@@ -118,15 +118,18 @@ Rules: `keepOut` (a penalty and radio call for each entry into a zone until a na
 Units are metres, m/s, headings in degrees true and yaw rates in rad/s; x is east and y is north. The loader converts to the engine's internal units and checks references (bollards on the berth's quay, zones, gates and vessels named by steps and rules, step order, one correct option per choice, unique ids and so on), listing every problem with its path.
 
 ```sh
-npm run stage:validate  # check every stages/*/stage.json
+npm run stage:validate  # schema, references and geometry of every stages/*/stage.json (or given files)
+npm run stage:test      # step-by-step playtest of every bundled stage (or given files)
 npm run stage:schema    # regenerate stages/stage.schema.json after changing the format
 ```
+
+**To write a stage, start with [`STAGE_AUTHORING.md`](STAGE_AUTHORING.md):** the workflow, units, every building block, a worked example and what the tools check.
 
 `stages/stage.schema.json` is generated from the definition in `src/stage/schema.ts`, so editors can validate and autocomplete stage files; a test fails if it is out of date. **Choosing a stage.** The **Stage** panel (top right) shows the current stage and lets you pick another bundled stage, or **Load stage file…** to play a `stage.json` from your computer. A loaded file is validated first: problems are listed in the panel and nothing changes; a valid file is kept for this browser tab and played. The URL selects the stage: `?stage=<id>` for a bundled stage, `?stage=file` for the loaded file; an unknown id falls back to the fuel dock with a notice. Switching stage reloads the page, so export the voyage log first if you need it. To bundle a new stage, add its folder under `stages/` and list it in `src/stage/registry.ts` (a test fails if a folder is missing from the list).
 
 A stage may have no traffic, zones or gates. The quay face a berth lies against (west, east, south or north) is worked out from where its alongside envelope sits; lines attach only from that face and the quay's fender posts are drawn along it. **Show me** is scripted for the fuel dock and is hidden on other stages.
 
-Next: an authoring guide and a headless runner that proves a stage can be completed ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)).
+Next: a second stage authored independently from the guide ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)).
 
 ## Restart checkpoints
 
@@ -279,4 +282,4 @@ The scripts target only the local game tab. Dock automation uses DOM lever input
 
 The production bundle is approximately **153 kB gzipped JS** plus approximately 3.4 kB CSS; Vite warns that Three.js makes the uncompressed JS chunk exceed 500 kB. No external assets download at runtime.
 
-Milestone C's mission loop ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) is complete: holding → clearance → approach → secured → service → departure → debrief, with restart checkpoints. Next: **stages as data plugins** ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)) so other authors (including agents) can build stages: (1) stage file format with layout and traffic ✔; (2) an objective engine with reusable building blocks, porting the fuel mission onto it ✔; (3) stage loading and a picker ✔; (4) validation, an automated completability runner and an authoring guide; (5) a second stage authored independently. Then milestone D's Croatian harbour becomes a stage package. Calibrate low-speed response and scoring with experienced operators before claiming training fidelity. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
+Milestone C's mission loop ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) is complete: holding → clearance → approach → secured → service → departure → debrief, with restart checkpoints. Next: **stages as data plugins** ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)) so other authors (including agents) can build stages: (1) stage file format with layout and traffic ✔; (2) an objective engine with reusable building blocks, porting the fuel mission onto it ✔; (3) stage loading and a picker ✔; (4) validation, an automated completability runner and an authoring guide ✔; (5) a second stage authored independently. Then milestone D's Croatian harbour becomes a stage package. Calibrate low-speed response and scoring with experienced operators before claiming training fidelity. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.

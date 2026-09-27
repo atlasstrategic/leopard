@@ -1,0 +1,201 @@
+# Authoring stages
+
+A **stage** is one JSON file, `stages/<id>/stage.json`, that describes a harbour, its traffic and a mission for the Leopard 42. It is data, not code: the game validates it before playing it, and a stage cannot change the physics. This guide is written for people and for AI agents building stages.
+
+The fuel dock (`stages/fuel-dock/stage.json`) is the full example. The worked example below builds the much smaller `tests/fixtures/west-quay.stage.json`.
+
+## Workflow
+
+1. **Start from an example.** Copy `tests/fixtures/west-quay.stage.json` (small) or `stages/fuel-dock/stage.json` (everything) into `stages/<your-id>/stage.json`. Set `"id"` to the folder name.
+2. **Keep the schema reference.** With `"$schema": "../stage.schema.json"` at the top, editors that understand JSON Schema autocomplete fields and show descriptions and units.
+3. **Validate** until it is clean:
+   ```sh
+   npm run stage:validate                        # every stage in stages/
+   npm run stage:validate -- path/to/stage.json  # one file anywhere
+   ```
+   This checks the schema, references between parts, and the geometry (see [Checks](#what-the-tools-check)). Errors must be fixed; warnings are probably mistakes.
+4. **Playtest**:
+   ```sh
+   npm run stage:test -- path/to/stage.json      # or no argument for all bundled stages
+   ```
+   This plays each mission step with the real engine and names the step that cannot be completed.
+5. **Play it.** Open the game, open the **Stage** panel and choose **Load stage file…**. Problems are listed in the panel; a valid file starts at once.
+6. **Bundle it** (optional). Add the import to `src/stage/registry.ts` so it appears in the stage picker and at `?stage=<id>`. `npm test` fails if a folder under `stages/` is not listed.
+
+## Coordinates and units
+
+- Metres; **x is east, y is north**. The harbour can sit anywhere; the game frames the camera on the boat and the debrief map on your structures.
+- **Headings in degrees true**, clockwise from north: 0 = north, 90 = east, 180 = south.
+- Speeds in m/s; **yaw rates in rad/s** (0.025 rad/s ≈ 1.4°/s); times in seconds.
+- Wind is given as the direction it blows **from**, like a forecast.
+- The boat is a Leopard 42: 12.67 m long and 7.04 m wide. Its lines lead from starboard fairleads 3.3 m out from the centreline and 4.6 m forward and aft of the centre, and a crew member can reach a bollard up to **6.5 m** away.
+
+## File structure
+
+| Part | Contents |
+| --- | --- |
+| Manifest | `schemaVersion` (1), `id` (lower case, matching the folder), semantic `version`, `name`, `description`, `author`, `area` (where it is set), `buoyage` (`IALA-A` in Europe: red is the port-hand light entering harbour) |
+| `scene.start` | The boat's starting pose `{ x, y, heading }` |
+| `scene.structures` | Solid axis-aligned rectangles `{ id, name, kind, x, y, width, length }`: `width` is east–west, `length` north–south. `kind` is `quay` (you can moor to it), `breakwater` or `barrier` (the edge of the play area). **Enclose the play area with barriers.** |
+| `scene.bollards` | `{ id, structure, x, y }` on a quay. The id is the label shown, e.g. `B01` |
+| `scene.berths` | A berth against a quay: `side` (starboard only), `lines` (bow and stern bollard ids), an `approach` target and an `alongside` envelope (see below) and an optional short `label` for the instruments |
+| `scene.zones` | Named `circle` or `rect` areas that steps and rules refer to, with an optional floating `label` |
+| `scene.gates` | Harbour entrances: centre, `width` between the two lights and the `outward` direction when leaving (`north`, `east`, `south`, `west`). The lights are placed at the ends; the buoyage decides which is red |
+| `scene.labels` | Floating signs `{ text, x, y, height, width }` |
+| `conditions` | `wind { speed, from }` and `current { x, y }` |
+| `traffic` | At most **one** scripted vessel (see below), or none |
+| `mission` | The berth used, the steps, the rules, completion texts and optional scoring |
+
+### Berths
+
+- `approach` is the arrival target: the whole hull must be inside the rectangle, the boat's centre within `positionTolerance` of its centre, heading within `headingTolerance`, below `maxSpeed` and `maxYawRate`, for `dwell` seconds. Make it at least 10 × 17 m; the boat is 7 × 12.7 m.
+- `alongside` is the envelope the boat must settle in once the first line is on. Put it against the quay face, with the **starboard side to the quay**: a boat heading north lies against a quay to its east; heading south, against a quay to its west.
+- The quay **face** is worked out from where the alongside envelope sits relative to its quay. Lines attach only from that face, and fender posts are drawn along it.
+- Place the bow and stern bollards within 6.5 m of the fairleads when the boat lies about 1 m off the face: roughly level with the boat's bow and stern, 0.5–1 m in from the quay edge. The validator checks this.
+
+### Traffic
+
+One vessel with `length`, `beam`, a `start` pose, handling limits (`cruiseSpeed`, `accel`, `brake`, `turnRadius`, `pivotYaw`, `maxYaw`, `arriveRadius`, `lookAhead`, `lateralClearance`) and `legs`: waypoints driven `ahead` or `astern`, optionally stopping at one. It waits at its start until a step `releases` it, stops (and can call `radio.yield`) if your boat is in its path, and disappears after its last waypoint. Keep waypoints more than about two turning radii apart, and leave through a gate on its starboard side. The validator simulates the route.
+
+## Mission
+
+`mission.steps` run in order; the last one completes the mission. Each step has an `id`, an eyebrow `label` (consecutive steps with the same label share a number), a `title` and `hint` for the objective panel, and optionally:
+
+- `radio`: calls made at the step's `start`, on `done`, and kind-specific moments (below);
+- `show`: zone ids drawn in the scene during the step;
+- `bearing`: `{ label, zone | gate }` for the instruments' bearing caption; the default is the berth;
+- `checkpoint`: a button label; a restart point is saved when the step starts;
+- `linesRefused`: the refusal shown if the player tries to attach lines during this step.
+
+| Block | Completes when | Specific fields |
+| --- | --- | --- |
+| `holdInZone` | the boat's centre has stayed in `zone` for `seconds` | `resetOnExit`, `releases` (vessel ids), radio `enter`, `reset` |
+| `waitForClear` | `vessel` has left the rectangle `zone` completely | |
+| `arriveAtBerth` | the berth's approach target is held | |
+| `secureAlongside` | both lines on, fenders out, neutral, in the envelope | must directly follow `arriveAtBerth`; `hintAlongside` once the first line is on |
+| `checklist` | every item is done in order | `requiresSecured`, `notReady`, `unsecured`, `items` |
+| `exitThroughGate` | the boat crosses `gate` outward | `keepSide`, `sidePenalty` (seconds), radio `wrongSide` |
+
+Checklist items, done in order (each has a `label`; all but `enginesOn` have a `pending` text shown when a later item is tried first):
+
+- `enginesOff`: the levers stop delivering thrust; counts as neutral for securing.
+- `choice`: `options`, exactly one without a `refusal`; the others are refused with their text.
+- `timed`: a task that runs on the game clock (`total`, `unit`, `rate`) and stops if securing is lost when `requiresSecured`.
+- `confirm`: a single button.
+- `enginesOn`: always allowed once the engines are off (safety); completes the checklist when everything else is done.
+
+`mission.rules` apply across steps: `keepOut` (a `penalty` and `radio` call for each entry into a zone until the step named in `until` completes; `check` is the objective line shown meanwhile) and `protectedContact` (contact with the vessel where no fender covers the hull fails the mission).
+
+Texts may use `{placeholders}`: `{penalty}` in penalty calls, `{time}` and `{penalty}` in the completion call, `{total} {unit}` and `{amount} {unit}` in timed items. The schema's descriptions list which apply where.
+
+`mission.scoring` is optional. Anything left out uses the engine defaults: weights 40/25/20/15 for impact and clearance, position and speed control, preparation and procedure, and smoothness; the thresholds; the ratings; and the debrief tips (which can use placeholders such as `{count}`, `{gap}` and `{minutes}`).
+
+## Worked example: West quay
+
+A harbour with one quay on the west side; the boat arrives from the north, berths bow south with its starboard side to the quay, and the mission ends when it is secured. No traffic.
+
+**1. Manifest.**
+
+```json
+"schemaVersion": 1,
+"id": "west-quay",
+"version": "1.0.0",
+"name": "Test · West quay",
+"description": "A mirrored harbour with the quay to the west, bow-south berth, no traffic.",
+"author": "Leopard tests",
+"area": "Test harbour",
+"buoyage": "IALA-A",
+```
+
+**2. Structures.** The quay runs from x −17 to −7 and y −21 to 21, so its east face (the water side) is at x = −7. Barriers close the north, south and east; the quay itself closes the west.
+
+```json
+"structures": [
+  { "id": "west-quay", "name": "West quay", "kind": "quay", "x": -12, "y": 0, "width": 10, "length": 42 },
+  { "id": "north-limit", "name": "North barrier", "kind": "barrier", "x": 0, "y": 45, "width": 60, "length": 2 },
+  { "id": "south-limit", "name": "South barrier", "kind": "barrier", "x": 0, "y": -45, "width": 60, "length": 2 },
+  { "id": "east-limit", "name": "East barrier", "kind": "barrier", "x": 30, "y": 0, "width": 2, "length": 92 }
+]
+```
+
+**3. The berth.** Heading south (180°), the starboard side faces west, onto the quay. The alongside envelope (x −7 to 3) touches the face. Lying 1 m off the face, the boat's centre is at x ≈ −2.5; its bow fairlead is then at about (−5.8, −4.6) and the stern fairlead at (−5.8, 4.6), so bollards at (−7.7, −7) and (−7.7, 7) are about 3 m away.
+
+```json
+"bollards": [
+  { "id": "W1", "structure": "west-quay", "x": -7.7, "y": -7 },
+  { "id": "W2", "structure": "west-quay", "x": -7.7, "y": 7 }
+],
+"berths": [{
+  "id": "west-berth", "name": "West berth", "label": "W", "side": "starboard",
+  "structure": "west-quay", "lines": { "bow": "W1", "stern": "W2" },
+  "approach": { "x": 0, "y": 0, "width": 10, "length": 17, "heading": 180, "headingTolerance": 8,
+                "maxSpeed": 0.18, "maxYawRate": 0.025, "positionTolerance": 1.2, "dwell": 3 },
+  "alongside": { "x": -2, "y": 0, "width": 10, "length": 20, "heading": 180, "headingTolerance": 10,
+                 "maxSpeed": 0.18, "maxYawRate": 0.025, "gentleSpeed": 0.08, "boundaryAllowance": 0.02 }
+}]
+```
+
+**4. Start, conditions and traffic.** Start 30 m north of the berth, heading south, in calm water, with no traffic, zones, gates or labels.
+
+**5. Mission.** Two steps and a completion call:
+
+```json
+"mission": {
+  "berth": "west-berth",
+  "steps": [
+    { "id": "approach", "kind": "arriveAtBerth", "label": "APPROACH",
+      "title": "Approach the west quay.", "hint": "Bow south, starboard side to.",
+      "radio": { "start": "Proceed to the west berth.", "done": "Arrival confirmed." } },
+    { "id": "secure", "kind": "secureAlongside", "label": "SECURE",
+      "title": "Make fast.", "hint": "Attach the first line.", "hintAlongside": "Settle alongside.",
+      "radio": { "done": "Secured." } }
+  ],
+  "rules": [],
+  "complete": { "title": "Moored.", "hint": "+{penalty} s",
+                "radio": "Moored in {time} s with +{penalty} s penalties." }
+}
+```
+
+**6. Validate and playtest.**
+
+```text
+$ npm run stage:validate -- tests/fixtures/west-quay.stage.json
+✔ west-quay (1.0.0)
+$ npm run stage:test -- tests/fixtures/west-quay.stage.json
+✔ west-quay (1.0.0) · score 100 · +0 s
+  ✔ approach (arriveAtBerth) 3.0 s
+  ✔ secure (secureAlongside) 3.0 s
+```
+
+Move bollard W1 to y = −14 and the validator explains the problem:
+
+```text
+✖ bad.json
+Stage "west-quay" is invalid:
+- Berth alongside: bow line to W1 cannot be attached (Out of reach (9.6 / 6.5 m))
+```
+
+## What the tools check
+
+`stage:validate` (and loading a file in the game) checks:
+
+- **Schema:** fields, types, units and allowed values, with the path of each problem.
+- **References:** bollards on quays, berths' bollards on their quay, zones, gates and vessels named by steps and rules, `secureAlongside` directly after `arriveAtBerth`, a `requiresSecured` checklist after securing, one correct option per choice, rectangle zones for `waitForClear`, unique ids.
+- **Geometry** (`stage:validate` only):
+  - the start pose clear of structures;
+  - the boat fitting its approach target;
+  - the alongside pose (1 m off the face) inside the envelope, starboard side to the quay, clear of other structures, with both lines attachable (face, side, reach and route);
+  - hold zones clear of structures;
+  - reachability from the start for a boat 7 m wide on a 1 m grid: the berth, zones and both sides of every gate (a gap narrower than the boat fails);
+  - the traffic route simulated for 600 s (it must finish and stay clear of structures; within 0.3 m is a warning).
+
+`stage:test` plays each step with the real engine: it deploys starboard fenders, parks in hold zones, waits (up to 300 s) for traffic to clear, holds the approach target, attaches lines and secures, works through the checklist, and motors out through the gate on the correct side. It moves the boat between steps rather than steering there, and lets traffic leave the harbour before moving onto the berth or to the exit. So it proves that **each step can be completed**; the reachability check covers getting between them, and a human playtest is still the judge of whether the stage is fun and fair.
+
+## Limits
+
+- Structures are axis-aligned rectangles: no angled quays, curves or pontoon fingers yet.
+- Berths are starboard side to, and a mission uses one berth.
+- At most one traffic vessel.
+- **Show me** is scripted for the fuel dock only.
+- Stages are data only: no new physics (anchoring, Mediterranean mooring) or custom code.
+- The look (materials, water, lighting) is the same for every stage.

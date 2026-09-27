@@ -10,7 +10,8 @@
     "build": "tsc --noEmit && vite build",
     "test": "tsx --test tests/*.test.ts",
     "stage:schema": "tsx tools/stage-schema.ts",
-    "stage:validate": "tsx tools/stage-validate.ts"
+    "stage:validate": "tsx tools/stage-validate.ts",
+    "stage:test": "tsx tools/stage-test.ts"
   },
   "dependencies": {
     "three": "^0.183.2",
