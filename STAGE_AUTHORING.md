@@ -77,6 +77,8 @@ Write titles, hints and radio calls in terms of these:
 - Fenders on **both** sides before any line goes on; gentle fender contact with a moored neighbour, like with the quay, does not stop securing. The boat has no fenders on its transom, so the stern must not touch the quay.
 - A slot about 1.2 m wider than the boat (7.04 m) leaves 0.6 m each side for fenders; the reachability check needs the slot's centre line clear by half the beam plus 0.3 m.
 
+Arriving stern-to accepts gentle fender contact with a neighbour or the quay (in a crosswind the boat settles on the downwind neighbour's fenders before the lines go on); arriving alongside still needs the boat clear. Make the envelopes as wide (north–south for an east or west quay) as the gap between the neighbours' hulls, so a boat lying on its fenders still fits, and let the berth envelope reach 2–3 m further from the quay than the arrival target: taking in the lazy line pulls the stern off the quay. `stages/between-boats/stage.json` is a worked stern-to stage.
+
 Secured stern-to means both stern lines and the lazy line on, not overloaded, crew idle and slack at most 0.45 m, fenders out both sides, both engines in neutral and the boat in its envelope for 3 s. The lazy line is picked up slack: the player takes it in until it holds the bow off.
 
 ### Moored boats

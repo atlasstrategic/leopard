@@ -1,0 +1,286 @@
+{
+  "$schema": "../stage.schema.json",
+  "schemaVersion": 1,
+  "id": "between-boats",
+  "version": "2.0.0",
+  "name": "Between two boats · Stern-to",
+  "description": "Reverse into a free slot in a row of boats moored stern-to on the east quay, between a catamaran and a monohull, in a light crosswind; make fast both stern lines, then the lazy line.",
+  "author": "Leopard (from an independent agent's first draft)",
+  "area": "Fictional training marina",
+  "buoyage": "IALA-A",
+  "scene": {
+    "start": {
+      "x": -30,
+      "y": -24,
+      "heading": 0
+    },
+    "structures": [
+      {
+        "id": "east-quay",
+        "name": "East quay",
+        "kind": "quay",
+        "x": 12,
+        "y": 0,
+        "width": 10,
+        "length": 80
+      },
+      {
+        "id": "north-limit",
+        "name": "North training barrier",
+        "kind": "barrier",
+        "x": -20,
+        "y": 41,
+        "width": 54,
+        "length": 2
+      },
+      {
+        "id": "south-limit",
+        "name": "South training barrier",
+        "kind": "barrier",
+        "x": -20,
+        "y": -41,
+        "width": 54,
+        "length": 2
+      },
+      {
+        "id": "west-limit",
+        "name": "West training barrier",
+        "kind": "barrier",
+        "x": -46,
+        "y": 0,
+        "width": 2,
+        "length": 84
+      }
+    ],
+    "bollards": [
+      {
+        "id": "B07",
+        "structure": "east-quay",
+        "x": 7.7,
+        "y": -3.3
+      },
+      {
+        "id": "B08",
+        "structure": "east-quay",
+        "x": 7.7,
+        "y": 3.3
+      }
+    ],
+    "berths": [
+      {
+        "id": "slot",
+        "name": "Free slot",
+        "label": "B07",
+        "style": "sternTo",
+        "structure": "east-quay",
+        "lines": {
+          "portQuarter": "B07",
+          "starboardQuarter": "B08"
+        },
+        "lazyLine": {
+          "x": -19,
+          "y": 0
+        },
+        "approach": {
+          "x": -1,
+          "y": 0,
+          "width": 14,
+          "length": 8.8,
+          "heading": 270,
+          "headingTolerance": 8,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "positionTolerance": 1.5,
+          "dwell": 3
+        },
+        "alongside": {
+          "x": -1,
+          "y": 0,
+          "width": 16,
+          "length": 8.8,
+          "heading": 270,
+          "headingTolerance": 10,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "gentleSpeed": 0.08,
+          "boundaryAllowance": 0.02
+        }
+      }
+    ],
+    "zones": [
+      {
+        "id": "stand-off",
+        "name": "Stand-off area",
+        "label": "STAND OFF",
+        "shape": {
+          "kind": "circle",
+          "x": -26,
+          "y": 0,
+          "radius": 6
+        }
+      }
+    ],
+    "gates": [],
+    "labels": [
+      {
+        "text": "EAST QUAY",
+        "x": 12,
+        "y": 24,
+        "height": 3,
+        "width": 10
+      },
+      {
+        "text": "FREE SLOT",
+        "x": 10,
+        "y": 0,
+        "height": 3.2,
+        "width": 8
+      },
+      {
+        "text": "FICTIONAL TRAINING MARINA",
+        "x": -26,
+        "y": 34,
+        "height": 2,
+        "width": 20
+      }
+    ],
+    "moored": [
+      {
+        "id": "north-3",
+        "name": "Moored catamaran",
+        "x": -0.335,
+        "y": 20.42,
+        "heading": 270,
+        "kind": "catamaran",
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "north-2",
+        "name": "Moored monohull",
+        "x": 0.25,
+        "y": 14.105,
+        "heading": 270,
+        "kind": "monohull",
+        "length": 11.5,
+        "beam": 3.99
+      },
+      {
+        "id": "north-neighbour",
+        "name": "North neighbour (catamaran)",
+        "x": -0.335,
+        "y": 7.79,
+        "heading": 270,
+        "kind": "catamaran",
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "south-neighbour",
+        "name": "South neighbour (monohull)",
+        "x": 0.25,
+        "y": -6.265,
+        "heading": 270,
+        "kind": "monohull",
+        "length": 11.5,
+        "beam": 3.99
+      },
+      {
+        "id": "south-2",
+        "name": "Moored catamaran",
+        "x": -0.335,
+        "y": -12.58,
+        "heading": 270,
+        "kind": "catamaran",
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "south-3",
+        "name": "Moored monohull",
+        "x": 0.25,
+        "y": -18.895,
+        "heading": 270,
+        "kind": "monohull",
+        "length": 11.5,
+        "beam": 3.99
+      }
+    ]
+  },
+  "conditions": {
+    "wind": {
+      "speed": 2.5,
+      "from": 10
+    },
+    "current": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "traffic": [],
+  "mission": {
+    "berth": "slot",
+    "steps": [
+      {
+        "id": "stand-off",
+        "kind": "holdInZone",
+        "label": "PREPARE",
+        "title": "Stand off and prepare.",
+        "hint": "Keep your boat's centre in the blue stand-off circle for 10 seconds. Put the fenders out on both sides (Crew & lines): you will lie between two boats. Look at the free slot on the east quay, between the catamaran and the monohull: about 8.5 m wide for your 7 m beam.",
+        "zone": "stand-off",
+        "seconds": 10,
+        "resetOnExit": true,
+        "releases": [],
+        "show": ["stand-off"],
+        "bearing": {
+          "label": "STBY",
+          "zone": "stand-off"
+        },
+        "linesRefused": "Not yet: prepare in the stand-off area first",
+        "radio": {
+          "start": "Leopard, marina office. This is a game, not certified training. Your berth is the free slot on the east quay, between the catamaran and the monohull: stern-to, lazy line provided. Stand off in the blue circle first and put fenders out on both sides.",
+          "enter": "In the stand-off area. Fenders out port and starboard. The breeze is from the north, across the slot: it will set you towards the monohull on your port side as you back in.",
+          "reset": "You drifted out of the stand-off area. Come back in; the count restarts.",
+          "done": "The slot is yours. Turn your stern to it and back in slowly, bow west."
+        }
+      },
+      {
+        "id": "approach",
+        "kind": "arriveAtBerth",
+        "label": "INTO THE SLOT",
+        "checkpoint": "Approach",
+        "title": "Back into the slot, stern first.",
+        "hint": "Line up in the fairway with your stern towards the slot and the bow pointing west, a little upwind (north) of the slot's centre line. Go astern gently on both engines and steer with them: more astern on one side swings the stern the other way. Straighten up in the mint box with the stern about a metre off the quay and hold still for 3 seconds.",
+        "linesRefused": "Stop in the mint box first, then pass the stern lines",
+        "radio": {
+          "start": "Back into the free slot, bow west. Dead slow astern. Mind the monohull downwind on your port side.",
+          "done": "Stopped in the slot. Stern lines to B07 and B08, then pick up the lazy line."
+        }
+      },
+      {
+        "id": "secure",
+        "kind": "secureAlongside",
+        "label": "SECURE",
+        "title": "Stern lines, then the lazy line.",
+        "hint": "Make fast the port quarter line to B07 and the starboard quarter line to B08 from Crew & lines, in neutral. Then pick up the lazy line at the quay and lead it to the bow.",
+        "hintAlongside": "Amber area: pick up the lazy line once a stern line is on, then Take in until it holds the bow up to windward and the stern off the quay. Keep both levers in neutral.",
+        "radio": {
+          "done": "Secured stern-to. Welcome to the marina."
+        }
+      }
+    ],
+    "rules": [],
+    "complete": {
+      "title": "Berthed stern-to.",
+      "hint": "Moored with +{penalty} s penalties. Open the debrief for your score and one thing to try; Retry (R) to go again.",
+      "radio": "Secured stern-to in {time} s with +{penalty} s penalties. A game, not certified training: practise this with an instructor on the water."
+    },
+    "scoring": {
+      "tips": {
+        "contacts": "You touched something {count}× (the quay or a neighbour). Back in slower, keep the stern a metre off the quay, and correct early for the crosswind.",
+        "fendersLate": "Your fenders were not out on both sides when you arrived. Put them out in the stand-off area: the crew needs 3 seconds.",
+        "failed": "{failure}. Fenders only cover the sides of your hulls: keep your bow and stern clear of the neighbours, and have fenders out on both sides before you back in."
+      }
+    }
+  }
+}

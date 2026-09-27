@@ -176,7 +176,13 @@ export function requirements(
       Math.abs(localY) + extentY <= t.length / 2,
     heading: Math.abs(a) <= t.headingTolerance,
     speed: Math.hypot(s.vx, s.vy) <= t.maxSpeed && Math.abs(s.yaw) <= t.maxYaw,
-    clear: !s.contact || (mode === "alongside" && acceptableContact),
+    // Gentle covered fender contact is fine once lines go on, and already
+    // on arrival stern-to: in a crosswind the boat settles on the downwind
+    // neighbour's fenders before the lines are made fast.
+    clear:
+      !s.contact ||
+      ((mode === "alongside" || stage.berth.style === "sternTo") &&
+        acceptableContact),
   };
 }
 export function updateProgress(

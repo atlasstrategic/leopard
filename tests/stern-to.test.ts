@@ -1,6 +1,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import sternToFile from "./fixtures/stern-to.stage.json";
+import betweenBoatsFile from "../stages/between-boats/stage.json";
 import { mooringConfig, STEP, useStage } from "../src/config";
 import { lineIds } from "../src/mooring";
 import { parseStage, StageError } from "../src/stage/load";
@@ -133,4 +134,100 @@ test("the lazy line pays out beyond a quay line's length and holds the boat off 
   assert.ok(line.attached && line.tension > 0, "the lazy line is loaded");
   assert.ok(!g.state.contact, "the stern is held off the quay");
   assert.ok(!Object.values(g.mooring).some((l) => l.broken));
+});
+test("between two boats: a stern-to slot in a row that holds in its crosswind", () => {
+  const stage = parseStage(betweenBoatsFile);
+  assert.equal(stage.berth.style, "sternTo");
+  assert.equal(stage.moored.length, 6);
+  assert.deepEqual(checkStage(stage), { errors: [], warnings: [] });
+  const result = playtest(stage);
+  assert.ok(result.ok, JSON.stringify(result.steps));
+  assert.equal(result.penalty, 0);
+  // Secured in the stage's own breeze (from the north, across the slot),
+  // with the lazy line taken in: it stays put for a minute without touching.
+  useStage(stage);
+  const g = new Session(
+    {
+      speed: stage.wind.speed,
+      direction: stage.wind.direction,
+      currentX: 0,
+      currentY: 0,
+    },
+    { mission: false },
+  );
+  const place = (p: { x: number; y: number; heading: number }) => {
+    Object.assign(g.state, { x: p.x, y: p.y, heading: p.heading });
+    g.previous = { ...g.state };
+  };
+  g.requestFenders("port");
+  g.requestFenders("starboard");
+  place(stage.berth.approach);
+  run(g, 3.5);
+  place(berthPose(stage));
+  for (const id of lineIds()) assert.ok(g.requestLine(id, "attach").accepted);
+  for (let i = 0; i < 6; i++) {
+    g.requestTend("lazy", "in");
+    run(g, 3);
+  }
+  run(g, 60);
+  assert.equal(g.progress.phase, "secured");
+  assert.equal(g.progress.collisions, 0);
+  assert.ok(Math.abs(g.state.y) < 0.6, `drifted to y ${g.state.y.toFixed(2)}`);
+  assert.ok(lineIds().every((id) => g.mooring[id].tension > 0));
+});
+test("between two boats: backing in with the levers alone and securing works in the stage's breeze", () => {
+  // A crude lever-only autopilot: if it can back into the slot, arrive and
+  // secure without touching anything, a player can.
+  const stage = parseStage(betweenBoatsFile);
+  useStage(stage);
+  const g = new Session({
+    speed: stage.wind.speed,
+    direction: stage.wind.direction,
+    currentX: 0,
+    currentY: 0,
+  });
+  g.skipTo("approach");
+  g.requestFenders("port");
+  g.requestFenders("starboard");
+  const west = 1.5 * Math.PI,
+    stop = stage.berth.approach.x;
+  Object.assign(g.state, { x: -20, y: 1, heading: west });
+  g.previous = { ...g.state };
+  const clamp = (v: number, a: number) => Math.max(-a, Math.min(a, v));
+  for (let t = 0; t < 240 && g.progress.phase === "approach"; t += STEP) {
+    const s = g.state,
+      togo = stop - s.x,
+      astern = -(s.vx * Math.sin(s.heading) + s.vy * Math.cos(s.heading));
+    // Aim the stern up towards the slot's centre line, then straighten up.
+    const heading =
+      west + (togo < 5 ? 0 : clamp(0.12 * s.y + 0.25 * s.vy, 0.25));
+    const turn = clamp(
+      1.2 *
+        Math.atan2(
+          Math.sin(heading - s.heading),
+          Math.cos(heading - s.heading),
+        ) -
+        3 * s.yaw,
+      0.6,
+    );
+    const thrust = clamp(-(clamp(togo * 0.06, 0.3) - astern) * 2.5, 0.8);
+    g.controls.port = clamp(thrust + turn / 2, 1);
+    g.controls.starboard = clamp(thrust - turn / 2, 1);
+    g.tick();
+  }
+  assert.equal(g.progress.phase, "securing", "arrived in the slot");
+  g.controls.port = g.controls.starboard = 0;
+  run(g, 2);
+  for (const id of lineIds()) {
+    const result = g.requestLine(id, "attach");
+    assert.ok(result.accepted, result.message);
+  }
+  for (let i = 0; i < 6; i++) {
+    g.requestTend("lazy", "in");
+    run(g, 3);
+  }
+  run(g, 5);
+  assert.equal(g.progress.phase, "complete");
+  assert.equal(g.progress.collisions, 0);
+  assert.equal(g.progress.penalty, 0);
 });
