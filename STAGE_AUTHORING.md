@@ -49,7 +49,7 @@ Write titles, hints and radio calls in terms of these:
 | `scene.start` | The boat's starting pose `{ x, y, heading }` |
 | `scene.structures` | Solid axis-aligned rectangles `{ id, name, kind, x, y, width, length }`: `width` is east–west, `length` north–south. `kind` is `quay` (you can moor to it), `breakwater` or `barrier` (the edge of the play area). **Enclose the play area with barriers.** |
 | `scene.bollards` | `{ id, structure, x, y }` on a quay. The id is the label shown, e.g. `B01` |
-| `scene.berths` | A berth against a quay: `side` (starboard only), `lines` (bow and stern bollard ids), an `approach` target and an `alongside` envelope (see below) and an optional short `label` for the instruments |
+| `scene.berths` | A berth against a quay: its `style` (`alongside`, the default, or `sternTo`), `lines` (bollard ids), for stern-to a `lazyLine` ground point, an `approach` target and an `alongside` envelope (see below) and an optional short `label` for the instruments |
 | `scene.zones` | Named `circle` or `rect` areas that steps and rules refer to, with an optional floating `label` |
 | `scene.gates` | Harbour entrances: centre, `width` between the two lights and the `outward` direction when leaving (`north`, `east`, `south`, `west`). The lights are placed at the ends; the buoyage decides which is red |
 | `scene.labels` | Floating signs `{ text, x, y, height, width }` |
@@ -65,6 +65,19 @@ Write titles, hints and radio calls in terms of these:
 - `alongside` is the envelope the boat must settle in once the first line is on. Put it against the quay face, with the **starboard side to the quay**: a boat heading north lies against a quay to its east; heading south, against a quay to its west.
 - The quay **face** is worked out from where the alongside envelope sits relative to its quay. Lines attach only from that face, and fender posts are drawn along it.
 - Place the bow and stern bollards within 6.5 m of the fairleads when the boat lies about 1 m off the face: roughly level with the boat's bow and stern, 0.5–1 m in from the quay edge. The validator checks this.
+- **Rectangles are axis-aligned** whatever their `heading`: `width` is always east–west and `length` north–south. A berth heading east or west therefore has the boat's length along `width`.
+
+#### Stern-to berths
+
+`"style": "sternTo"` moors the boat stern to the quay, usually in a slot between boats moored the same way (see [Moored boats](#moored-boats)), as in most Mediterranean marinas. It needs:
+
+- `lines`: `portQuarter` and `starboardQuarter` bollards (no `bow` or `stern`). The stern lines leave from cleats on each quarter, about 3.3 m either side of the centreline and 6 m aft of the centre; put the bollards 0.5–1 m in from the quay edge, roughly level with each quarter, so they are within 6.5 m when the stern lies about 1 m off the face. The lines must lead aft; crossing them is allowed.
+- `lazyLine`: `{ x, y }`, where the lazy line's ground chain lies, in the water off the berth ahead of the moored boat's bow, typically 20–30 m from the quay. The crew picks the lazy line up at the quay once a stern line is on and makes it fast at the bow (a bridle between the bows); it can be paid out to 40 m. The validator checks it lies ahead of the bow and within 40 m of it.
+- `approach` and `alongside` headings that point the **bow away from the quay** (heading 270 for a quay to the east). The alongside envelope is the slot the boat settles in once the first line is on.
+- Fenders on **both** sides before any line goes on; gentle fender contact with a moored neighbour, like with the quay, does not stop securing. The boat has no fenders on its transom, so the stern must not touch the quay.
+- A slot about 1.2 m wider than the boat (7.04 m) leaves 0.6 m each side for fenders; the reachability check needs the slot's centre line clear by half the beam plus 0.3 m.
+
+Secured stern-to means both stern lines and the lazy line on, not overloaded, crew idle and slack at most 0.45 m, fenders out both sides, both engines in neutral and the boat in its envelope for 3 s. The lazy line is picked up slack: the player takes it in until it holds the bow off.
 
 ### Moored boats
 
@@ -202,20 +215,20 @@ Stage "west-quay" is invalid:
   - moored boats clear of structures and of each other;
   - the start pose clear of structures and moored boats;
   - the boat fitting its approach target, clear of structures and moored boats;
-  - the alongside pose (1 m off the face) inside the envelope, starboard side to the quay, clear of other structures and moored boats, with both lines attachable (face, side, reach and route);
+  - the berth pose (1 m off the face) inside the envelope, starboard side to the quay (alongside) or bow pointing away from it (stern-to), clear of other structures and moored boats, with its quay lines attachable (face, side or lead, reach and route) and, stern-to, the lazy line ahead of the bow and within 40 m;
   - hold zones clear of structures;
   - reachability from the start for a boat 7 m wide on a 1 m grid, round structures and moored boats: the berth, zones and both sides of every gate (a gap narrower than the boat fails);
   - the traffic route simulated for 600 s (it must finish and stay clear of structures and moored boats; within 0.3 m is a warning). The message names what it hit or passed closest to, the leg and the time.
 
-`stage:test` plays each step with the real engine: it deploys starboard fenders, parks in hold zones, waits (up to 300 s) for traffic to clear, holds the approach target, attaches lines and secures, works through the checklist, and motors out through the gate on the correct side. It moves the boat between steps rather than steering there, and lets traffic under way leave the harbour before moving onto the berth or to the exit (traffic that was never released stays where it is). So it proves that **each step can be completed**; the reachability check covers getting between them, and a human playtest is still the judge of whether the stage is fun and fair.
+`stage:test` plays each step with the real engine: it deploys the berth's fenders (starboard alongside, both sides stern-to), parks in hold zones, waits (up to 300 s) for traffic to clear, holds the approach target, attaches lines (the lazy line last) and secures, works through the checklist, and motors out through the gate on the correct side. It moves the boat between steps rather than steering there, and lets traffic under way leave the harbour before moving onto the berth or to the exit (traffic that was never released stays where it is). So it proves that **each step can be completed**; the reachability check covers getting between them, and a human playtest is still the judge of whether the stage is fun and fair.
 
 ## Limits
 
 - Every stage needs a berth, and so a quay with two bollards, even when the mission never moors.
 - `holdInZone` checks position only; there is no block that requires a stop, a heading or a gear (such as going astern) in open water other than the berth's approach target.
 - Structures are axis-aligned rectangles: no angled quays, curves or pontoon fingers yet.
-- Berths are starboard side to, and a mission uses one berth.
+- Alongside berths are starboard side to; stern-to berths have no anchor option; a mission uses one berth.
 - At most one traffic vessel.
 - **Show me** is scripted for the fuel dock only.
-- Stages are data only: no new physics (anchoring, Mediterranean mooring) or custom code.
+- Stages are data only: no new physics (such as anchoring) or custom code.
 - The look (materials, water, lighting) is the same for every stage.

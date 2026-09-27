@@ -54,11 +54,32 @@ const berth = z
       .string()
       .optional()
       .describe("Short code for the instruments' bearing caption, e.g. 01"),
-    side: z.literal("starboard").describe("Side of the boat against the quay"),
+    style: z
+      .enum(["alongside", "sternTo"])
+      .optional()
+      .describe(
+        "alongside (default): starboard side to the quay, bow and stern lines. sternTo: stern to the quay between neighbours, two stern lines and a lazy line to the bow",
+      ),
+    side: z
+      .literal("starboard")
+      .optional()
+      .describe("Alongside berths: the side against the quay (starboard only)"),
     structure: id.describe("Quay the boat lies against"),
     lines: z
-      .object({ bow: z.string(), stern: z.string() })
-      .describe("Bollard ids for the bow and stern lines"),
+      .object({
+        bow: z.string().optional(),
+        stern: z.string().optional(),
+        portQuarter: z.string().optional(),
+        starboardQuarter: z.string().optional(),
+      })
+      .describe(
+        "Bollard ids: bow and stern for an alongside berth; portQuarter and starboardQuarter (the stern lines from each quarter) for a stern-to berth",
+      ),
+    lazyLine: point
+      .optional()
+      .describe(
+        "Stern-to berths: where the lazy line's ground chain lies, in the water off the berth ahead of the moored boat; the crew picks it up at the quay and leads it to the bow",
+      ),
     approach: envelope
       .extend({
         positionTolerance: positive.describe(
@@ -76,9 +97,11 @@ const berth = z
         ),
         boundaryAllowance: z.number().nonnegative().describe("Metres"),
       })
-      .describe("Whole-hull envelope used once the first line is attached"),
+      .describe(
+        "Whole-hull envelope used once the first line is attached: alongside the quay, or the stern-to slot",
+      ),
   })
-  .describe("Berth with its approach target, alongside envelope and lines");
+  .describe("Berth with its approach target, final envelope and lines");
 
 const zone = z
   .object({

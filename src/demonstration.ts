@@ -98,7 +98,7 @@ export class Demonstration {
     this.failure = reason;
     this.enter("stopped");
     this.game.controls.port = this.game.controls.starboard = 0;
-    for (const id of lineIds) this.game.requestTend(id, "stop");
+    for (const id of lineIds()) this.game.requestTend(id, "stop");
     this.game.recorder.event(
       this.game.progress.elapsed,
       "demo.stopped",
@@ -117,7 +117,7 @@ export class Demonstration {
     }
     if (
       g.progress.collisions > 0 ||
-      lineIds.some((id) => g.mooring[id].broken)
+      lineIds().some((id) => g.mooring[id].broken)
     ) {
       this.stop("Unexpected impact or line failure.");
       return;
@@ -173,7 +173,7 @@ export class Demonstration {
         this.enter(this.stage === "bow" ? "stern" : "tend");
     } else if (this.stage === "tend") {
       let finished = true;
-      for (const id of lineIds) {
+      for (const id of lineIds()) {
         const target =
           lineGeometry({ ...g.state, ...demonstrationConfig.alongsidePose }, id)
             .distance + 0.05;

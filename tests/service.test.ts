@@ -14,7 +14,7 @@ function secured() {
   Object.assign(g.state, { x: 2.5, y: 16 });
   g.previous = { ...g.state };
   g.fenders.starboard.deployed = g.fenders.starboard.target = true;
-  for (const id of lineIds)
+  for (const id of lineIds())
     assert.equal(g.requestLine(id, "attach").accepted, true);
   run(g, 13);
   assert.equal(g.progress.phase, "secured");

@@ -98,7 +98,7 @@ A **stage** is a self-contained data file, `stages/<id>/stage.json`, describing 
 A stage file currently defines:
 
 - **Manifest:** `id` (matching its folder), semantic `version`, name, description, author, setting (`area`) and `buoyage` (`IALA-A` or `IALA-B`, which decides which entrance light is red).
-- **Scene:** start pose; solid `structures` (quay, breakwater, training barrier); `bollards` on quays; `berths` with their approach target, alongside envelope and bow/stern bollards; named `zones` (circles or rectangles); entrance `gates` with an outward direction; floating `labels`; optional `moored` boats (monohull or catamaran) that never move.
+- **Scene:** start pose; solid `structures` (quay, breakwater, training barrier); `bollards` on quays; `berths` with their approach target, final envelope and lines: alongside (starboard side to, bow and stern bollards) or **stern-to** (two stern lines from the quarters and a lazy line to the bow); named `zones` (circles or rectangles); entrance `gates` with an outward direction; floating `labels`; optional `moored` boats (monohull or catamaran) that never move.
 - **Conditions:** wind (speed and the direction it blows **from**) and current.
 - **Traffic:** scripted vessels with dimensions, handling limits, a route of ahead/astern waypoints and an optional radio call when they give way. The engine supports one vessel for now.
 - **Mission:** the berth used, an ordered list of **steps**, **rules** that apply across steps, the completion texts and optional **scoring**.
@@ -110,7 +110,7 @@ Each step is one of the engine's building blocks, with its own eyebrow `label`, 
 | `holdInZone` | the boat's centre has stayed inside a zone for `seconds` | `resetOnExit` restarts the countdown; `releases` sends traffic on its way |
 | `waitForClear` | a vessel has left a rectangle zone completely | |
 | `arriveAtBerth` | the berth's approach target is held | the existing arrival rules |
-| `secureAlongside` | secured with both lines, fenders and neutral | must directly follow `arriveAtBerth` |
+| `secureAlongside` | secured with the berth's lines, fenders and neutral | must directly follow `arriveAtBerth`; stern-to needs fenders on both sides and the lazy line picked up after a stern line |
 | `checklist` | every item is done, in order | items: `enginesOff`, `choice` (one right answer, refusals for the others), `timed` (e.g. fuelling), `confirm`, `enginesOn`; `requiresSecured` stops timed items if securing is lost |
 | `exitThroughGate` | the boat crosses the gate outward | `keepSide` with a `sidePenalty` |
 

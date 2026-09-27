@@ -21,10 +21,15 @@ export function tendingBlock(
     return "Load too high for the crew — relieve tension before tending";
   if (action === "in" && line.restLength <= cfg.minLength + 1e-8)
     return "Minimum paid-out length reached";
-  if (action === "out" && line.restLength >= cfg.maxLength - 1e-8)
+  if (action === "out" && line.restLength >= maxLength(id) - 1e-8)
     return "Maximum paid-out length reached";
   return "";
 }
+// Longest a line may be paid out: the lazy line runs well off the quay.
+export const maxLength = (id: LineId) =>
+  mooringConfig.lines[id].kind === "lazy"
+    ? mooringConfig.tending.lazyMaxLength
+    : mooringConfig.tending.maxLength;
 export function stopTending(lines: Mooring, id: LineId) {
   lines[id].tending = "idle";
   lines[id].adjustmentRemaining = 0;
@@ -45,7 +50,7 @@ export function advanceTending(
     length: number;
   }[] = [];
   const cfg = mooringConfig.tending;
-  for (const id of lineIds) {
+  for (const id of lineIds()) {
     const line = lines[id];
     line.restRate = 0;
     if (line.tending === "idle") continue;
@@ -66,7 +71,7 @@ export function advanceTending(
     const amount = Math.min(cfg.rate * dt, line.adjustmentRemaining);
     line.restLength = Math.max(
       cfg.minLength,
-      Math.min(cfg.maxLength, previous + direction * amount),
+      Math.min(maxLength(id), previous + direction * amount),
     );
     line.restRate = (line.restLength - previous) / dt;
     line.adjustmentRemaining = Math.max(

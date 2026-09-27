@@ -1,15 +1,18 @@
-import { angle, boat, scenario, mooringConfig } from "./config";
+import { angle, boat, scenario, mooringConfig, stage } from "./config";
 import { missionSteps, phaseFor } from "./mission";
 import type { State } from "./simulation";
 import { hullPoints, type ContactSample } from "./contacts";
 export type PositionTarget = "approach" | "alongside";
+// Gentle contact on a fender with the berth's quay, or with a moored boat
+// (neighbours lie against your fenders stern-to), does not stop securing.
 export function contactAcceptable(s: State, samples: ContactSample[]) {
   if (!s.contact) return true;
   return (
     samples.length > 0 &&
     samples.every(
       (c) =>
-        c.obstacleId === scenario.alongside.obstacleId &&
+        (c.obstacleId === scenario.alongside.obstacleId ||
+          stage.moored.some((m) => m.id === c.obstacleId)) &&
         c.covered &&
         !c.hullContact &&
         c.speed <= scenario.alongside.gentleSpeed,
@@ -151,16 +154,18 @@ export function requirements(
 ) {
   const t = positioningTarget(mode),
     a = angle(s.heading - t.heading);
+  // Envelopes are axis-aligned like every stage rectangle (width east–west,
+  // length north–south), whatever heading they ask for.
   const dx = s.x - t.x,
     dy = s.y - t.y;
-  const localX = dx * Math.cos(t.heading) - dy * Math.sin(t.heading);
-  const localY = dx * Math.sin(t.heading) + dy * Math.cos(t.heading);
+  const localX = dx,
+    localY = dy;
   const extentX =
-    (Math.abs(Math.cos(a)) * boat.beam) / 2 +
-    (Math.abs(Math.sin(a)) * boat.length) / 2;
+    (Math.abs(Math.cos(s.heading)) * boat.beam) / 2 +
+    (Math.abs(Math.sin(s.heading)) * boat.length) / 2;
   const extentY =
-    (Math.abs(Math.sin(a)) * boat.beam) / 2 +
-    (Math.abs(Math.cos(a)) * boat.length) / 2;
+    (Math.abs(Math.sin(s.heading)) * boat.beam) / 2 +
+    (Math.abs(Math.cos(s.heading)) * boat.length) / 2;
   return {
     position:
       (mode === "alongside" ||

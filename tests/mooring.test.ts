@@ -22,7 +22,7 @@ function ready(x = 0) {
   return g;
 }
 function attachBoth(g: Session) {
-  for (const id of lineIds)
+  for (const id of lineIds())
     assert.equal(g.requestLine(id, "attach").accepted, true);
 }
 
@@ -102,12 +102,12 @@ test("pair of lines stably restrains offshore wind without teleporting or explod
   g.weather.speed = 5;
   g.weather.direction = -Math.PI / 2;
   for (let i = 0; i < 10800; i++) g.tick();
-  assert.ok(lineIds.every((id) => g.mooring[id].attached));
+  assert.ok(lineIds().every((id) => g.mooring[id].attached));
   assert.ok(Math.abs(g.state.x) < 1);
   assert.ok(Math.abs(g.state.y - 16) < 0.5);
   assert.ok(Math.hypot(g.state.vx, g.state.vy) < 0.1);
   assert.ok(Math.abs(g.state.yaw) < 0.01);
-  assert.ok(lineIds.some((id) => g.mooring[id].tension > 0));
+  assert.ok(lineIds().some((id) => g.mooring[id].tension > 0));
 });
 test("sustained excessive tension warns and breaks, then stops pulling", () => {
   const g = ready();
@@ -252,7 +252,7 @@ test("entire calm approach, attach, secure and release uses commands without ber
   g.controls.port = g.controls.starboard = 0;
   attachBoth(g);
   for (let i = 0; i < 6000 && !g.progress.success; i++) {
-    for (const id of lineIds)
+    for (const id of lineIds())
       if (g.mooring[id].tending === "idle" && g.mooring[id].restLength > 3.1)
         g.requestTend(id, "in");
     g.tick();

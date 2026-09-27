@@ -1,9 +1,9 @@
 import { STEP, useStage } from "../config";
-import { lineIds } from "../mooring";
+import { berthFenderSides, lineIds } from "../mooring";
 import { Session } from "../session";
 import type { State } from "../simulation";
 import { debrief } from "../debrief";
-import { alongsidePose, pose } from "./check";
+import { berthPose, pose } from "./check";
 import type { Stage } from "./load";
 
 // Step-by-step playtest: plays each mission step with the real engine,
@@ -51,8 +51,8 @@ export function playtest(stage: Stage): PlaytestResult {
     !g.traffic || g.traffic.status === "gone" || g.traffic.status === "moored";
   const refused = (result: { accepted: boolean; message: string }) =>
     result.accepted ? "" : result.message;
-  // Starboard fenders go out first, as a careful skipper would.
-  g.requestFenders("starboard");
+  // The berth's fenders go out first, as a careful skipper would.
+  for (const side of berthFenderSides()) g.requestFenders(side);
   for (let i = 0; i < g.steps.length && !ended(); i++) {
     const st = g.steps[i],
       from = g.progress.elapsed,
@@ -86,9 +86,14 @@ export function playtest(stage: Stage): PlaytestResult {
         break;
       }
       case "secureAlongside": {
-        runUntil(() => g.fenders.starboard.deployed, 5);
-        place(alongsidePose(stage));
-        for (const id of lineIds) note ||= refused(g.requestLine(id, "attach"));
+        runUntil(
+          () => berthFenderSides().every((side) => g.fenders[side].deployed),
+          5,
+        );
+        place(berthPose(stage));
+        // Quay lines first: the lazy line (listed last) needs a stern line on.
+        for (const id of lineIds())
+          note ||= refused(g.requestLine(id, "attach"));
         if (!note) runUntil(done, 30);
         if (!note && !done()) note = "not secured within 30 s";
         break;
@@ -115,7 +120,7 @@ export function playtest(stage: Stage): PlaytestResult {
       case "exitThroughGate": {
         // Let traffic leave the harbour first, still alongside with lines on.
         runUntil(trafficGone, 300);
-        for (const id of lineIds)
+        for (const id of lineIds())
           if (g.mooring[id].attached) g.requestLine(id, "release");
         const gate = stage.gates[st.gate],
           out = { x: Math.sin(gate.heading), y: Math.cos(gate.heading) },

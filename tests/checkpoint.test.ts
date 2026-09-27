@@ -63,7 +63,7 @@ test("the departure checkpoint restores a secured, serviced boat ready to let go
   g.skipTo("secure");
   place(g, 2.5, 16);
   g.fenders.starboard.deployed = g.fenders.starboard.target = true;
-  for (const id of lineIds) g.requestLine(id, "attach");
+  for (const id of lineIds()) g.requestLine(id, "attach");
   run(g, 13);
   for (const action of ["engines-off", "diesel", "fuel"] as const)
     g.requestService(action);
@@ -71,13 +71,13 @@ test("the departure checkpoint restores a secured, serviced boat ready to let go
   g.requestService("pay");
   g.requestService("engines-on");
   assert.ok(g.checkpoints.departure);
-  for (const id of lineIds) g.requestLine(id, "release");
+  for (const id of lineIds()) g.requestLine(id, "release");
   g.controls.port = g.controls.starboard = -0.6;
   run(g, 10);
   g.retry("departure");
   assert.equal(g.progress.phase, "departure");
   assert.notEqual(g.progress.service.completedAt, null);
-  assert.ok(lineIds.every((id) => g.mooring[id].attached));
+  assert.ok(lineIds().every((id) => g.mooring[id].attached));
   assert.deepEqual(g.controls, { port: 0, starboard: 0, rudder: 0 });
   assert.equal(g.requestLine("bow", "release").accepted, true);
 });

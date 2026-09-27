@@ -37,6 +37,30 @@ export class StageError extends Error {
   }
 }
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
+// Quay lines each berth style uses, by the name of the boat's fitting.
+const lineEnds = ["bow", "stern", "portQuarter", "starboardQuarter"] as const;
+type LineEnd = (typeof lineEnds)[number];
+const quayLines: Record<"alongside" | "sternTo", readonly LineEnd[]> = {
+  alongside: ["bow", "stern"],
+  sternTo: ["portQuarter", "starboardQuarter"],
+};
+const lineNames: Record<LineEnd | "lazy", string> = {
+  bow: "Bow",
+  stern: "Stern",
+  portQuarter: "Port quarter",
+  starboardQuarter: "Starboard quarter",
+  lazy: "Lazy line",
+};
+// A berth's mooring line: from a fitting on the boat (named like the line)
+// to a bollard on the quay, or, for the lazy line, to its ground chain.
+export type BerthLine = {
+  name: string;
+  kind: "quay" | "lazy";
+  // Bollard label; empty for the lazy line.
+  bollard: string;
+  obstacleId: string;
+  anchor: { x: number; y: number };
+};
 const kinds = { quay: "dock", breakwater: "breakwater", barrier: "boundary" };
 const outwardHeading = { north: 0, east: 90, south: 180, west: 270 };
 // Checks that the schema cannot express: references and unique ids.
@@ -77,17 +101,31 @@ function problems(s: StageFile) {
   for (const berth of scene.berths) {
     if (!quays.has(berth.structure))
       found.push(`Berth ${berth.id}: "${berth.structure}" is not a quay`);
-    for (const end of ["bow", "stern"] as const) {
-      const bollard = bollards.get(berth.lines[end]);
-      if (!bollard)
-        found.push(
-          `Berth ${berth.id}: ${end} bollard "${berth.lines[end]}" does not exist`,
-        );
+    const sternTo = berth.style === "sternTo",
+      needs = quayLines[berth.style ?? "alongside"];
+    for (const end of lineEnds) {
+      const id = berth.lines[end];
+      if (!needs.includes(end)) {
+        if (id !== undefined)
+          found.push(
+            `Berth ${berth.id}: ${sternTo ? "a stern-to" : "an alongside"} berth has no ${end} line`,
+          );
+        continue;
+      }
+      const bollard = id === undefined ? undefined : bollards.get(id);
+      if (id === undefined)
+        found.push(`Berth ${berth.id}: needs a ${end} bollard`);
+      else if (!bollard)
+        found.push(`Berth ${berth.id}: ${end} bollard "${id}" does not exist`);
       else if (bollard.structure !== berth.structure)
         found.push(
           `Berth ${berth.id}: ${end} bollard ${bollard.id} is not on ${berth.structure}`,
         );
     }
+    if (sternTo && !berth.lazyLine)
+      found.push(`Berth ${berth.id}: a stern-to berth needs a lazyLine`);
+    if (!sternTo && berth.lazyLine)
+      found.push(`Berth ${berth.id}: only a stern-to berth has a lazyLine`);
   }
   const mission = s.mission,
     stepIds = mission.steps.map((st) => st.id);
@@ -246,11 +284,30 @@ function toStage(s: StageFile) {
   const scene = s.scene,
     berth = scene.berths.find((b) => b.id === s.mission.berth)!;
   const bollard = (id: string) => scene.bollards.find((b) => b.id === id)!;
-  const line = (end: "bow" | "stern") => ({
-    bollard: berth.lines[end],
-    obstacleId: berth.structure,
-    anchor: { x: bollard(berth.lines[end]).x, y: bollard(berth.lines[end]).y },
-  });
+  const style = berth.style ?? "alongside";
+  const lines: Record<string, BerthLine> = Object.fromEntries(
+    quayLines[style].map((end) => {
+      const b = bollard(berth.lines[end]!);
+      return [
+        end,
+        {
+          name: lineNames[end],
+          kind: "quay",
+          bollard: b.id,
+          obstacleId: berth.structure,
+          anchor: { x: b.x, y: b.y },
+        },
+      ];
+    }),
+  );
+  if (berth.lazyLine)
+    lines.lazy = {
+      name: lineNames.lazy,
+      kind: "lazy",
+      bollard: "",
+      obstacleId: "",
+      anchor: { x: berth.lazyLine.x, y: berth.lazyLine.y },
+    };
   const xs = scene.structures.flatMap((b) => [
       b.x - b.width / 2,
       b.x + b.width / 2,
@@ -315,7 +372,8 @@ function toStage(s: StageFile) {
         gentleSpeed: berth.alongside.gentleSpeed,
         boundaryAllowance: berth.alongside.boundaryAllowance,
       },
-      lines: { bow: line("bow"), stern: line("stern") },
+      style,
+      lines,
     },
     moored: (scene.moored ?? []).map((m): MooredBoat => {
       const outline =

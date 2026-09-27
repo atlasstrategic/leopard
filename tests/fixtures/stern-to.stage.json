@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "id": "stern-to",
+  "version": "1.0.0",
+  "name": "Test \u00b7 Stern-to slot",
+  "description": "Test fixture: a stern-to slot on an east quay between a moored catamaran and a moored monohull, with a lazy line.",
+  "author": "Leopard tests",
+  "area": "Test harbour",
+  "buoyage": "IALA-A",
+  "scene": {
+    "start": {
+      "x": -25,
+      "y": 0,
+      "heading": 90
+    },
+    "structures": [
+      {
+        "id": "east-quay",
+        "name": "East quay",
+        "kind": "quay",
+        "x": 12,
+        "y": 0,
+        "width": 10,
+        "length": 60
+      },
+      {
+        "id": "north-limit",
+        "name": "North barrier",
+        "kind": "barrier",
+        "x": -14,
+        "y": 31,
+        "width": 62,
+        "length": 2
+      },
+      {
+        "id": "south-limit",
+        "name": "South barrier",
+        "kind": "barrier",
+        "x": -14,
+        "y": -31,
+        "width": 62,
+        "length": 2
+      },
+      {
+        "id": "west-limit",
+        "name": "West barrier",
+        "kind": "barrier",
+        "x": -44,
+        "y": 0,
+        "width": 2,
+        "length": 64
+      }
+    ],
+    "bollards": [
+      {
+        "id": "Q1",
+        "structure": "east-quay",
+        "x": 7.7,
+        "y": -3.5
+      },
+      {
+        "id": "Q2",
+        "structure": "east-quay",
+        "x": 7.7,
+        "y": 3.5
+      }
+    ],
+    "berths": [
+      {
+        "id": "slot",
+        "name": "Slot",
+        "label": "S",
+        "style": "sternTo",
+        "structure": "east-quay",
+        "lines": {
+          "portQuarter": "Q1",
+          "starboardQuarter": "Q2"
+        },
+        "lazyLine": {
+          "x": -18,
+          "y": 0
+        },
+        "approach": {
+          "x": -1,
+          "y": 0,
+          "width": 14,
+          "length": 8.4,
+          "heading": 270,
+          "headingTolerance": 8,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "positionTolerance": 1.5,
+          "dwell": 3
+        },
+        "alongside": {
+          "x": -0.3,
+          "y": 0,
+          "width": 14.5,
+          "length": 8.4,
+          "heading": 270,
+          "headingTolerance": 10,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "gentleSpeed": 0.08,
+          "boundaryAllowance": 0.02
+        }
+      }
+    ],
+    "zones": [],
+    "gates": [],
+    "labels": [],
+    "moored": [
+      {
+        "id": "north-cat",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": -0.335,
+        "y": 7.64,
+        "heading": 270,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "south-mono",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 0.25,
+        "y": -6.12,
+        "heading": 270,
+        "length": 11.5,
+        "beam": 3.99
+      }
+    ]
+  },
+  "conditions": {
+    "wind": {
+      "speed": 0,
+      "from": 90
+    },
+    "current": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "traffic": [],
+  "mission": {
+    "berth": "slot",
+    "steps": [
+      {
+        "id": "approach",
+        "kind": "arriveAtBerth",
+        "label": "APPROACH",
+        "title": "Reverse into the slot.",
+        "hint": "Stern first, bow west.",
+        "radio": {
+          "start": "Proceed to the slot, stern first.",
+          "done": "Arrival confirmed."
+        }
+      },
+      {
+        "id": "secure",
+        "kind": "secureAlongside",
+        "label": "SECURE",
+        "title": "Make fast.",
+        "hint": "Both stern lines, then the lazy line.",
+        "hintAlongside": "Take in the lazy line.",
+        "radio": {
+          "done": "Secured."
+        }
+      }
+    ],
+    "rules": [],
+    "complete": {
+      "title": "Moored.",
+      "hint": "+{penalty} s",
+      "radio": "Moored in {time} s with +{penalty} s penalties."
+    }
+  }
+}

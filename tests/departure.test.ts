@@ -34,7 +34,7 @@ test("completing the service starts the departure; letting go no longer unsecure
   Object.assign(g.state, { x: 2.5, y: 16 });
   g.previous = { ...g.state };
   g.fenders.starboard.deployed = g.fenders.starboard.target = true;
-  for (const id of lineIds) g.requestLine(id, "attach");
+  for (const id of lineIds()) g.requestLine(id, "attach");
   run(g, 13);
   for (const action of ["engines-off", "diesel", "fuel"] as const)
     assert.equal(g.requestService(action).accepted, true);
@@ -45,7 +45,7 @@ test("completing the service starts the departure; letting go no longer unsecure
   assert.equal(g.recorder.phase, "departure");
   assert.ok(types(g).includes("mission.departure"));
   assert.match(g.radio.at(-1)!.message, /harbour entrance/);
-  for (const id of lineIds)
+  for (const id of lineIds())
     assert.equal(g.requestLine(id, "release").accepted, true);
   run(g, 1);
   assert.equal(g.progress.phase, "departure");

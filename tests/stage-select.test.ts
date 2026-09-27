@@ -91,7 +91,7 @@ test("another stage runs end to end with nothing left over from the fuel dock", 
   Object.assign(g.state, { x: -2.5, y: 0, vx: 0, vy: 0, yaw: 0 });
   g.previous = { ...g.state };
   g.fenders.starboard.deployed = g.fenders.starboard.target = true;
-  for (const id of lineIds) {
+  for (const id of lineIds()) {
     const result = g.requestLine(id, "attach");
     assert.equal(result.accepted, true, result.message);
   }

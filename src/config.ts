@@ -56,8 +56,12 @@ export function useStage(next: Stage) {
   scenario = scenarioFor(next);
   scoreConfig = next.mission.scoring;
   trafficConfig.monohull = next.traffic[0];
-  for (const end of ["bow", "stern"] as const)
-    Object.assign(mooringConfig.lines[end], next.berth.lines[end]);
+  mooringConfig.lines = Object.fromEntries(
+    Object.entries(next.berth.lines).map(([id, line]) => [
+      id,
+      { ...line, fairlead: fittings[id as keyof typeof fittings] },
+    ]),
+  );
 }
 // Provisional game equipment and logging limits, not measured hardware specifications.
 export const fenderConfig = {
@@ -69,7 +73,21 @@ export const fenderConfig = {
   maxForce: 6000,
   crewSeconds: 3,
 };
-// Fictional quay bollards and starboard fairleads. Planar line-throwing reach,
+// Where each line leaves the boat (x starboard, y forward, metres): the
+// starboard bow and stern fairleads used alongside, the stern cleats on each
+// quarter used stern-to, and the lazy line's bridle between the bows.
+// Fictional fittings, not measured from a real Leopard 42.
+export const fittings = {
+  bow: { x: 3.3, y: 4.6 },
+  stern: { x: 3.3, y: -4.6 },
+  portQuarter: { x: -3.3, y: -6.0 },
+  starboardQuarter: { x: 3.3, y: -6.0 },
+  lazy: { x: 0, y: 6.0 },
+};
+export type LineDef = Stage["berth"]["lines"][string] & {
+  fairlead: { x: number; y: number };
+};
+// Fictional quay bollards and boat fittings. Planar line-throwing reach,
 // not a claim about crew arm reach, real deck fittings or rope safe working load.
 export const mooringConfig = {
   reach: 6.5,
@@ -88,28 +106,14 @@ export const mooringConfig = {
     rate: 0.12,
     minLength: 1,
     maxLength: 10,
+    // The lazy line runs from the bow to its ground chain well off the quay.
+    lazyMaxLength: 40,
     maxHaulLoad: 1800,
     maxEaseLoad: 6500,
     maxPointSpeed: 0.25,
   },
-  // Bollards come from the stage's berth (set by useStage); fairleads are
-  // fittings on the boat.
-  lines: {
-    bow: {
-      name: "Bow",
-      bollard: "",
-      obstacleId: "",
-      anchor: { x: 0, y: 0 },
-      fairlead: { x: 3.3, y: 4.6 },
-    },
-    stern: {
-      name: "Stern",
-      bollard: "",
-      obstacleId: "",
-      anchor: { x: 0, y: 0 },
-      fairlead: { x: 3.3, y: -4.6 },
-    },
-  },
+  // The active berth's lines (set by useStage), keyed by line id.
+  lines: {} as Record<string, LineDef>,
 };
 export const recorderConfig = {
   events: 4000,

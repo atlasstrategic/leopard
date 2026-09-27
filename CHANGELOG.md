@@ -26,6 +26,8 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - The debrief now states the **wind and current** the run was sailed in, and flags a wind changed during the attempt with its range. Figures a stage cannot produce are left out.
 - Fixed an empty "Restart from" row showing in the objective panel before any checkpoint was reached.
 - The **harbour radio** folds to one line 8 s after each call so it no longer covers the view; press **V** or its button to open or fold it.
+- Stages can have **stern-to berths**: reverse into a slot, put fenders out on both sides, make fast both stern lines to the quay, then pick up the lazy line and take it in to hold the bow off. The Crew & lines panel, objective and checks follow the berth. ([#4](https://github.com/atlasstrategic/leopard/issues/4))
+- The debrief headline now uses the stage's own completion title instead of "Clear of the harbour.", and the map key only lists traffic a stage has. The berth target's heading arrow now points along the berth's heading (it always pointed north).
 - Stages can place **moored boats** (a monohull or a catamaran) that are drawn and collide with their outline; touching one where no fender covers the hull fails the mission. The stage checker treats them as obstacles and now says which structure or boat, which leg and when a traffic route hits. ([#4](https://github.com/atlasstrategic/leopard/issues/4))
 
 ## [0.1.0] — 2026-09-25

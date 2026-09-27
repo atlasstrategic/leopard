@@ -36,6 +36,9 @@ export class View {
     THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>
   >();
   targetGroup = new THREE.Group();
+  // The target's heading arrow, outside the scaled target group so it can
+  // turn without being stretched.
+  targetArrow = new THREE.Group();
   targetOutline = new THREE.LineBasicMaterial({ color: 0x94ffce });
   mode: CameraMode = "chase";
   waterTime = { value: 0 };
@@ -214,7 +217,7 @@ export class View {
       this.targetOutline,
     );
     this.targetGroup.add(outline);
-    this.targetGroup.add(
+    this.targetArrow.add(
       new THREE.ArrowHelper(
         new THREE.Vector3(0, 0, -1),
         new THREE.Vector3(0, 0.12, 3),
@@ -224,23 +227,26 @@ export class View {
         1.2,
       ),
     );
-    this.scene.add(this.targetGroup);
-    for (const id of lineIds) {
+    this.scene.add(this.targetGroup, this.targetArrow);
+    for (const id of lineIds()) {
       const def = mooringConfig.lines[id];
-      const bollard = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.28, 0.32, 0.5, 12),
-        mat(0xd7af60),
-      );
-      bollard.position.set(def.anchor.x, 1.25, -def.anchor.y);
-      bollard.castShadow = true;
-      this.scene.add(bollard);
-      this.label(
-        `${def.bollard} / ${def.name.toUpperCase()}`,
-        def.anchor.x + 1.5,
-        2.4,
-        -def.anchor.y,
-        4.8,
-      );
+      // The lazy line's ground chain lies on the bottom: nothing to draw.
+      if (def.kind === "quay") {
+        const bollard = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.28, 0.32, 0.5, 12),
+          mat(0xd7af60),
+        );
+        bollard.position.set(def.anchor.x, 1.25, -def.anchor.y);
+        bollard.castShadow = true;
+        this.scene.add(bollard);
+        this.label(
+          `${def.bollard} / ${def.name.toUpperCase()}`,
+          def.anchor.x + 1.5,
+          2.4,
+          -def.anchor.y,
+          4.8,
+        );
+      }
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute(
         "position",
@@ -513,6 +519,8 @@ export class View {
     }
     const target = positioningTarget(positionTarget);
     this.targetGroup.position.set(target.x, 0, -target.y);
+    this.targetArrow.position.set(target.x, 0, -target.y);
+    this.targetArrow.rotation.y = -target.heading;
     this.targetGroup.scale.set(
       target.width / scenario.target.width,
       1,
@@ -524,7 +532,7 @@ export class View {
     this.targetOutline.color.setHex(
       positionTarget === "alongside" ? 0xffcc77 : 0x94ffce,
     );
-    for (const id of lineIds) {
+    for (const id of lineIds()) {
       const mesh = this.mooringMeshes.get(id)!,
         line = mooring[id];
       mesh.visible = line.attached;
@@ -535,12 +543,15 @@ export class View {
         0.8,
         Math.max(0, line.restLength - g.distance) + 0.08,
       );
+      // Quay lines end at the bollard top; the lazy line runs down into the
+      // water towards its ground chain.
+      const drop = mooringConfig.lines[id].kind === "lazy" ? 4 : 0.1;
       for (let i = 0; i <= 16; i++) {
         const t = i / 16;
         positions.setXYZ(
           i,
           g.point.x + (g.anchor.x - g.point.x) * t,
-          1.35 - 0.1 * t - 4 * sag * t * (1 - t),
+          1.35 - drop * t - 4 * sag * t * (1 - t),
           -(g.point.y + (g.anchor.y - g.point.y) * t),
         );
       }

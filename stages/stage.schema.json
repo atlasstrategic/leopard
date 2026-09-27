@@ -174,10 +174,18 @@
                 "description": "Short code for the instruments' bearing caption, e.g. 01",
                 "type": "string"
               },
-              "side": {
+              "style": {
+                "description": "alongside (default): starboard side to the quay, bow and stern lines. sternTo: stern to the quay between neighbours, two stern lines and a lazy line to the bow",
                 "type": "string",
-                "const": "starboard",
-                "description": "Side of the boat against the quay"
+                "enum": [
+                  "alongside",
+                  "sternTo"
+                ]
+              },
+              "side": {
+                "description": "Alongside berths: the side against the quay (starboard only)",
+                "type": "string",
+                "const": "starboard"
               },
               "structure": {
                 "type": "string",
@@ -192,14 +200,35 @@
                   },
                   "stern": {
                     "type": "string"
+                  },
+                  "portQuarter": {
+                    "type": "string"
+                  },
+                  "starboardQuarter": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Bollard ids: bow and stern for an alongside berth; portQuarter and starboardQuarter (the stern lines from each quarter) for a stern-to berth"
+              },
+              "lazyLine": {
+                "description": "Stern-to berths: where the lazy line's ground chain lies, in the water off the berth ahead of the moored boat; the crew picks it up at the quay and leads it to the bow",
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "description": "Metres"
+                  },
+                  "y": {
+                    "type": "number",
+                    "description": "Metres"
                   }
                 },
                 "required": [
-                  "bow",
-                  "stern"
+                  "x",
+                  "y"
                 ],
-                "additionalProperties": false,
-                "description": "Bollard ids for the bow and stern lines"
+                "additionalProperties": false
               },
               "approach": {
                 "type": "object",
@@ -331,20 +360,19 @@
                   "boundaryAllowance"
                 ],
                 "additionalProperties": false,
-                "description": "Whole-hull envelope used once the first line is attached"
+                "description": "Whole-hull envelope used once the first line is attached: alongside the quay, or the stern-to slot"
               }
             },
             "required": [
               "id",
               "name",
-              "side",
               "structure",
               "lines",
               "approach",
               "alongside"
             ],
             "additionalProperties": false,
-            "description": "Berth with its approach target, alongside envelope and lines"
+            "description": "Berth with its approach target, final envelope and lines"
           }
         },
         "zones": {

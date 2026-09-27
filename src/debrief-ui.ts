@@ -5,9 +5,10 @@ import type { Session } from "./session";
 import type { Weather } from "./simulation";
 import { checkpointMarkup } from "./checkpoint-ui";
 import { outlineWorld } from "./hulls";
+import { midSentence } from "./mission";
 import "./debrief.css";
 export const debriefMarkup = () =>
-  `<dialog id="debrief" aria-labelledby="debrief-title"><div class="log-header"><div><div class="eyebrow">DEBRIEF · ${stage.name.toUpperCase()}</div><h2 id="debrief-title"></h2></div><button id="close-debrief" aria-label="Close debrief">Close ×</button></div><div class="debrief-body"><div class="debrief-summary"><p class="debrief-score"><strong id="debrief-total"></strong><span id="debrief-rating"></span></p><p class="debrief-conditions" id="debrief-conditions"></p><div id="debrief-categories"></div><p class="debrief-tip"><b>One thing to try:</b> <span id="debrief-tip"></span></p><dl id="debrief-figures"></dl><div id="debrief-penalties"></div><p class="debrief-note">Game score with provisional weights (40% impact & clearance, 25% position & speed, 20% procedure, 15% smoothness). Not a skipper assessment.</p><div class="debrief-actions"><button id="debrief-retry">Retry · R</button>${checkpointMarkup("debrief-restart")}</div></div><figure class="debrief-track"><svg id="debrief-svg" role="img" aria-label="Overhead trace of your track and the monohull's"></svg><figcaption><span class="key-boat"></span>Your track <span class="key-mono"></span>Monohull <span class="key-contact"></span>Contact</figcaption></figure></div></dialog>`;
+  `<dialog id="debrief" aria-labelledby="debrief-title"><div class="log-header"><div><div class="eyebrow">DEBRIEF · ${stage.name.toUpperCase()}</div><h2 id="debrief-title"></h2></div><button id="close-debrief" aria-label="Close debrief">Close ×</button></div><div class="debrief-body"><div class="debrief-summary"><p class="debrief-score"><strong id="debrief-total"></strong><span id="debrief-rating"></span></p><p class="debrief-conditions" id="debrief-conditions"></p><div id="debrief-categories"></div><p class="debrief-tip"><b>One thing to try:</b> <span id="debrief-tip"></span></p><dl id="debrief-figures"></dl><div id="debrief-penalties"></div><p class="debrief-note">Game score with provisional weights (40% impact & clearance, 25% position & speed, 20% procedure, 15% smoothness). Not a skipper assessment.</p><div class="debrief-actions"><button id="debrief-retry">Retry · R</button>${checkpointMarkup("debrief-restart")}</div></div><figure class="debrief-track"><svg id="debrief-svg" role="img" aria-label="Overhead trace of your track${stage.traffic.length ? ` and the ${midSentence(stage.traffic[0].name)}'s` : ""}"></svg><figcaption><span class="key-boat"></span>Your track ${stage.traffic.length ? `<span class="key-mono"></span>${stage.traffic[0].name} ` : ""}<span class="key-contact"></span>Contact</figcaption></figure></div></dialog>`;
 const esc = (text: string) =>
   text.replace(
     /[&<>"]/g,
@@ -103,7 +104,7 @@ export class DebriefUI {
     this.el("debrief-title").textContent =
       g.progress.phase === "failed"
         ? "Mission failed."
-        : "Clear of the harbour.";
+        : stage.mission.complete.title;
     this.el("debrief-total").textContent =
       d.total === null ? "—" : `${d.total}`;
     this.el("debrief-rating").textContent = d.rating;

@@ -27,6 +27,9 @@ import {
   initialLine,
   lineIds,
   attachmentCheck,
+  berthFenderSides,
+  lineTarget,
+  sternTo,
   lineGeometry,
   type LineId,
   type Mooring,
@@ -34,6 +37,7 @@ import {
 import { Recorder, headingChanged, type Recording } from "./recorder";
 import {
   advanceTending,
+  maxLength,
   stopTending,
   tendingBlock,
   type TendAction,
@@ -284,10 +288,11 @@ export class Session {
   }
   securingRequirements() {
     return {
-      fenders:
-        this.fenders.starboard.deployed &&
-        this.fenders.starboard.remaining === 0,
-      lines: lineIds.every((id) => {
+      fenders: berthFenderSides().every(
+        (side) =>
+          this.fenders[side].deployed && this.fenders[side].remaining === 0,
+      ),
+      lines: lineIds().every((id) => {
         const line = this.mooring[id];
         return (
           line.attached &&
@@ -333,7 +338,19 @@ export class Session {
       else if (this.progress.phase === "approach")
         reason = "First hold the marked berth for 3 seconds";
       else if (!this.securingRequirements().fenders)
-        reason = "Deploy starboard fenders and wait for crew completion";
+        reason = sternTo()
+          ? "Deploy fenders on both sides and wait for crew completion"
+          : "Deploy starboard fenders and wait for crew completion";
+      else if (
+        def.kind === "lazy" &&
+        !lineIds().some(
+          (other) =>
+            mooringConfig.lines[other].kind === "quay" &&
+            this.mooring[other].attached,
+        )
+      )
+        reason =
+          "Get a stern line on first: the lazy line is picked up at the quay";
       else if (
         Math.abs(this.controls.port) >= 0.01 ||
         Math.abs(this.controls.starboard) >= 0.01
@@ -346,7 +363,7 @@ export class Session {
       this.recorder.event(
         this.progress.elapsed,
         "line.rejected",
-        `${def.name} / ${def.bollard}: ${reason}`,
+        `${def.name} / ${lineTarget(id)}: ${reason}`,
         {
           line: id,
           bollard: def.bollard,
@@ -362,7 +379,7 @@ export class Session {
       this.recorder.event(
         this.progress.elapsed,
         "line.release",
-        `${def.name} released from ${def.bollard}${line.warning ? " — under load" : ""}`,
+        `${def.name} released from ${lineTarget(id)}${line.warning ? " — under load" : ""}`,
         { line: id, bollard: def.bollard, tensionN: line.tension },
       );
       this.mooring[id] = initialLine();
@@ -400,7 +417,7 @@ export class Session {
     this.recorder.event(
       this.progress.elapsed,
       "line.attach",
-      `${def.name} attached to ${def.bollard}`,
+      `${def.name} attached to ${lineTarget(id)}`,
       {
         line: id,
         bollard: def.bollard,
@@ -411,7 +428,10 @@ export class Session {
     );
     return {
       accepted: true,
-      message: `${def.name} attached to ${def.bollard} with ${mooringConfig.slack.toFixed(2)} m slack. Use gradual Take in / Ease; attachment does not move the boat.`,
+      message:
+        def.kind === "lazy"
+          ? `Lazy line picked up and made fast at the bow with ${mooringConfig.slack.toFixed(2)} m slack. Take in until it holds the bow off.`
+          : `${def.name} attached to ${def.bollard} with ${mooringConfig.slack.toFixed(2)} m slack. Use gradual Take in / Ease; attachment does not move the boat.`,
     };
   }
   // The checklist a request applies to: the current step, or the next one.
@@ -619,7 +639,7 @@ export class Session {
         mooringConfig.tending.step,
         action === "in"
           ? line.restLength - mooringConfig.tending.minLength
-          : mooringConfig.tending.maxLength - line.restLength,
+          : maxLength(id) - line.restLength,
       );
     }
     const message =
@@ -734,7 +754,7 @@ export class Session {
     );
     this.progress.collisions += impacts.collisions;
     this.progress.penalty += impacts.penalties;
-    for (const id of lineIds) {
+    for (const id of lineIds()) {
       const old = priorLines[id],
         line = this.mooring[id],
         def = mooringConfig.lines[id];
@@ -742,7 +762,7 @@ export class Session {
         this.recorder.event(
           this.progress.elapsed + STEP,
           "line.break",
-          `${def.name} / ${def.bollard} failed under sustained load`,
+          `${def.name} / ${lineTarget(id)} failed under sustained load`,
           {
             line: id,
             peakTensionN: line.peakTension,
@@ -753,7 +773,7 @@ export class Session {
         this.recorder.event(
           this.progress.elapsed + STEP,
           line.warning ? "line.overload" : "line.load.normal",
-          `${def.name} / ${def.bollard}: ${line.warning ? "excessive tension" : "load below warning"}`,
+          `${def.name} / ${lineTarget(id)}: ${line.warning ? "excessive tension" : "load below warning"}`,
           { line: id, tensionN: line.tension },
         );
     }
@@ -794,8 +814,9 @@ export class Session {
         { phase },
       );
       if (phase === "securing" && priorPhase === "approach")
-        this.progress.metrics.fendersAtArrival =
-          this.fenders.starboard.deployed;
+        this.progress.metrics.fendersAtArrival = berthFenderSides().every(
+          (side) => this.fenders[side].deployed,
+        );
       if (phase === "failed")
         this.announce(
           `Mission failed: ${this.progress.failure}. Retry to start again.`,

@@ -1,6 +1,6 @@
 import { boat, mooringConfig, STEP, trafficConfig, useStage } from "../config";
 import { hullPoints } from "../contacts";
-import { attachmentCheck, lineIds } from "../mooring";
+import { attachmentCheck, lineGeometry, lineIds } from "../mooring";
 import { requirements } from "../scenario";
 import { initialState, type State } from "../simulation";
 import {
@@ -63,13 +63,14 @@ export function hullClearance(stage: Stage, s: State) {
   }
   return min;
 }
-// Where the boat lies alongside: heading of the envelope, starboard side
-// alongsideGap metres off the berth's quay face, centred along the envelope.
-export function alongsidePose(stage: Stage): State {
+// Where the boat lies at the berth: heading of the envelope, centred along
+// it, alongsideGap metres off the berth's quay face with its starboard side
+// (alongside) or its stern (stern-to).
+export function berthPose(stage: Stage): State {
   const b = stage.berth,
     a = b.alongside,
     quay = stage.obstacles.find((o) => o.id === a.obstacleId)!,
-    off = boat.beam / 2 + alongsideGap;
+    off = (b.style === "sternTo" ? boat.length : boat.beam) / 2 + alongsideGap;
   switch (b.face) {
     case "west":
       return pose(quay.x - quay.width / 2 - off, a.y, a.heading);
@@ -202,32 +203,70 @@ export function checkStage(stage: Stage): CheckResult {
     found.errors.push(
       "Berth approach: the target overlaps a structure or moored boat",
     );
-  const alongside = alongsidePose(stage);
+  const alongside = berthPose(stage),
+    sternTo = stage.berth.style === "sternTo",
+    what = sternTo ? "Berth (stern-to)" : "Berth alongside";
   const right = {
-    x: Math.cos(alongside.heading),
-    y: -Math.sin(alongside.heading),
-  };
+      x: Math.cos(alongside.heading),
+      y: -Math.sin(alongside.heading),
+    },
+    ahead = { x: Math.sin(alongside.heading), y: Math.cos(alongside.heading) };
   const quay = stage.obstacles.find(
     (o) => o.id === stage.berth.alongside.obstacleId,
   )!;
-  if (right.x * (quay.x - alongside.x) + right.y * (quay.y - alongside.y) <= 0)
+  const toQuay = { x: quay.x - alongside.x, y: quay.y - alongside.y };
+  // Stern-to, the quay lies astern (within 30° of dead astern, face-on).
+  const astern = {
+    west: { x: 1, y: 0 },
+    east: { x: -1, y: 0 },
+    south: { x: 0, y: 1 },
+    north: { x: 0, y: -1 },
+  }[stage.berth.face];
+  if (
+    sternTo &&
+    -(ahead.x * astern.x + ahead.y * astern.y) < Math.cos(Math.PI / 6)
+  )
+    found.errors.push(
+      `${what}: the heading must point the bow away from the ${stage.berth.face} face of the quay`,
+    );
+  else if (!sternTo && right.x * toQuay.x + right.y * toQuay.y <= 0)
     found.errors.push(
       "Berth alongside: the heading puts the port side against the quay (berths are starboard side to)",
     );
   else {
     if (!requirements(alongside, "alongside", true).position)
       found.errors.push(
-        `Berth alongside: the boat, ${alongsideGap} m off the ${stage.berth.face} face, is not inside the alongside envelope`,
+        `${what}: the boat, ${alongsideGap} m off the ${stage.berth.face} face, is not inside the ${sternTo ? "berth" : "alongside"} envelope`,
       );
     if (hullClearance(stage, alongside) < 0)
       found.errors.push(
-        "Berth alongside: the boat overlaps another structure or a moored boat",
+        `${what}: the boat overlaps another structure or a moored boat`,
       );
-    for (const id of lineIds) {
+    // The lazy line is picked up at the quay, so only quay lines have a
+    // reach to check.
+    for (const id of lineIds()) {
+      const def = mooringConfig.lines[id];
+      if (def.kind !== "quay") continue;
       const check = attachmentCheck(alongside, id, stage.obstacles, true);
       if (!check.ok)
         found.errors.push(
-          `Berth alongside: ${id} line to ${mooringConfig.lines[id].bollard} cannot be attached (${check.reason})`,
+          `${what}: ${id} line to ${def.bollard} cannot be attached (${check.reason})`,
+        );
+    }
+    const lazy = mooringConfig.lines.lazy;
+    if (lazy) {
+      // The ground chain lies off the berth, ahead of the moored boat.
+      const bow = lineGeometry(alongside, "lazy");
+      const along =
+        (lazy.anchor.x - alongside.x) * ahead.x +
+        (lazy.anchor.y - alongside.y) * ahead.y;
+      if (along < boat.length / 2 + 2)
+        found.errors.push(
+          `${what}: the lazyLine must lie ahead of the moored boat's bow, off the berth`,
+        );
+      else if (bow.distance > mooringConfig.tending.lazyMaxLength)
+        found.errors.push(
+          `${what}: the lazyLine is ${bow.distance.toFixed(1)} m from the bow, beyond the ${mooringConfig.tending.lazyMaxLength} m the crew can pay out`,
         );
     }
   }

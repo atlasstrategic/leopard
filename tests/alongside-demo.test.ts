@@ -60,7 +60,7 @@ test("first line switches the target immediately without moving the boat; releas
 test("screenshot regression: sensible alongside position outside old centre tolerance can secure", () => {
   const g = alongside(3.2, 14);
   assert.equal(requirements(g.state).position, false);
-  for (const id of lineIds) assert.ok(g.requestLine(id, "attach").accepted);
+  for (const id of lineIds()) assert.ok(g.requestLine(id, "attach").accepted);
   for (let i = 0; i < 180; i++) g.tick();
   assert.equal(g.progress.phase, "secured");
   assert.ok(requirements(g.state, "alongside").position);
@@ -110,7 +110,7 @@ test("actual fender solver contacts qualify and permit attachment, not just synt
 });
 test("long slack cannot masquerade as effective securing", () => {
   const g = alongside();
-  for (const id of lineIds) g.requestLine(id, "attach");
+  for (const id of lineIds()) g.requestLine(id, "attach");
   g.mooring.bow.restLength += 2;
   assert.equal(g.securingRequirements().lines, false);
   for (let i = 0; i < 240; i++) g.tick();

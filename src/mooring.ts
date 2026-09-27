@@ -8,8 +8,22 @@ import {
 } from "./config";
 import type { Face } from "./stage/load";
 import type { State } from "./simulation";
-export type LineId = keyof typeof mooringConfig.lines;
-export const lineIds: LineId[] = ["bow", "stern"];
+import type { Side } from "./fenders";
+// Lines come from the active berth: bow and stern alongside; port and
+// starboard quarter plus the lazy line stern-to.
+export type LineId = string;
+export const lineIds = (): LineId[] => Object.keys(mooringConfig.lines);
+export const sternTo = () => stage.berth.style === "sternTo";
+// What a line is made fast to ashore: its bollard, or for the lazy line
+// (made fast at the bow) the bow.
+export const lineTarget = (id: LineId) =>
+  mooringConfig.lines[id].kind === "lazy"
+    ? "the bow"
+    : mooringConfig.lines[id].bollard;
+// Fenders the berth needs out: the quay side alongside, both sides stern-to
+// (the neighbours lie on either side).
+export const berthFenderSides = (): Side[] =>
+  sternTo() ? ["port", "starboard"] : ["starboard"];
 export type MooringLine = {
   attached: boolean;
   restLength: number;
@@ -39,10 +53,8 @@ export const initialLine = (): MooringLine => ({
   restRate: 0,
   tendStatus: "",
 });
-export const initialMooring = (): Mooring => ({
-  bow: initialLine(),
-  stern: initialLine(),
-});
+export const initialMooring = (): Mooring =>
+  Object.fromEntries(lineIds().map((id) => [id, initialLine()]));
 export function fairlead(s: State, id: LineId) {
   const p = mooringConfig.lines[id].fairlead,
     sn = Math.sin(s.heading),
@@ -126,6 +138,26 @@ export function attachmentCheck(
 ) {
   const g = lineGeometry(s, id),
     def = mooringConfig.lines[id];
+  // The lazy line is picked up at the quay (the session checks a stern line
+  // is on) and led to the bow: no reach or face check, only a steady boat.
+  if (def.kind === "lazy") {
+    if (
+      Math.hypot(g.point.vx, g.point.vy) > mooringConfig.maxPointSpeed ||
+      Math.abs(s.yaw) > mooringConfig.maxYaw
+    )
+      return {
+        ok: false,
+        reason: "Slow down: bow speed ≤0.25 m/s and yaw ≤1.43°/s",
+        ...g,
+      };
+    if (s.contact && !acceptableContact)
+      return {
+        ok: false,
+        reason: "Clear the obstacle contact before attaching",
+        ...g,
+      };
+    return { ok: true, reason: "Lazy line ready to pick up", ...g };
+  }
   const quay = obstacles.find((b) => b.id === def.obstacleId);
   if (!quay) return { ok: false, reason: "Bollard quay unavailable", ...g };
   // Only the berth's water-facing edge of the quay is an attachment face.
@@ -135,7 +167,20 @@ export function attachmentCheck(
       reason: "Approach the water-facing side of the quay",
       ...g,
     };
-  if (g.ux * Math.cos(s.heading) - g.uy * Math.sin(s.heading) < 0.2)
+  // Stern-to, the stern lines lead aft to the quay (crossed or not).
+  if (
+    sternTo() &&
+    -(g.ux * Math.sin(s.heading) + g.uy * Math.cos(s.heading)) < 0.2
+  )
+    return {
+      ok: false,
+      reason: "Keep the quay astern; lead the stern lines aft to it",
+      ...g,
+    };
+  if (
+    !sternTo() &&
+    g.ux * Math.cos(s.heading) - g.uy * Math.sin(s.heading) < 0.2
+  )
     return {
       ok: false,
       reason:
@@ -182,7 +227,7 @@ export function mooringForces(
   let fx = 0,
     fy = 0,
     torque = 0;
-  for (const id of lineIds) {
+  for (const id of lineIds()) {
     const line = mooring[id];
     if (!line.attached) {
       line.tension = 0;

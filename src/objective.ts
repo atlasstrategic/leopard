@@ -1,6 +1,7 @@
 import { degrees, knots, mooringConfig, scenario, stage } from "./config";
 import { fill, insideZone, midSentence, zoneShape } from "./mission";
 import { quayClearance, requirements } from "./scenario";
+import { lineIds, sternTo } from "./mooring";
 import type { Session } from "./session";
 import type { Step } from "./stage/load";
 
@@ -43,12 +44,14 @@ function berthChecks(g: Session): [boolean, string][] {
     [
       r.position,
       alongside
-        ? "Full hull inside amber alongside area"
+        ? `Full hull inside amber ${sternTo() ? "berth" : "alongside"} area`
         : `Position within ${scenario.target.positionTolerance} m · full hull inside`,
     ],
     [
       r.heading,
-      alongside ? `Parallel to quay · ${heading}` : `Heading ${heading}`,
+      alongside
+        ? `${sternTo() ? "Stern to the quay" : "Parallel to quay"} · ${heading}`
+        : `Heading ${heading}`,
     ],
     [r.speed, `Speed ≤ ${knots(t.maxSpeed).toFixed(2)} kn · minimal rotation`],
     [
@@ -61,8 +64,14 @@ function berthChecks(g: Session): [boolean, string][] {
   if (p.phase === "approach") return checks;
   return [
     ...checks,
-    [secured.fenders, "Starboard fenders deployed"],
-    [secured.lines, "Both lines · slack ≤0.45 m · safe load · crew idle"],
+    [
+      secured.fenders,
+      sternTo() ? "Fenders out on both sides" : "Starboard fenders deployed",
+    ],
+    [
+      secured.lines,
+      `${sternTo() ? "Stern lines and lazy line" : "Both lines"} · slack ≤0.45 m · safe load · crew idle`,
+    ],
     [
       secured.neutral,
       p.service.enginesOff
@@ -119,7 +128,7 @@ export function objective(g: Session): Objective {
       checks:
         exit && p.channelSide
           ? [
-              [true, "Both lines let go"],
+              [true, sternTo() ? "All lines let go" : "Both lines let go"],
               [
                 p.channelSide === exit.keepSide,
                 p.channelSide === exit.keepSide
@@ -225,7 +234,12 @@ export function objective(g: Session): Objective {
       const running = step.items.find((it) => it.id === p.service.running);
       return {
         ...base,
-        checks: [[true, "Secured alongside · lines, fenders, neutral"]],
+        checks: [
+          [
+            true,
+            `Secured ${sternTo() ? "stern-to" : "alongside"} · lines, fenders, neutral`,
+          ],
+        ],
         bar: 1,
         result:
           running && running.action === "timed"
@@ -234,11 +248,11 @@ export function objective(g: Session): Objective {
       };
     }
     case "exitThroughGate": {
-      const lines = !g.mooring.bow.attached && !g.mooring.stern.attached;
+      const lines = lineIds().every((id) => !g.mooring[id].attached);
       return {
         ...base,
         checks: [
-          [lines, "Both lines let go"],
+          [lines, sternTo() ? "All lines let go" : "Both lines let go"],
           [quayClearance(g.state) > 2, "Clear of the quay by 2 m"],
           [
             false,
