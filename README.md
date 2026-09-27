@@ -80,7 +80,7 @@ Every step stays clickable. A step taken out of order is **refused with an expla
 
 ## Departure (milestone C, in progress)
 
-The harbour's south side is a **breakwater** with an 18 m **entrance** at x = −30 m. A **red** light marks the west end of the gap and a **green** light the east end (IALA region A, as used in Croatia: red is the port-hand mark when entering, so going out it stays on your **starboard** side). The lights flash for orientation only. Training barriers enclose the water outside the entrance.
+The harbour's south side is a **breakwater** with a 24 m **entrance** at x = −30 m. A **red** light marks the west end of the gap and a **green** light the east end (IALA region A, as used in Croatia: red is the port-hand mark when entering, so going out it stays on your **starboard** side). The lights flash for orientation only. Training barriers enclose the water outside the entrance.
 
 Once the service is complete:
 

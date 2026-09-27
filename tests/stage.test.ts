@@ -34,9 +34,8 @@ test("the fuel dock stage loads and drives the game's scenario", () => {
   assert.deepEqual(stage.berth.lines.bow.anchor, { x: 7.7, y: 23 });
   // IALA A, leaving southbound: red on the west (starboard) end.
   const gate = stage.gates.entrance;
-  assert.ok(
-    Math.abs(gate.red.x - -39) < 1e-9 && Math.abs(gate.green.x - -21) < 1e-9,
-  );
+  assert.ok(Math.abs(gate.red.x - (gate.x - gate.width / 2)) < 1e-9);
+  assert.ok(Math.abs(gate.green.x - (gate.x + gate.width / 2)) < 1e-9);
 });
 test("the committed JSON Schema matches the stage definition", () => {
   const committed = JSON.parse(
@@ -80,7 +79,7 @@ test("buoyage and gate direction decide which light is red", () => {
   b.buoyage = "IALA-B";
   const flipped = parseStage(b).gates.entrance;
   assert.ok(
-    Math.abs(flipped.red.x - -21) < 1e-9,
+    Math.abs(flipped.red.x - (flipped.x + flipped.width / 2)) < 1e-9,
     "IALA B: red on the east end",
   );
   const east = copy();

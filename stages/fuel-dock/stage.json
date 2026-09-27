@@ -2,7 +2,7 @@
   "$schema": "../stage.schema.json",
   "schemaVersion": 1,
   "id": "fuel-dock",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "name": "Fuel dock · North quay",
   "description": "Wait for a monohull to leave the fuel berth, come alongside the east quay, refuel and leave through the harbour entrance.",
   "author": "Leopard / Handling Lab",
@@ -13,8 +13,8 @@
     "structures": [
       { "id": "east-quay", "name": "East quay", "kind": "quay", "x": 12, "y": 16, "width": 10, "length": 42 },
       { "id": "north-quay", "name": "North quay", "kind": "quay", "x": -3, "y": 34, "width": 40, "length": 6 },
-      { "id": "west-breakwater", "name": "West breakwater", "kind": "breakwater", "x": -43, "y": -50, "width": 8, "length": 3 },
-      { "id": "east-breakwater", "name": "East breakwater", "kind": "breakwater", "x": 13, "y": -50, "width": 68, "length": 3 },
+      { "id": "west-breakwater", "name": "West breakwater", "kind": "breakwater", "x": -44.5, "y": -50, "width": 5, "length": 3 },
+      { "id": "east-breakwater", "name": "East breakwater", "kind": "breakwater", "x": 14.5, "y": -50, "width": 65, "length": 3 },
       { "id": "west-limit", "name": "West training barrier", "kind": "barrier", "x": -46, "y": -13.5, "width": 2, "length": 129 },
       { "id": "east-limit", "name": "East training barrier", "kind": "barrier", "x": 46, "y": -13.5, "width": 2, "length": 129 },
       { "id": "south-limit", "name": "South training barrier", "kind": "barrier", "x": 0, "y": -77, "width": 94, "length": 2 },
@@ -59,7 +59,7 @@
       }
     ],
     "gates": [
-      { "id": "entrance", "name": "Harbour entrance", "label": "HARBOUR ENTRANCE", "x": -30, "y": -50, "width": 18, "outward": "south" }
+      { "id": "entrance", "name": "Harbour entrance", "label": "HARBOUR ENTRANCE", "x": -30, "y": -50, "width": 24, "outward": "south" }
     ],
     "labels": [
       { "text": "01  /  NORTH QUAY", "x": 0, "y": 26, "height": 3, "width": 11 },
