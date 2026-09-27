@@ -1,0 +1,98 @@
+{
+  "$schema": "../stage.schema.json",
+  "schemaVersion": 1,
+  "id": "fuel-dock",
+  "version": "6.0.0",
+  "name": "Fuel dock · North quay",
+  "description": "Wait for a monohull to leave the fuel berth, come alongside the east quay, refuel and leave through the harbour entrance.",
+  "author": "Leopard / Handling Lab",
+  "area": "Fictional training area",
+  "buoyage": "IALA-A",
+  "scene": {
+    "start": { "x": 0, "y": -22, "heading": 0 },
+    "structures": [
+      { "id": "east-quay", "name": "East quay", "kind": "quay", "x": 12, "y": 16, "width": 10, "length": 42 },
+      { "id": "north-quay", "name": "North quay", "kind": "quay", "x": -3, "y": 34, "width": 40, "length": 6 },
+      { "id": "west-breakwater", "name": "West breakwater", "kind": "breakwater", "x": -43, "y": -50, "width": 8, "length": 3 },
+      { "id": "east-breakwater", "name": "East breakwater", "kind": "breakwater", "x": 13, "y": -50, "width": 68, "length": 3 },
+      { "id": "west-limit", "name": "West training barrier", "kind": "barrier", "x": -46, "y": -13.5, "width": 2, "length": 129 },
+      { "id": "east-limit", "name": "East training barrier", "kind": "barrier", "x": 46, "y": -13.5, "width": 2, "length": 129 },
+      { "id": "south-limit", "name": "South training barrier", "kind": "barrier", "x": 0, "y": -77, "width": 94, "length": 2 },
+      { "id": "north-limit", "name": "North training barrier", "kind": "barrier", "x": 0, "y": 50, "width": 94, "length": 2 }
+    ],
+    "bollards": [
+      { "id": "B01", "structure": "east-quay", "x": 7.7, "y": 23 },
+      { "id": "B02", "structure": "east-quay", "x": 7.7, "y": 9 }
+    ],
+    "berths": [
+      {
+        "id": "berth-01",
+        "name": "Berth 01",
+        "side": "starboard",
+        "structure": "east-quay",
+        "lines": { "bow": "B01", "stern": "B02" },
+        "approach": {
+          "x": 0, "y": 16, "width": 10, "length": 17,
+          "heading": 0, "headingTolerance": 8,
+          "maxSpeed": 0.18, "maxYawRate": 0.025,
+          "positionTolerance": 1.2, "dwell": 3
+        },
+        "alongside": {
+          "x": 2, "y": 16, "width": 10, "length": 20,
+          "heading": 0, "headingTolerance": 10,
+          "maxSpeed": 0.18, "maxYawRate": 0.025,
+          "gentleSpeed": 0.08, "boundaryAllowance": 0.02
+        }
+      }
+    ],
+    "zones": [
+      {
+        "id": "holding",
+        "name": "Holding area",
+        "label": "HOLDING AREA",
+        "shape": { "kind": "circle", "x": 20, "y": -22, "radius": 8 }
+      },
+      {
+        "id": "fuel-berth",
+        "name": "Fuel berth and approach lane",
+        "shape": { "kind": "rect", "x": 1.5, "y": 13.5, "width": 11, "length": 47 }
+      }
+    ],
+    "gates": [
+      { "id": "entrance", "name": "Harbour entrance", "label": "HARBOUR ENTRANCE", "x": -30, "y": -50, "width": 18, "outward": "south" }
+    ],
+    "labels": [
+      { "text": "01  /  NORTH QUAY", "x": 0, "y": 26, "height": 3, "width": 11 },
+      { "text": "FICTIONAL TRAINING AREA", "x": -17, "y": 39, "height": 2, "width": 19 }
+    ]
+  },
+  "conditions": {
+    "wind": { "speed": 2, "from": 270 },
+    "current": { "x": 0, "y": 0 }
+  },
+  "traffic": [
+    {
+      "id": "monohull",
+      "name": "Monohull",
+      "kind": "monohull",
+      "length": 12,
+      "beam": 3.9,
+      "start": { "x": 4.5, "y": 16, "heading": 0 },
+      "cruiseSpeed": 1,
+      "accel": 0.15,
+      "brake": 0.4,
+      "turnRadius": 8,
+      "pivotYaw": 0.03,
+      "maxYaw": 0.12,
+      "arriveRadius": 3,
+      "lookAhead": 6,
+      "lateralClearance": 1,
+      "legs": [
+        { "gear": "astern", "x": 3.2, "y": 2, "stop": true },
+        { "gear": "ahead", "x": -12, "y": 6, "stop": false },
+        { "gear": "ahead", "x": -33, "y": -8, "stop": false },
+        { "gear": "ahead", "x": -33, "y": -64, "stop": false }
+      ]
+    }
+  ]
+}

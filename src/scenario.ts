@@ -57,13 +57,18 @@ export function quayClearance(s: State) {
   }
   return min;
 }
-// Outward crossing of the entrance gate line between the lights. Leaving
-// southbound, the starboard half of the channel is the west (red) half.
+// Outward crossing of the entrance gate line between the lights, and which
+// half of the channel it was in, relative to a boat leaving (starboard =
+// the red side under IALA A).
 export function gateCrossing(previous: State, s: State) {
   const gate = missionConfig.entrance;
-  if (!(previous.y > gate.y && s.y <= gate.y)) return null;
-  if (Math.abs(s.x - gate.x) > gate.width / 2) return null;
-  return s.x <= gate.x ? "starboard" : "port";
+  const out = { x: Math.sin(gate.heading), y: Math.cos(gate.heading) },
+    starboard = { x: Math.cos(gate.heading), y: -Math.sin(gate.heading) };
+  const along = (p: State) => (p.x - gate.x) * out.x + (p.y - gate.y) * out.y;
+  if (!(along(previous) < 0 && along(s) >= 0)) return null;
+  const across = (s.x - gate.x) * starboard.x + (s.y - gate.y) * starboard.y;
+  if (Math.abs(across) > gate.width / 2) return null;
+  return across >= 0 ? "starboard" : "port";
 }
 export type Phase =
   | "holding"

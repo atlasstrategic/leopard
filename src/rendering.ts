@@ -6,6 +6,7 @@ import {
   mooringConfig,
   trafficConfig,
   missionConfig,
+  stage,
 } from "./config";
 import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
 import { initialFenders, type Fenders } from "./fenders";
@@ -246,8 +247,8 @@ export class View {
       this.scene.add(line);
       this.mooringMeshes.set(id, line);
     }
-    this.label("01  /  NORTH QUAY", 0, 3, -26, 11);
-    this.label("FICTIONAL TRAINING AREA", -17, 2, -39, 19);
+    for (const l of stage.labels)
+      this.label(l.text, l.x, l.height, -l.y, l.width);
     for (const x of [
       -boat.beam / 2 + boat.hullRadius,
       boat.beam / 2 - boat.hullRadius,
@@ -374,19 +375,19 @@ export class View {
       );
       this.holdingArea.add(buoy);
     }
-    // Entrance lights: red at the west end of the gap, green at the east end
-    // (IALA A, entering northbound). Flashing is decorative only.
+    // Entrance lights at the gate ends; the stage's buoyage decides which is
+    // red. Flashing is decorative only.
     const gate = missionConfig.entrance;
-    for (const [dx, color] of [
-      [-1, 0xe0463c],
-      [1, 0x3fbf6a],
+    for (const [end, color] of [
+      [gate.red, 0xe0463c],
+      [gate.green, 0x3fbf6a],
     ] as const) {
-      const x = gate.x + (dx * gate.width) / 2;
+      const x = end.x;
       const tower = new THREE.Mesh(
         new THREE.CylinderGeometry(0.45, 0.6, 4.2, 12),
         mat(color),
       );
-      tower.position.set(x, 3.6, -gate.y);
+      tower.position.set(x, 3.6, -end.y);
       tower.castShadow = true;
       this.scene.add(tower);
       const light = new THREE.MeshStandardMaterial({
@@ -395,12 +396,20 @@ export class View {
         emissiveIntensity: 0.4,
       });
       const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), light);
-      lamp.position.set(x, 6, -gate.y);
+      lamp.position.set(x, 6, -end.y);
       this.scene.add(lamp);
       this.entranceLights.push(light);
     }
-    // On the east breakwater, clear of boats passing through the gap.
-    this.label("HARBOUR ENTRANCE", gate.x + gate.width / 2 + 7, 3, -gate.y, 9);
+    // Beyond the port-hand end (leaving), clear of boats in the gap.
+    const starboard = { x: Math.cos(gate.heading), y: -Math.sin(gate.heading) };
+    if (gate.label)
+      this.label(
+        gate.label,
+        gate.x - starboard.x * (gate.width / 2 + 7),
+        3,
+        -(gate.y - starboard.y * (gate.width / 2 + 7)),
+        9,
+      );
     const gateLine = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(-gate.width / 2, 0.04, 0),
@@ -414,7 +423,8 @@ export class View {
     );
     gateLine.computeLineDistances();
     this.exitGate.add(gateLine);
-    // Starboard (west) half of the channel when leaving, lightly tinted.
+    // Starboard half of the channel when leaving, lightly tinted. Drawn for a
+    // southward exit, then rotated to the gate's outward heading.
     const lane = new THREE.Mesh(
       new THREE.PlaneGeometry(gate.width / 2, 8),
       new THREE.MeshBasicMaterial({
@@ -428,13 +438,16 @@ export class View {
     lane.position.set(-gate.width / 4, 0.02, -2);
     this.exitGate.add(lane);
     this.exitGate.position.set(gate.x, 0, -gate.y);
+    this.exitGate.rotation.y = -(gate.heading - Math.PI);
     this.exitGate.visible = false;
     this.scene.add(this.exitGate);
     this.holdingArea.position.set(hold.x, 0, -hold.y);
     this.holdingArea.visible = false;
     this.scene.add(this.holdingArea);
     // Re-parented so the label hides with the area.
-    this.holdingArea.add(this.label("HOLDING AREA", 0, 2, 0, 7));
+    const holdingLabel = stage.zones.holding?.label;
+    if (holdingLabel)
+      this.holdingArea.add(this.label(holdingLabel, 0, 2, 0, 7));
     this.resize();
     window.addEventListener("resize", () => this.resize());
   }

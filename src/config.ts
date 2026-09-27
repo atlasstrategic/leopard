@@ -1,3 +1,5 @@
+import fuelDock from "../stages/fuel-dock/stage.json";
+import { parseStage } from "./stage/load";
 // SI throughout. x=east, y=north; heading 0=north, positive clockwise.
 // Manufacturer September 2024 baseline, NOT verified 2026 equipment.
 export const boat = {
@@ -22,128 +24,32 @@ export const boat = {
   windLever: 1.2,
 };
 export type Tuning = typeof boat;
-export type Box = {
-  id?: string;
-  name?: string;
-  x: number;
-  y: number;
-  width: number;
-  length: number;
-  kind: "dock" | "breakwater" | "boundary";
+export type { Box } from "./stage/load";
+// The active stage: harbour layout, conditions and traffic come from its
+// stage file (stages/<id>/stage.json); the engine constants below stay here.
+export const stage = parseStage(fuelDock);
+const zone = (id: string) => {
+  const found = stage.zones[id];
+  if (!found) throw new Error(`Stage ${stage.id} needs a "${id}" zone`);
+  return found.shape;
 };
-// Harbour entrance: a gap in the south breakwater, red light at its west end
-// and green at its east end (IALA region A, entering northbound). The gate
-// line runs across the gap at the breakwater's centre line.
-const entrance = { x: -30, y: -50, width: 18, breakwater: 3 };
+const gate = (id: string) => {
+  const found = stage.gates[id];
+  if (!found) throw new Error(`Stage ${stage.id} needs a "${id}" gate`);
+  return found;
+};
 export const scenario = {
-  version: 6,
-  name: "North quay · Berth 01",
-  area: "Fictional training area",
-  start: { x: 0, y: -22, heading: 0 },
-  target: {
-    x: 0,
-    y: 16,
-    heading: 0,
-    width: 10,
-    length: 17,
-    positionTolerance: 1.2,
-    headingTolerance: (8 * Math.PI) / 180,
-    maxSpeed: 0.18,
-    maxYaw: 0.025,
-    dwell: 3,
-  },
-  // Full waterline footprint envelope beside the EAST quay, not a centre-point target.
-  alongside: {
-    x: 2,
-    y: 16,
-    width: 10,
-    length: 20,
-    heading: 0,
-    headingTolerance: (10 * Math.PI) / 180,
-    maxSpeed: 0.18,
-    maxYaw: 0.025,
-    obstacleId: "east-quay",
-    gentleSpeed: 0.08,
-    boundaryAllowance: 0.02,
-  },
-  wind: { speed: 2, direction: Math.PI / 2 }, // direction blowing TOWARD, not meteorological FROM
-  current: { x: 0, y: 0 },
+  version: stage.version,
+  name: stage.name,
+  area: stage.area,
+  start: stage.start,
+  target: stage.berth.approach,
+  // Full waterline footprint envelope beside the quay, not a centre-point target.
+  alongside: stage.berth.alongside,
+  wind: stage.wind, // direction blowing TOWARD, not meteorological FROM
+  current: stage.current,
   collisionPenalty: 5,
-  obstacles: [
-    {
-      id: "east-quay",
-      name: "East quay",
-      x: 12,
-      y: 16,
-      width: 10,
-      length: 42,
-      kind: "dock",
-    },
-    {
-      id: "north-quay",
-      name: "North quay",
-      x: -3,
-      y: 34,
-      width: 40,
-      length: 6,
-      kind: "dock",
-    },
-    {
-      id: "west-breakwater",
-      name: "West breakwater",
-      x: (-47 + entrance.x - entrance.width / 2) / 2,
-      y: entrance.y,
-      width: entrance.x - entrance.width / 2 + 47,
-      length: entrance.breakwater,
-      kind: "breakwater",
-    },
-    {
-      id: "east-breakwater",
-      name: "East breakwater",
-      x: (47 + entrance.x + entrance.width / 2) / 2,
-      y: entrance.y,
-      width: 47 - entrance.x - entrance.width / 2,
-      length: entrance.breakwater,
-      kind: "breakwater",
-    },
-    // Training barriers enclose the harbour and the water outside the entrance.
-    {
-      id: "west-limit",
-      name: "West training barrier",
-      x: -46,
-      y: -13.5,
-      width: 2,
-      length: 129,
-      kind: "boundary",
-    },
-    {
-      id: "east-limit",
-      name: "East training barrier",
-      x: 46,
-      y: -13.5,
-      width: 2,
-      length: 129,
-      kind: "boundary",
-    },
-    {
-      id: "south-limit",
-      name: "South training barrier",
-      x: 0,
-      y: -77,
-      width: 94,
-      length: 2,
-      kind: "boundary",
-    },
-    {
-      id: "north-limit",
-      name: "North training barrier",
-      x: 0,
-      y: 50,
-      width: 94,
-      length: 2,
-      kind: "boundary",
-    },
-  ] as Box[],
+  obstacles: stage.obstacles,
 };
 // Provisional game equipment and logging limits, not measured hardware specifications.
 export const fenderConfig = {
@@ -178,19 +84,16 @@ export const mooringConfig = {
     maxEaseLoad: 6500,
     maxPointSpeed: 0.25,
   },
+  // Bollards come from the stage's berth; fairleads are fittings on the boat.
   lines: {
     bow: {
       name: "Bow",
-      bollard: "B01",
-      obstacleId: "east-quay",
-      anchor: { x: 7.7, y: 23 },
+      ...stage.berth.lines.bow,
       fairlead: { x: 3.3, y: 4.6 },
     },
     stern: {
       name: "Stern",
-      bollard: "B02",
-      obstacleId: "east-quay",
-      anchor: { x: 7.7, y: 9 },
+      ...stage.berth.lines.stern,
       fairlead: { x: 3.3, y: -4.6 },
     },
   },
@@ -206,12 +109,20 @@ export const recorderConfig = {
 // Fuel mission before the approach: wait in the holding area, then enter the
 // fuel berth only once it is called clear.
 export const missionConfig = {
-  // Boat centre must stay inside; clear of the monohull's south-west exit.
-  holding: { x: 20, y: -22, radius: 8, countdown: 5 },
-  // Fuel berth and its approach lane (x -4..7, y -10..37).
-  fuelZone: { x: 1.5, y: 13.5, width: 11, length: 47 },
+  // Boat centre must stay inside the stage's "holding" circle.
+  holding: {
+    ...(zone("holding") as { x: number; y: number; radius: number }),
+    countdown: 5,
+  },
+  // The stage's "fuel-berth" zone: the berth and its approach lane.
+  fuelZone: zone("fuel-berth") as {
+    x: number;
+    y: number;
+    width: number;
+    length: number;
+  },
   earlyEntryPenalty: 10,
-  entrance,
+  entrance: gate("entrance"),
   // Crossing the gate line in the port half of the channel on the way out.
   channelSidePenalty: 5,
   // Accelerated, fictional fuel service: not real quantities or procedures.
@@ -260,31 +171,11 @@ export const scoreConfig = {
 // Scripted, kinematic harbour traffic. It follows its legs, never reacts to
 // impacts itself, and stops rather than pushing through the player.
 export const trafficConfig = {
-  monohull: {
-    id: "monohull",
-    name: "Monohull",
-    length: 12,
-    beam: 3.9,
-    // Alongside the east quay at the fuel berth, bow north.
-    start: { x: 4.5, y: 16, heading: 0 },
-    cruiseSpeed: 1,
-    accel: 0.15,
-    brake: 0.4,
-    turnRadius: 8,
-    pivotYaw: 0.03,
-    maxYaw: 0.12,
-    arriveRadius: 3,
-    lookAhead: 6,
-    lateralClearance: 1,
-    legs: [
-      // Back off the quay; the bow swings in as the stern opens, as with a bow spring.
-      { gear: "astern", x: 3.2, y: 2, stop: true },
-      { gear: "ahead", x: -12, y: 6, stop: false },
-      // Out through the entrance on the starboard (west) side of the channel.
-      { gear: "ahead", x: -33, y: -8, stop: false },
-      { gear: "ahead", x: -33, y: -64, stop: false },
-    ] as { gear: "ahead" | "astern"; x: number; y: number; stop: boolean }[],
-  },
+  monohull: (() => {
+    const v = stage.traffic.find((t) => t.id === "monohull");
+    if (!v) throw new Error(`Stage ${stage.id} needs a "monohull" vessel`);
+    return v;
+  })(),
 };
 export const STEP = 1 / 60;
 export const knots = (v: number) => v * 1.943844;

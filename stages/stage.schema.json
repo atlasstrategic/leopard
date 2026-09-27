@@ -1,0 +1,757 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of this stage"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "area": {
+      "type": "string",
+      "description": "Where it is set, e.g. 'Fictional training area'"
+    },
+    "buoyage": {
+      "type": "string",
+      "enum": [
+        "IALA-A",
+        "IALA-B"
+      ],
+      "description": "Lateral light colours: A = red to port entering (Europe)"
+    },
+    "scene": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "description": "Metres"
+            },
+            "y": {
+              "type": "number",
+              "description": "Metres"
+            },
+            "heading": {
+              "type": "number",
+              "description": "Degrees true, clockwise from north"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "heading"
+          ],
+          "additionalProperties": false,
+          "description": "Player's starting pose"
+        },
+        "structures": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "y": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "East–west extent in metres"
+              },
+              "length": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "North–south extent in metres"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "quay",
+                  "breakwater",
+                  "barrier"
+                ],
+                "description": "quay: mooring structure; breakwater: solid harbour wall; barrier: training-area limit"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "width",
+              "length",
+              "id",
+              "name",
+              "kind"
+            ],
+            "additionalProperties": false,
+            "description": "Solid, axis-aligned obstacle"
+          }
+        },
+        "bollards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "y": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Z0-9-]+$",
+                "description": "Label shown on the quay, e.g. B01"
+              },
+              "structure": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "Id of the quay it stands on"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "id",
+              "structure"
+            ],
+            "additionalProperties": false,
+            "description": "Mooring bollard"
+          }
+        },
+        "berths": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+              },
+              "name": {
+                "type": "string"
+              },
+              "side": {
+                "type": "string",
+                "const": "starboard",
+                "description": "Side of the boat against the quay"
+              },
+              "structure": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "Quay the boat lies against"
+              },
+              "lines": {
+                "type": "object",
+                "properties": {
+                  "bow": {
+                    "type": "string"
+                  },
+                  "stern": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "bow",
+                  "stern"
+                ],
+                "additionalProperties": false,
+                "description": "Bollard ids for the bow and stern lines"
+              },
+              "approach": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "description": "Metres"
+                  },
+                  "y": {
+                    "type": "number",
+                    "description": "Metres"
+                  },
+                  "width": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "East–west extent in metres"
+                  },
+                  "length": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "North–south extent in metres"
+                  },
+                  "heading": {
+                    "type": "number",
+                    "description": "Degrees true, clockwise from north"
+                  },
+                  "headingTolerance": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Allowed heading error, degrees"
+                  },
+                  "maxSpeed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "m/s"
+                  },
+                  "maxYawRate": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "rad/s"
+                  },
+                  "positionTolerance": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Boat centre must be within this many metres of the approach centre"
+                  },
+                  "dwell": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Seconds the arrival must be held"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "width",
+                  "length",
+                  "heading",
+                  "headingTolerance",
+                  "maxSpeed",
+                  "maxYawRate",
+                  "positionTolerance",
+                  "dwell"
+                ],
+                "additionalProperties": false,
+                "description": "Arrival target: the whole hull inside, held for dwell seconds"
+              },
+              "alongside": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "description": "Metres"
+                  },
+                  "y": {
+                    "type": "number",
+                    "description": "Metres"
+                  },
+                  "width": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "East–west extent in metres"
+                  },
+                  "length": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "North–south extent in metres"
+                  },
+                  "heading": {
+                    "type": "number",
+                    "description": "Degrees true, clockwise from north"
+                  },
+                  "headingTolerance": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Allowed heading error, degrees"
+                  },
+                  "maxSpeed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "m/s"
+                  },
+                  "maxYawRate": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "rad/s"
+                  },
+                  "gentleSpeed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "m/s; covered fender contact below this still counts as secured"
+                  },
+                  "boundaryAllowance": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Metres"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "width",
+                  "length",
+                  "heading",
+                  "headingTolerance",
+                  "maxSpeed",
+                  "maxYawRate",
+                  "gentleSpeed",
+                  "boundaryAllowance"
+                ],
+                "additionalProperties": false,
+                "description": "Whole-hull envelope used once the first line is attached"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "side",
+              "structure",
+              "lines",
+              "approach",
+              "alongside"
+            ],
+            "additionalProperties": false,
+            "description": "Berth with its approach target, alongside envelope and lines"
+          }
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+              },
+              "name": {
+                "type": "string"
+              },
+              "label": {
+                "description": "Text shown over the zone",
+                "type": "string"
+              },
+              "shape": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "description": "Metres"
+                      },
+                      "y": {
+                        "type": "number",
+                        "description": "Metres"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "circle"
+                      },
+                      "radius": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "kind",
+                      "radius"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "description": "Metres"
+                      },
+                      "y": {
+                        "type": "number",
+                        "description": "Metres"
+                      },
+                      "width": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "description": "East–west extent in metres"
+                      },
+                      "length": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "description": "North–south extent in metres"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "rect"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "width",
+                      "length",
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "shape"
+            ],
+            "additionalProperties": false,
+            "description": "Named area used by objectives"
+          }
+        },
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "y": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$",
+                "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+              },
+              "name": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Metres between the two lights"
+              },
+              "outward": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "east",
+                  "south",
+                  "west"
+                ],
+                "description": "Direction of travel when leaving through the gate"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "id",
+              "name",
+              "width",
+              "outward"
+            ],
+            "additionalProperties": false,
+            "description": "Harbour entrance: a gate line between two lateral lights"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "y": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "text": {
+                "type": "string"
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Metres above the water"
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Label width in metres"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "text",
+              "height",
+              "width"
+            ],
+            "additionalProperties": false,
+            "description": "Floating sign in the scene"
+          }
+        }
+      },
+      "required": [
+        "start",
+        "structures",
+        "bollards",
+        "berths",
+        "zones",
+        "gates",
+        "labels"
+      ],
+      "additionalProperties": false
+    },
+    "conditions": {
+      "type": "object",
+      "properties": {
+        "wind": {
+          "type": "object",
+          "properties": {
+            "speed": {
+              "type": "number",
+              "minimum": 0,
+              "description": "m/s"
+            },
+            "from": {
+              "type": "number",
+              "description": "Direction the wind blows from, degrees true"
+            }
+          },
+          "required": [
+            "speed",
+            "from"
+          ],
+          "additionalProperties": false
+        },
+        "current": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "additionalProperties": false,
+          "description": "Water current, m/s east and north"
+        }
+      },
+      "required": [
+        "wind",
+        "current"
+      ],
+      "additionalProperties": false
+    },
+    "traffic": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "const": "monohull"
+          },
+          "length": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "beam": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "start": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "y": {
+                "type": "number",
+                "description": "Metres"
+              },
+              "heading": {
+                "type": "number",
+                "description": "Degrees true, clockwise from north"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "heading"
+            ],
+            "additionalProperties": false
+          },
+          "cruiseSpeed": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "m/s"
+          },
+          "accel": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "m/s²"
+          },
+          "brake": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "m/s² when stopping for the player"
+          },
+          "turnRadius": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Metres"
+          },
+          "pivotYaw": {
+            "type": "number",
+            "minimum": 0,
+            "description": "rad/s it can turn at rest"
+          },
+          "maxYaw": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "rad/s"
+          },
+          "arriveRadius": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Metres"
+          },
+          "lookAhead": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Metres ahead it keeps clear of the player"
+          },
+          "lateralClearance": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Metres"
+          },
+          "legs": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "description": "Metres"
+                },
+                "y": {
+                  "type": "number",
+                  "description": "Metres"
+                },
+                "gear": {
+                  "type": "string",
+                  "enum": [
+                    "ahead",
+                    "astern"
+                  ]
+                },
+                "stop": {
+                  "type": "boolean",
+                  "description": "Come to a stop at this waypoint"
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "gear",
+                "stop"
+              ],
+              "additionalProperties": false,
+              "description": "Route waypoint"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "length",
+          "beam",
+          "start",
+          "cruiseSpeed",
+          "accel",
+          "brake",
+          "turnRadius",
+          "pivotYaw",
+          "maxYaw",
+          "arriveRadius",
+          "lookAhead",
+          "lateralClearance",
+          "legs"
+        ],
+        "additionalProperties": false,
+        "description": "Scripted traffic that follows its route and yields to the player"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "name",
+    "description",
+    "author",
+    "area",
+    "buoyage",
+    "scene",
+    "conditions",
+    "traffic"
+  ],
+  "additionalProperties": false,
+  "description": "Leopard / Handling Lab stage",
+  "title": "Leopard / Handling Lab stage"
+}

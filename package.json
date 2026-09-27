@@ -8,10 +8,13 @@
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "stage:schema": "tsx tools/stage-schema.ts",
+    "stage:validate": "tsx tools/stage-validate.ts"
   },
   "dependencies": {
-    "three": "^0.183.2"
+    "three": "^0.183.2",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^25.0.0",

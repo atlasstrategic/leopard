@@ -121,6 +121,10 @@ p {
   font-size: 11px;
   color: #acbec4;
 }
+/* display: flex would otherwise override the hidden attribute. */
+.checkpoints[hidden] {
+  display: none;
+}
 .checkpoints button {
   font-size: 11px;
   padding: 5px 9px;

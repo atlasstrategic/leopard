@@ -90,6 +90,26 @@ Once the service is complete:
 
 On completion the simulation stops, the radio reports the total time and penalties, the [debrief](#debrief-and-score) opens, and commands are refused until **Retry**. The monohull also leaves through the entrance on its starboard side.
 
+## Stages
+
+A **stage** is a self-contained data file, `stages/<id>/stage.json`, describing a harbour and its traffic. The fuel mission is the first one, `stages/fuel-dock/stage.json`. The game loads it through a validator (`src/stage/`), so the layout is no longer hard-coded.
+
+A stage file currently defines:
+
+- **Manifest:** `id` (matching its folder), semantic `version`, name, description, author, setting (`area`) and `buoyage` (`IALA-A` or `IALA-B`, which decides which entrance light is red).
+- **Scene:** start pose; solid `structures` (quay, breakwater, training barrier); `bollards` on quays; `berths` with their approach target, alongside envelope and bow/stern bollards; named `zones` (circles or rectangles); entrance `gates` with an outward direction; floating `labels`.
+- **Conditions:** wind (speed and the direction it blows **from**) and current.
+- **Traffic:** scripted vessels with dimensions, handling limits and a route of ahead/astern waypoints.
+
+Units are metres, m/s, headings in degrees true and yaw rates in rad/s; x is east and y is north. The loader converts to the engine's internal units and checks references (bollards on the berth's quay, unique ids, and so on), listing every problem with its path.
+
+```sh
+npm run stage:validate  # check every stages/*/stage.json
+npm run stage:schema    # regenerate stages/stage.schema.json after changing the format
+```
+
+`stages/stage.schema.json` is generated from the definition in `src/stage/schema.ts`, so editors can validate and autocomplete stage files; a test fails if it is out of date. Objectives, radio calls, scoring and checkpoints still live in the engine; they move into stage files next, followed by a stage picker and an authoring guide ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)).
+
 ## Restart checkpoints
 
 Two checkpoints are saved automatically during the fuel mission:
@@ -241,4 +261,4 @@ The scripts target only the local game tab. Dock automation uses DOM lever input
 
 The production bundle is approximately **153 kB gzipped JS** plus approximately 3.4 kB CSS; Vite warns that Three.js makes the uncompressed JS chunk exceed 500 kB. No external assets download at runtime.
 
-Milestone C's mission loop ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) is complete: holding → clearance → approach → secured → service → departure → debrief, with restart checkpoints. Next: calibrate low-speed response and scoring with experienced operators before claiming training fidelity; Croatian geography and exact boat assets are milestone D. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.
+Milestone C's mission loop ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) is complete: holding → clearance → approach → secured → service → departure → debrief, with restart checkpoints. Next: **stages as data plugins** ([issue #2](https://github.com/atlasstrategic/leopard/issues/2)) so other authors (including agents) can build stages: (1) stage file format with layout and traffic ✔; (2) an objective engine with reusable building blocks, porting the fuel mission onto it; (3) stage loading and a picker; (4) validation, an automated completability runner and an authoring guide; (5) a second stage authored independently. Then milestone D's Croatian harbour becomes a stage package. Calibrate low-speed response and scoring with experienced operators before claiming training fidelity. Calibrate low-speed response with experienced operators before claiming training fidelity; Croatian geography and exact boat assets remain milestone D.

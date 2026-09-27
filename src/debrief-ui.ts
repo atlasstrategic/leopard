@@ -1,4 +1,4 @@
-import { missionConfig, scenario } from "./config";
+import { missionConfig, scenario, stage } from "./config";
 import { debrief, tracks } from "./debrief";
 import type { Episode } from "./recorder";
 import type { Session } from "./session";
@@ -13,6 +13,11 @@ const esc = (text: string) =>
 // World metres to SVG: x east, y north drawn upwards.
 const pts = (list: [number, number][]) =>
   list.map(([x, y]) => `${x.toFixed(1)},${(-y).toFixed(1)}`).join(" ");
+// The stage's structures plus a 1 m margin, in SVG coordinates.
+function viewBox() {
+  const b = stage.bounds;
+  return [b.minX - 1, -(b.maxY + 1), b.maxX - b.minX + 2, b.maxY - b.minY + 2];
+}
 function trackSvg(g: Session) {
   const recording = g.recorder.export();
   const { boat, monohull } = tracks(recording.snapshots);
@@ -35,7 +40,8 @@ function trackSvg(g: Session) {
     )
     .join("");
   const [sx, sy] = boat[0] ?? [0, 0];
-  return `<rect class="water" x="-48" y="-52" width="96" height="131"/>${shapes}<rect class="berth" x="${t.x - t.width / 2}" y="${-(t.y + t.length / 2)}" width="${t.width}" height="${t.length}"/><circle class="holding" cx="${h.x}" cy="${-h.y}" r="${h.radius}"/><circle class="light-red" cx="${gate.x - gate.width / 2}" cy="${-gate.y}" r="1.1"/><circle class="light-green" cx="${gate.x + gate.width / 2}" cy="${-gate.y}" r="1.1"/>${monohull.length > 1 ? `<polyline class="mono" points="${pts(monohull)}"/>` : ""}<polyline class="boat" points="${pts(boat)}"/><circle class="start" cx="${sx.toFixed(1)}" cy="${(-sy).toFixed(1)}" r="1.3"/>${contacts}`;
+  const v = viewBox();
+  return `<rect class="water" x="${v[0]}" y="${v[1]}" width="${v[2]}" height="${v[3]}"/>${shapes}<rect class="berth" x="${t.x - t.width / 2}" y="${-(t.y + t.length / 2)}" width="${t.width}" height="${t.length}"/><circle class="holding" cx="${h.x}" cy="${-h.y}" r="${h.radius}"/><circle class="light-red" cx="${gate.x - gate.width / 2}" cy="${-gate.y}" r="1.1"/><circle class="light-green" cx="${gate.x + gate.width / 2}" cy="${-gate.y}" r="1.1"/>${monohull.length > 1 ? `<polyline class="mono" points="${pts(monohull)}"/>` : ""}<polyline class="boat" points="${pts(boat)}"/><circle class="start" cx="${sx.toFixed(1)}" cy="${(-sy).toFixed(1)}" r="1.3"/>${contacts}`;
 }
 export class DebriefUI {
   private dialog: HTMLDialogElement;
@@ -85,7 +91,7 @@ export class DebriefUI {
       ? `<div class="eyebrow">PENALTIES</div>${d.penalties.map((p) => `<p>${p.time.toFixed(1)} s · ${esc(p.message)}</p>`).join("")}`
       : `<div class="eyebrow">PENALTIES</div><p>None.</p>`;
     const svg = this.el("debrief-svg");
-    svg.setAttribute("viewBox", "-48 -52 96 131");
+    svg.setAttribute("viewBox", viewBox().join(" "));
     svg.innerHTML = trackSvg(g);
     if (!this.dialog.open) this.dialog.showModal();
   }
