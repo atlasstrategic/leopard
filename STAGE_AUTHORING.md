@@ -67,7 +67,7 @@ Write titles, hints and radio calls in terms of these:
 
 ### Traffic
 
-One vessel with `length`, `beam`, a `start` pose, handling limits (`cruiseSpeed`, `accel`, `brake`, `turnRadius`, `pivotYaw`, `maxYaw`, `arriveRadius`, `lookAhead`, `lateralClearance`) and `legs`: waypoints driven `ahead` or `astern`, optionally stopping at one. It waits at its start until a step `releases` it, stops (and can call `radio.yield`) if your boat is in its path, and disappears after its last waypoint. Keep waypoints more than about two turning radii apart, and leave through a gate on its starboard side. The validator simulates the route.
+One vessel with `length`, `beam` (it is drawn, and collides, as a modern plumb-bowed cruising monohull scaled to these, using its deck-edge outline), a `start` pose, handling limits (`cruiseSpeed`, `accel`, `brake`, `turnRadius`, `pivotYaw`, `maxYaw`, `arriveRadius`, `lookAhead`, `lateralClearance`) and `legs`: waypoints driven `ahead` or `astern`, optionally stopping at one. It waits at its start until a step `releases` it, stops (and can call `radio.yield`) if your boat is in its path, and disappears after its last waypoint. Keep waypoints more than about two turning radii apart, and leave through a gate on its starboard side. The validator simulates the route.
 
 ## Mission
 

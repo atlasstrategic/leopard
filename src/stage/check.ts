@@ -10,6 +10,7 @@ import {
   vesselObstacle,
 } from "../traffic";
 import type { Box, Stage } from "./load";
+import { outlineWorld } from "../hulls";
 
 // Geometry checks for a stage that already passed the schema and reference
 // checks: does the scene actually work for the boat? Uses the engine's own
@@ -138,16 +139,13 @@ function trafficRoute(stage: Stage, found: CheckResult) {
     time = 0;
   for (; time < 600 && v.status !== "gone"; time += STEP) {
     const o = vesselObstacle(v);
-    if (o) {
-      const ax = Math.sin(o.heading),
-        ay = Math.cos(o.heading);
-      for (let t = -o.halfLength; t <= o.halfLength; t += 0.5)
+    if (o)
+      for (const p of outlineWorld(o, 0.5))
         for (const b of stage.obstacles)
           closest = Math.min(
             closest,
-            distanceToBox(b, o.x + ax * t, o.y + ay * t) - o.radius,
+            inside(b, p.x, p.y) ? -0.01 : distanceToBox(b, p.x, p.y),
           );
-    }
     advanceVessel(v, away, boat, STEP);
   }
   if (v.status !== "gone")

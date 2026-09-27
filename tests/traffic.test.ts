@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boat, scenario, STEP, trafficConfig } from "../src/config";
 import { resolveContacts } from "../src/contacts";
+import { monohullOutline, outlineDistance, outlineWorld } from "../src/hulls";
 import { initialFenders } from "../src/fenders";
 import { initialState } from "../src/simulation";
 import { Session } from "../src/session";
@@ -25,20 +26,15 @@ const place = (g: Session, x: number, y: number) => {
   g.previous = { ...g.state };
 };
 const hold = (g: Session) => place(g, fuel.holding.x, fuel.holding.y);
-// Smallest gap between the monohull's capsule and any dock or breakwater.
+// Smallest gap between the monohull's outline and any dock or breakwater.
 function dockClearance(o: VesselObstacle) {
   let min = Infinity;
-  const ax = Math.sin(o.heading),
-    ay = Math.cos(o.heading);
-  for (let t = -o.halfLength; t <= o.halfLength; t += 0.25) {
-    const x = o.x + ax * t,
-      y = o.y + ay * t;
+  for (const { x, y } of outlineWorld(o, 0.25))
     for (const b of scenario.obstacles.filter((b) => b.kind !== "boundary")) {
       const qx = Math.max(b.x - b.width / 2, Math.min(b.x + b.width / 2, x));
       const qy = Math.max(b.y - b.length / 2, Math.min(b.y + b.length / 2, y));
-      min = Math.min(min, Math.hypot(x - qx, y - qy) - o.radius);
+      min = Math.min(min, Math.hypot(x - qx, y - qy));
     }
-  }
   return min;
 }
 test("monohull waits until the holding countdown, then leaves the harbour clear of docks", () => {
@@ -52,8 +48,10 @@ test("monohull waits until the holding countdown, then leaves the harbour clear 
   );
   hold(g);
   const entered = g.progress.elapsed;
+  let tick = 0;
   run(g, 130, () => {
-    const o = g.traffic && vesselObstacle(g.traffic);
+    // Every 0.1 s: the outline is sampled densely.
+    const o = tick++ % 6 === 0 && g.traffic && vesselObstacle(g.traffic);
     if (o) clearance = Math.min(clearance, dockClearance(o));
   });
   const types = g.recorder.events.map((e) => e.type);
@@ -73,15 +71,21 @@ test("moving hull contact uses relative velocity and pushes the boat", () => {
   const vessel = (vx: number): VesselObstacle => ({
     id: mono.id,
     name: mono.name,
-    // Capsule surface 1 cm inside the boat's starboard hull circles.
-    x: boat.beam / 2 - boat.hullRadius + boat.hullRadius + mono.beam / 2 - 0.01,
+    // A plain rectangular outline whose port side is 1 cm inside the boat's
+    // starboard hull circles, so the contact normal is exactly east–west.
+    x: boat.beam / 2 + mono.beam / 2 - 0.01,
     y: 0,
     heading: 0,
     vx,
     vy: 0,
     yaw: 0,
-    halfLength: mono.length / 2 - mono.beam / 2,
-    radius: mono.beam / 2,
+    outline: [
+      [mono.beam / 2, -mono.length / 2],
+      [mono.beam / 2, mono.length / 2],
+      [-mono.beam / 2, mono.length / 2],
+      [-mono.beam / 2, -mono.length / 2],
+    ],
+    reach: Math.hypot(mono.beam, mono.length) / 2,
   });
   const hit = { ...initialState(), x: 0, y: 0 };
   const samples = resolveContacts(hit, boat, [], initialFenders(), STEP, [
@@ -141,4 +145,19 @@ test("traffic resets on retry, matches across render rates and is absent from Sh
   lab.showMe();
   assert.equal(lab.active.traffic, null);
   assert.notEqual(lab.practice.traffic, null);
+});
+test("the monohull collides with its visible deck-edge outline, not a capsule", () => {
+  const length = 11.5,
+    beam = 3.99,
+    o = monohullOutline(length, beam);
+  // 0.3 m behind the stem and 0.8 m off the centreline is open water beside
+  // the fine plumb bow (a capsule of the same size would report contact).
+  assert.ok(outlineDistance(o, 0.8, length / 2 - 0.3).distance > 0.25);
+  // The wide transom is solid right out to its corners.
+  assert.ok(outlineDistance(o, 1.6, -length / 2 + 0.05).distance < 0);
+  // At the widest point the hull side is exactly half the beam out.
+  const widest = -length / 2 + 0.3 * length;
+  assert.ok(
+    Math.abs(outlineDistance(o, beam / 2 + 0.5, widest).distance - 0.5) < 1e-9,
+  );
 });

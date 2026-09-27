@@ -1,5 +1,11 @@
 import { angle, trafficConfig, type Tuning } from "./config";
 import { hullPoints } from "./contacts";
+import {
+  monohullOutline,
+  outlineDistance,
+  toLocal,
+  type Outline,
+} from "./hulls";
 import type { State } from "./simulation";
 
 export type VesselStatus = "moored" | "departing" | "yielding" | "gone";
@@ -24,9 +30,25 @@ export type VesselObstacle = {
   vx: number;
   vy: number;
   yaw: number;
-  halfLength: number;
-  radius: number;
+  // Plan outline at the deck edge in the vessel's frame (see hulls.ts), and
+  // its bounding radius for cheap distance checks.
+  outline: Outline;
+  reach: number;
 };
+let shape: { key: string; outline: Outline; reach: number } | undefined;
+function vesselShape() {
+  const { length, beam } = vesselConfig(),
+    key = `${length}/${beam}`;
+  if (shape?.key !== key) {
+    const outline = monohullOutline(length, beam);
+    shape = {
+      key,
+      outline,
+      reach: Math.max(...outline.map(([x, y]) => Math.hypot(x, y))),
+    };
+  }
+  return shape;
+}
 export type TrafficEvent = { type: string; message: string };
 // Only called when the active stage has traffic.
 const vesselConfig = () => trafficConfig.monohull!;
@@ -48,27 +70,27 @@ export function vesselObstacle(v: Vessel): VesselObstacle | null {
     vx: Math.sin(v.heading) * v.speed,
     vy: Math.cos(v.heading) * v.speed,
     yaw: v.yaw,
-    halfLength: vesselConfig().length / 2 - vesselConfig().beam / 2,
-    radius: vesselConfig().beam / 2,
+    outline: vesselShape().outline,
+    reach: vesselShape().reach,
   };
 }
-// Smallest hull-to-hull gap between the boat and the vessel's capsule.
+// Smallest hull-to-hull gap between the boat and the vessel's outline.
 export function hullGap(v: VesselObstacle, s: State, p: Tuning) {
-  const ax = Math.sin(v.heading),
-    ay = Math.cos(v.heading);
+  // Far apart, a lower bound is enough (the metric matters within metres).
+  const apart = Math.hypot(s.x - v.x, s.y - v.y) - v.reach - p.length / 2;
+  if (apart > 10) return apart;
   const sn = Math.sin(s.heading),
     cs = Math.cos(s.heading);
   let min = Infinity;
   for (const point of hullPoints(p)) {
-    const ox = s.x + point.x * cs + point.y * sn - v.x,
-      oy = s.y - point.x * sn + point.y * cs - v.y;
-    const along = Math.max(
-      -v.halfLength,
-      Math.min(v.halfLength, ox * ax + oy * ay),
+    const l = toLocal(
+      v,
+      s.x + point.x * cs + point.y * sn,
+      s.y - point.x * sn + point.y * cs,
     );
     min = Math.min(
       min,
-      Math.hypot(ox - ax * along, oy - ay * along) - v.radius - p.hullRadius,
+      outlineDistance(v.outline, l.x, l.y).distance - p.hullRadius,
     );
   }
   return min;

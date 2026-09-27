@@ -2,6 +2,7 @@ import { fenderConfig, type Tuning, type Box, STEP } from "./config";
 import type { State } from "./simulation";
 import { coveredFender, initialFenders, type Fenders } from "./fenders";
 import type { VesselObstacle } from "./traffic";
+import { outlineDistance, toLocal } from "./hulls";
 export type ContactSample = {
   obstacleId: string;
   obstacleName: string;
@@ -99,27 +100,22 @@ export function resolveContacts(
           const v = vessels[index - boxes.length];
           id = v.id;
           name = v.name;
-          const ax = Math.sin(v.heading),
-            ay = Math.cos(v.heading);
           const ox = x - v.x,
             oy = y - v.y;
-          const along = Math.max(
-            -v.halfLength,
-            Math.min(v.halfLength, ox * ax + oy * ay),
-          );
-          nx = ox - ax * along;
-          ny = oy - ay * along;
-          const dist = Math.hypot(nx, ny);
-          if (dist - v.radius >= p.hullRadius + fenderConfig.thickness)
+          if (
+            Math.hypot(ox, oy) - v.reach >=
+            p.hullRadius + fenderConfig.thickness
+          )
             continue;
-          depth = p.hullRadius + v.radius - dist;
-          if (dist > 1e-8) {
-            nx /= dist;
-            ny /= dist;
-          } else {
-            nx = ay;
-            ny = -ax;
-          }
+          // Nearest point on the vessel's deck-edge outline, in its frame.
+          const local = toLocal(v, x, y),
+            hit = outlineDistance(v.outline, local.x, local.y);
+          if (hit.distance >= p.hullRadius + fenderConfig.thickness) continue;
+          depth = p.hullRadius - hit.distance;
+          const vs = Math.sin(v.heading),
+            vc = Math.cos(v.heading);
+          nx = hit.nx * vc + hit.ny * vs;
+          ny = -hit.nx * vs + hit.ny * vc;
           // Kinematic point velocity, same clockwise yaw convention as the boat.
           ovx = v.vx + v.yaw * oy;
           ovy = v.vy - v.yaw * ox;

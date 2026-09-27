@@ -123,7 +123,11 @@ const vessel = z
   .object({
     id,
     name: z.string(),
-    kind: z.literal("monohull"),
+    kind: z
+      .literal("monohull")
+      .describe(
+        "A modern plumb-bowed cruising monohull, drawn and colliding with the same deck-edge outline, scaled to length and beam",
+      ),
     length: positive,
     beam: positive,
     start: pose,

@@ -17,10 +17,14 @@ test("the bundled stages and the test fixture pass the geometry checks", () => {
     const result = checkStage(parseStage(data));
     assert.deepEqual(result.errors, [], JSON.stringify(result));
   }
-  // The monohull's close pass to the quay is flagged, not failed.
+  // The fuel dock's monohull route now clears the quay comfortably.
+  assert.deepEqual(checkStage(parseStage(fuelDockFile)).warnings, []);
+  // A route that backs off less before turning passes close: a warning.
+  const close = fuel();
+  close.traffic[0].legs[0].x = 2.8;
   assert.match(
-    checkStage(parseStage(fuelDockFile)).warnings.join("\n"),
-    /monohull: route passes within 0\.[12]\d m/,
+    checkStage(parseStage(close)).warnings.join("\n"),
+    /monohull: route passes within 0\.\d\d m of a structure/,
   );
 });
 test("geometry mistakes are reported", () => {

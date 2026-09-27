@@ -605,7 +605,8 @@
           },
           "kind": {
             "type": "string",
-            "const": "monohull"
+            "const": "monohull",
+            "description": "A modern plumb-bowed cruising monohull, drawn and colliding with the same deck-edge outline, scaled to length and beam"
           },
           "length": {
             "type": "number",

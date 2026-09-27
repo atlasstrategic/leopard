@@ -3,6 +3,7 @@ import type { Step } from "./stage/load";
 import type { State } from "./simulation";
 import type { Phase } from "./scenario";
 import type { VesselObstacle } from "./traffic";
+import { outlineWorld } from "./hulls";
 
 // Building-block helpers shared by the session, UI and debrief. The stage's
 // mission is an ordered list of steps; the coarse phase follows the step kind.
@@ -42,14 +43,17 @@ export function insideZone(shape: ZoneShape, s: { x: number; y: number }) {
     : Math.abs(s.x - shape.x) <= shape.width / 2 &&
         Math.abs(s.y - shape.y) <= shape.length / 2;
 }
-// Any part of a vessel's capsule (by bounding box) inside a rectangle zone.
+// Any part of a vessel's outline (by bounding box) inside a rectangle zone.
 export function vesselInZone(v: VesselObstacle, shape: ZoneShape) {
   if (shape.kind !== "rect") return false;
-  const dx = Math.abs(Math.sin(v.heading)) * v.halfLength + v.radius,
-    dy = Math.abs(Math.cos(v.heading)) * v.halfLength + v.radius;
+  const points = outlineWorld(v),
+    xs = points.map((p) => p.x),
+    ys = points.map((p) => p.y);
   return (
-    Math.abs(v.x - shape.x) < shape.width / 2 + dx &&
-    Math.abs(v.y - shape.y) < shape.length / 2 + dy
+    Math.max(...xs) > shape.x - shape.width / 2 &&
+    Math.min(...xs) < shape.x + shape.width / 2 &&
+    Math.max(...ys) > shape.y - shape.length / 2 &&
+    Math.min(...ys) < shape.y + shape.length / 2
   );
 }
 // Outward crossing of a gate line between its lights, and which half of the

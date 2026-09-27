@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { monohullForm } from "./hulls";
 
 // Procedural boat models. Local frame: x starboard, y up (waterline at 0),
 // z aft (the bow points to −z). Waterlines stay inside each boat's collision
@@ -275,25 +276,15 @@ function guardrails(
 
 // Beneteau Oceanis 38.1 (2016 on): 11.5 m, 3.99 m beam, plumb bow, wide
 // transom, low coachroof, deck-stepped mast about 16.5 m above the waterline.
-// Built inside a collision capsule of the given length and beam: the bow fills
-// the front cap and the transom sits where the rear cap is as wide as it.
-export function oceanis381(capsuleLength: number, beam: number) {
+// Its deck-edge outline is exactly the vessel's collision outline.
+export function oceanis381(length: number, beam: number) {
   const group = new THREE.Group();
-  const loa = 11.5,
-    b = beam / 2,
-    bow = -capsuleLength / 2,
-    stern = bow + loa;
+  const b = beam / 2,
+    bow = -length / 2,
+    stern = length / 2;
   const at = (f: number) => stern - (stern - bow) * f;
-  const stations: Station[] = [
-    { f: 0, deck: 0.84, water: 0.66, depth: 0.28, sheer: 1.12 },
-    { f: 0.12, deck: 0.95, water: 0.82, depth: 0.42, sheer: 1.16 },
-    { f: 0.3, deck: 1.0, water: 0.9, depth: 0.55, sheer: 1.2 },
-    { f: 0.5, deck: 0.99, water: 0.88, depth: 0.6, sheer: 1.25 },
-    { f: 0.68, deck: 0.92, water: 0.76, depth: 0.55, sheer: 1.31 },
-    { f: 0.82, deck: 0.74, water: 0.52, depth: 0.46, sheer: 1.38 },
-    { f: 0.93, deck: 0.44, water: 0.24, depth: 0.34, sheer: 1.44 },
-    { f: 1, deck: 0.05, water: 0.02, depth: 0.2, sheer: 1.48 },
-  ].map((s) => ({
+  // The same hull form the collision outline uses (hulls.ts).
+  const stations: Station[] = monohullForm.map((s) => ({
     z: at(s.f),
     deck: s.deck * b,
     water: s.water * b,
