@@ -26,6 +26,8 @@ export class Input {
         "KeyD",
         "KeyW",
         "KeyS",
+        "ArrowUp",
+        "ArrowDown",
         "ArrowLeft",
         "ArrowRight",
         "KeyX",
@@ -57,18 +59,14 @@ export class Input {
         c.starboard = 0;
       }
       if (e.code === "KeyX") c.rudder = 0;
-      if (["KeyQ", "KeyA", "KeyW", "KeyS"].includes(e.code))
-        c.port = clamp(
-          c.port + (["KeyQ", "KeyW"].includes(e.code) ? 0.2 : -0.2),
-          -1,
-          1,
-        );
-      if (["KeyE", "KeyD", "KeyW", "KeyS"].includes(e.code))
-        c.starboard = clamp(
-          c.starboard + (["KeyE", "KeyW"].includes(e.code) ? 0.2 : -0.2),
-          -1,
-          1,
-        );
+      // W/S and ↑/↓ move both levers together.
+      const both = { KeyW: 0.2, ArrowUp: 0.2, KeyS: -0.2, ArrowDown: -0.2 }[
+        e.code
+      ];
+      const port = { KeyQ: 0.2, KeyA: -0.2 }[e.code] ?? both;
+      const starboard = { KeyE: 0.2, KeyD: -0.2 }[e.code] ?? both;
+      if (port) c.port = clamp(c.port + port, -1, 1);
+      if (starboard) c.starboard = clamp(c.starboard + starboard, -1, 1);
       game.observe(); // Capture every lever command, even multiple taps in one frame.
     });
     window.addEventListener("keyup", (e) => this.held.delete(e.code));

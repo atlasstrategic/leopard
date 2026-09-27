@@ -60,23 +60,23 @@ export class UI {
       <section class="panel radio" id="radio" role="status" aria-live="polite" hidden><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><p id="radio-message"></p></section>
       ${instrumentsMarkup}
       <aside class="tools"><div class="toolbar"><button id="camera">Camera</button><button id="pause">Pause · P</button><button id="retry">Retry · R</button><button id="show-me">Show me</button></div>
-      <details class="panel stage-panel"${actions.stageNotice ? " open" : ""}><summary>Stage · <b id="stage-name"></b> <span>↗</span></summary><p id="stage-description"></p><label>Choose stage<select id="stage-select">${bundledStages()
+      <div class="tool-panels"><details class="panel stage-panel"${actions.stageNotice ? " open" : ""}><summary>Stage <span>↗</span></summary><div class="tool-panel-body panel"><div class="eyebrow">CURRENT STAGE</div><strong id="stage-name"></strong><p id="stage-description"></p><label>Choose stage<select id="stage-select">${bundledStages()
         .map((s) => `<option value="${s.id}">${s.name}</option>`)
         .join(
           "",
-        )}</select></label><label class="stage-file">Load stage file…<input id="stage-file" type="file" accept=".json,application/json"></label><p class="stage-help">Switching stage restarts the game; export your voyage log first if you need it.</p><p id="stage-notice" role="status"></p></details>
-      <details class="panel"><summary>Handling & weather <span>↗</span></summary><p>Experimental coefficients, not certified training.</p>
+        )}</select></label><label class="stage-file">Load stage file…<input id="stage-file" type="file" accept=".json,application/json"></label><p class="stage-help">Switching stage restarts the game; export your voyage log first if you need it.</p><p id="stage-notice" role="status"></p></div></details>
+      <details class="panel handling-panel"><summary>Handling & weather <span>↗</span></summary><div class="tool-panel-body panel"><p>Experimental coefficients, not certified training.</p>
       <label>Wind strength <output id="windSpeedValue"></output><input id="windSpeed" type="range" min="0" max="24" step="0.5"></label>
       <label>Wind from (° true) <output id="windDirectionValue"></output><input id="windDirection" type="range" min="0" max="360" step="5"></label>
       <label>Engine thrust <output id="maxThrustValue"></output><input id="maxThrust" type="range" min="1500" max="5000" step="100"></label>
       <label>Engine response <output id="engineLagValue"></output><input id="engineLag" type="range" min="0.3" max="3" step="0.1"></label>
       <label>Lateral resistance <output id="lateralDragValue"></output><input id="lateralDrag" type="range" min="4000" max="24000" step="1000"></label>
       <label>Yaw damping <output id="yawDragValue"></output><input id="yawDrag" type="range" min="40000" max="220000" step="10000"></label>
-      <button id="defaults">Restore tuning defaults</button></details></aside>
+      <button id="defaults">Restore tuning defaults</button></div></details></div></aside>
       <footer><section class="panel levers"><div class="lever" data-engine="port"><div class="eyebrow">PORT <span>Q / A</span></div><strong id="portValue"></strong><input id="port" aria-label="Port gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="port" data-value="-1">− REV</button><button data-engine="port" data-value="0">N</button><button data-engine="port" data-value="1">FWD +</button></div><small id="portActual"></small></div>
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
-      <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
+      <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S or ↑/↓ both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
       <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}${debriefMarkup()}`;
     for (const section of ["objective", "crew"] as const) {
       this.el(`${section}-tab`).onclick = () => {
@@ -175,6 +175,15 @@ export class UI {
   // Stage picker: bundled stages reload with ?stage=<id>; a stage file is
   // validated first, kept for this browser tab and played with ?stage=file.
   private setupStagePanel() {
+    // The Stage and Handling & weather panels share one row: open one at a time.
+    const panels = Array.from(
+      this.root.querySelectorAll<HTMLDetailsElement>(".tool-panels details"),
+    );
+    for (const panel of panels)
+      panel.addEventListener("toggle", () => {
+        if (panel.open)
+          for (const other of panels) if (other !== panel) other.open = false;
+      });
     const select = this.el("stage-select") as HTMLSelectElement,
       notice = this.el("stage-notice");
     this.el("stage-name").textContent = stage.name;

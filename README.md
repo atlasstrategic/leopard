@@ -37,7 +37,7 @@ Each new obstacle-contact episode above 0.08 m/s closing speed incurs **+5 secon
 | ---------- | ------------------------------------------- |
 | Q / A      | Port lever up / down in 20% steps           |
 | E / D      | Starboard lever up / down in 20% steps      |
-| W / S      | Both levers up / down in 20% steps          |
+| W / S, ↑ / ↓ | Both levers up / down in 20% steps        |
 | Hold ← / → | Turn persistent rudder to port / starboard  |
 | X          | Centre rudder                               |
 | Space      | Both engines neutral (not an instant brake) |

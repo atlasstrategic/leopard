@@ -112,6 +112,42 @@ p {
   margin-top: 8px;
   width: 100%;
 }
+/* Stage and Handling & weather share one row above the instruments; an open
+   panel's body drops below the row at full width. */
+.tool-panels {
+  position: relative;
+  display: flex;
+  gap: 5px;
+}
+.tool-panels > details {
+  min-width: 0;
+}
+.tool-panels > .handling-panel {
+  flex: 1;
+}
+.tool-panels summary {
+  white-space: nowrap;
+}
+.tool-panels summary span {
+  margin-left: 10px;
+}
+.tool-panel-body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  z-index: 3;
+}
+.tool-panel-body > p:first-of-type {
+  margin-top: 0;
+}
+.stage-panel strong {
+  display: block;
+  font-size: 13px;
+  margin-top: 4px;
+}
 .stage-panel label {
   display: block;
   margin: 8px 0;
@@ -487,4 +523,19 @@ footer {
 }
 .stage-panel summary b {
   font-weight: inherit;
+}
+/* Narrower screens: keep both panel buttons on one line above the instruments. */
+@media (max-width: 1200px), (max-height: 800px) {
+  .toolbar {
+    margin-bottom: 6px;
+  }
+  .tool-panels > details {
+    padding: 9px 11px !important;
+  }
+  .tool-panels summary {
+    font-size: 11px;
+  }
+  .tool-panels summary span {
+    margin-left: 6px;
+  }
 }

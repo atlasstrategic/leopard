@@ -34,7 +34,7 @@ Examples: the fuel dock (`stages/fuel-dock/stage.json`) uses every part of the f
 
 Write titles, hints and radio calls in terms of these:
 
-- **Controls:** two engine levers, **port** and **starboard**, each from full astern through **neutral** to full ahead in 20% steps (keys Q/A and E/D, W/S for both, Space for both neutral), and a persistent **wheel** (arrow keys, X to centre). One lever ahead with the other in neutral or astern turns the boat. Engines respond with a delay; neutral is not a brake.
+- **Controls:** two engine levers, **port** and **starboard**, each from full astern through **neutral** to full ahead in 20% steps (keys Q/A and E/D, W/S or ↑/↓ for both, Space for both neutral), and a persistent **wheel** (arrow keys, X to centre). One lever ahead with the other in neutral or astern turns the boat. Engines respond with a delay; neutral is not a brake.
 - **Crew & lines** tab: port and starboard **fenders** (3 seconds to deploy), and **bow** and **stern** lines with Attach/Release and Take in/Ease.
 - **Objective panel:** your step's `label` (numbered), `title` and `hint`, the step's checks and a progress bar.
 - **Harbour radio** panel: the latest radio call.
