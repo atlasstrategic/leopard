@@ -20,6 +20,7 @@ Notable user-facing changes to Leopard / Handling Lab are recorded here. The app
 - Added a second stage, **Open water · First session**: ahead, astern, turning and stopping at marks, then a stop box. It was written from the authoring guide by an independent author. ([#2](https://github.com/atlasstrategic/leopard/issues/2))
 - Fixed a hold step that directly follows another hold completing immediately.
 - New boat models: the traffic monohull is now a recognisable **Beneteau Oceanis 38.1** (at its published 11.5 × 3.99 m), and the **Leopard 42** has shaped hulls, a saloon with tinted windows, a hardtop, a raised helm and a full-height rig. The monohull now collides with exactly its visible outline (plumb bow, wide transom) instead of a rounded capsule, and backs further off the quay before turning so its stern clears it (stage version 7.2.0).
+- Each boat model is merged into one mesh per material once built, so the new models cost no more to draw than the old ones (measured on an integrated laptop GPU).
 - The Stage and Handling & weather panels now share one row, so they no longer cover the instruments; one opens at a time.
 - ↑ / ↓ now move both levers, like W / S.
 - The debrief now states the **wind and current** the run was sailed in, and flags a wind changed during the attempt with its range. Figures a stage cannot produce are left out.

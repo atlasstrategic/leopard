@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { monohullForm } from "./hulls";
 
 // Procedural boat models. Local frame: x starboard, y up (waterline at 0),
@@ -82,6 +83,7 @@ function rod(
   );
   return m;
 }
+const lineMaterials = new Map<number, THREE.LineBasicMaterial>();
 // Standing rigging and lifelines: thin lines, no shadow.
 function wires(
   parent: THREE.Object3D,
@@ -89,7 +91,12 @@ function wires(
   color = colors.rope,
 ) {
   const g = new THREE.BufferGeometry().setFromPoints(segments.flat());
-  parent.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color })));
+  let material = lineMaterials.get(color);
+  if (!material) {
+    material = new THREE.LineBasicMaterial({ color });
+    lineMaterials.set(color, material);
+  }
+  parent.add(new THREE.LineSegments(g, material));
 }
 const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 // A profile in the z–y plane extruded symmetrically across x.
@@ -274,6 +281,30 @@ function guardrails(
   wires(parent, segments, colors.steel);
 }
 
+// The models never change shape, so once built their parts are merged into
+// one mesh (and one set of line segments) per material: dozens of small
+// meshes cost a draw call each, twice with shadows.
+function mergeStatic(group: THREE.Group) {
+  group.updateMatrixWorld(true);
+  const meshes = new Map<THREE.Material, THREE.BufferGeometry[]>(),
+    lines = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  group.traverse((o) => {
+    if (!(o instanceof THREE.Mesh || o instanceof THREE.LineSegments)) return;
+    const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    g.applyMatrix4(o.matrixWorld);
+    for (const name of Object.keys(g.attributes))
+      if (name !== "position" && name !== "normal") g.deleteAttribute(name);
+    const into = o instanceof THREE.Mesh ? meshes : lines;
+    const material = o.material as THREE.Material;
+    into.set(material, [...(into.get(material) ?? []), g]);
+  });
+  const merged = new THREE.Group();
+  for (const [material, geometries] of meshes)
+    add(merged, new THREE.Mesh(mergeGeometries(geometries)!, material));
+  for (const [material, geometries] of lines)
+    merged.add(new THREE.LineSegments(mergeGeometries(geometries)!, material));
+  return merged;
+}
 // Beneteau Oceanis 38.1 (2016 on): 11.5 m, 3.99 m beam, plumb bow, wide
 // transom, low coachroof, deck-stepped mast about 16.5 m above the waterline.
 // Its deck-edge outline is exactly the vessel's collision outline.
@@ -464,7 +495,7 @@ export function oceanis381(length: number, beam: number) {
     mat(colors.dinghy, 0.8),
   );
   dinghy.position.set(0, 1.66, at(0.84));
-  return group;
+  return mergeStatic(group);
 }
 
 // Leopard 42 catamaran, simplified: two slim hulls matching the collision
@@ -638,5 +669,5 @@ export function leopard42(length: number, beam: number, hullRadius: number) {
         return [side * (hullX + s.x - 0.05), 1.4 + f * 0.15, at(f)];
       }),
     );
-  return group;
+  return mergeStatic(group);
 }
