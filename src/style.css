@@ -121,6 +121,9 @@ p {
 }
 .tool-panels > details {
   min-width: 0;
+  /* A backdrop filter would make each button the containing block of its
+     absolutely positioned body, squeezing it to the button's width. */
+  backdrop-filter: none;
 }
 .tool-panels > .handling-panel {
   flex: 1;
