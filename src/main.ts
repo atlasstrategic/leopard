@@ -4,7 +4,7 @@ import { chooseStage } from "./stage/select";
 import { View, hasWebGL2, type CameraMode } from "./rendering";
 import { PracticeLab, showMeAvailable } from "./demonstration";
 import { Input } from "./input";
-import { UI } from "./ui";
+import { toggleRadio, UI } from "./ui";
 import type { CheckpointId } from "./session";
 const canvas = document.querySelector<HTMLCanvasElement>("#scene")!;
 function error(message: string) {
@@ -39,6 +39,10 @@ if (!hasWebGL2()) {
     const actions = {
       camera: () => {
         view.mode = modes[(modes.indexOf(view.mode) + 1) % modes.length];
+      },
+      radio: () => {
+        toggleRadio(lab.active);
+        ui.update();
       },
       retry: () => {
         input.clear();

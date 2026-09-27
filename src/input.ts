@@ -6,6 +6,7 @@ export class Input {
     private game: Session,
     private actions: {
       camera: () => void;
+      radio: () => void;
       retry: () => void;
       pause: () => void;
     },
@@ -33,6 +34,7 @@ export class Input {
         "KeyX",
         "Space",
         "KeyC",
+        "KeyV",
         "KeyR",
         "KeyP",
       ];
@@ -49,6 +51,10 @@ export class Input {
       }
       if (e.code === "KeyC") {
         actions.camera();
+        return;
+      }
+      if (e.code === "KeyV") {
+        actions.radio();
         return;
       }
       if (game.paused || this.readOnly()) return;

@@ -29,6 +29,28 @@ import {
 } from "./checkpoint-ui";
 
 import type { View } from "./rendering";
+// Harbour radio: a new call shows in full for a few seconds of simulation
+// time, then folds to one line so it does not cover the view. V or the
+// button unfolds it (it stays open) or folds it again. Kept outside the UI,
+// which is rebuilt when the session changes.
+const radioFold = { pinned: false, folded: -1 },
+  radioFresh = 8;
+function radioOpen(g: Session) {
+  const latest = g.radio.at(-1);
+  return (
+    !!latest &&
+    (radioFold.pinned ||
+      (g.progress.elapsed - latest.time < radioFresh &&
+        radioFold.folded !== g.radio.length))
+  );
+}
+export function toggleRadio(g: Session) {
+  if (!g.radio.length) return;
+  if (radioOpen(g)) {
+    radioFold.pinned = false;
+    radioFold.folded = g.radio.length;
+  } else radioFold.pinned = true;
+}
 export class UI {
   root = document.querySelector<HTMLDivElement>("#ui")!;
   instruments: Instruments;
@@ -57,7 +79,7 @@ export class UI {
       <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div>${serviceMarkup()}</div>
       <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button>${checkpointMarkup("restart")}<div class="stats"><span id="time"></span><span id="penalties"></span></div>
       <div id="crew-page" hidden>${mooringMarkup()}${crewMarkup}</div></section>
-      <section class="panel radio" id="radio" role="status" aria-live="polite" hidden><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><p id="radio-message"></p></section>
+      <section class="panel radio" id="radio" hidden><div class="radio-head"><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><button id="radio-toggle" type="button" aria-controls="radio-message" aria-expanded="true">Fold · V</button></div><p id="radio-message" role="status" aria-live="polite"></p></section>
       ${instrumentsMarkup}
       <aside class="tools"><div class="toolbar"><button id="camera">Camera</button><button id="pause">Pause · P</button><button id="retry">Retry · R</button><button id="show-me">Show me</button></div>
       <div class="tool-panels"><details class="panel stage-panel"${actions.stageNotice ? " open" : ""}><summary>Stage <span>↗</span></summary><div class="tool-panel-body panel"><div class="eyebrow">CURRENT STAGE</div><strong id="stage-name"></strong><p id="stage-description"></p><label>Choose stage<select id="stage-select">${bundledStages()
@@ -76,7 +98,7 @@ export class UI {
       <footer><section class="panel levers"><div class="lever" data-engine="port"><div class="eyebrow">PORT <span>Q / A</span></div><strong id="portValue"></strong><input id="port" aria-label="Port gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="port" data-value="-1">− REV</button><button data-engine="port" data-value="0">N</button><button data-engine="port" data-value="1">FWD +</button></div><small id="portActual"></small></div>
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
-      <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S or ↑/↓ both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
+      <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S or ↑/↓ both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · V radio · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
       <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}${debriefMarkup()}`;
     for (const section of ["objective", "crew"] as const) {
       this.el(`${section}-tab`).onclick = () => {
@@ -106,6 +128,10 @@ export class UI {
     this.el("resume").onclick = actions.pause;
     this.el("paused-show-me").onclick = actions.showDemo;
     this.el("camera").onclick = actions.camera;
+    this.el("radio-toggle").onclick = () => {
+      toggleRadio(game);
+      this.update();
+    };
     this.setupStagePanel();
     const allowed = () => !game.paused && !actions.readOnly();
     this.el("neutral").onclick = () => {
@@ -296,6 +322,11 @@ export class UI {
       this.el("radio-time").textContent = `${latest.time.toFixed(1)} s`;
       this.el("radio-message").textContent = latest.message;
       this.el("radio").classList.toggle("fresh", p.elapsed - latest.time < 6);
+      const open = radioOpen(g);
+      this.el("radio").classList.toggle("folded", !open);
+      const toggle = this.el("radio-toggle");
+      toggle.textContent = open ? "Fold · V" : "Open · V";
+      toggle.setAttribute("aria-expanded", String(open));
     }
     this.el("time").textContent = `TIME ${p.elapsed.toFixed(1)} s`;
     this.el("penalties").textContent =

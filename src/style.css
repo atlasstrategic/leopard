@@ -257,6 +257,26 @@ p {
   font-size: 13px;
   color: #e7f1ef;
 }
+.radio-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.radio-head button {
+  padding: 2px 8px;
+  font-size: 10px;
+}
+.radio.folded {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+.radio.folded p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #b9cfd4;
+}
 .radio.fresh {
   background: #173d4cf2;
   box-shadow: 0 0 0 1px #f1bd6266;
