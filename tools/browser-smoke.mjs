@@ -24,6 +24,9 @@ await page.bringToFront();
 await page.waitForSelector("#retry");
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 const text = (id) => page.$eval("#" + id, (el) => el.textContent);
+// The instrument's plain-text reading ends with the rudder angle.
+const rudderText = () =>
+  page.$eval("#p70-readout", (el) => el.textContent.match(/rudder [^.]*/)[0]);
 await page.click("#retry");
 // Use actual key events, not direct state mutation.
 await page.keyboard.press("KeyQ");
@@ -35,15 +38,15 @@ await page.keyboard.down("ArrowRight");
 await delay(800);
 await page.keyboard.up("ArrowRight");
 await delay(100);
-const rudder = await text("rudder");
+const rudder = await rudderText();
 assert.match(rudder, /S/);
 await delay(500);
-assert.equal(await text("rudder"), rudder);
+assert.equal(await rudderText(), rudder);
 await page.keyboard.press("KeyX");
 await page.keyboard.press("Space");
 await delay(150);
 assert.match(await text("portValue"), /NEUTRAL/);
-assert.match(await text("rudder"), /0°/);
+assert.match(await rudderText(), /rudder 0 degrees/);
 await page.click('[data-engine="port"][data-value="-1"]');
 await delay(150);
 assert.match(await text("portValue"), /ASTERN 20/);
@@ -51,11 +54,13 @@ await page.click("#retry");
 await page.click('[data-engine="port"][data-value="1"]');
 await page.click('[data-engine="starboard"][data-value="1"]');
 await delay(4000);
-const movingSpeed = await text("speed");
+const movingSpeed = (await text("p70-readout")).match(/speed [\d.]+ knots/)[0];
 assert.ok(parseFloat(movingSpeed) > 0.15);
 await page.click("#neutral");
 await delay(300);
-const coastingSpeed = await text("speed");
+const coastingSpeed = (await text("p70-readout")).match(
+  /speed [\d.]+ knots/,
+)[0];
 assert.ok(parseFloat(coastingSpeed) > 0.15);
 await page.click("#camera");
 await delay(300);
@@ -77,9 +82,9 @@ await delay(350);
 assert.equal(await text("time"), pausedTime);
 await page.click("#resume");
 await delay(100);
-const afterResume = await text("rudder");
+const afterResume = await rudderText();
 await delay(400);
-assert.equal(await text("rudder"), afterResume);
+assert.equal(await rudderText(), afterResume);
 await page.click("summary");
 await page.$eval("#windSpeed", (e) => {
   e.value = "6";
@@ -92,18 +97,16 @@ await page.$eval("#windDirection", (e) => {
   e.dispatchEvent(new Event("input", { bubbles: true }));
 });
 await page.click("summary");
-await page.click("#wind-true");
+assert.match(await text("p70-readout"), /true wind 6.0 knots from 045° T/);
+assert.equal(await text("p70-page"), "Heading");
+assert.equal(await text("p70-label-0"), "TWS (kn)");
+await page.keyboard.press("KeyI");
 await delay(150);
-assert.match(await text("wind"), /6.0 kn/);
-assert.equal(await text("wind-from"), "045° T");
-assert.equal(await text("wind-speed-label"), "TWS");
-assert.equal(
-  await page.$eval("#wind-true", (e) => e.getAttribute("aria-pressed")),
-  "true",
-);
-await page.click("#wind-apparent");
+assert.equal(await text("p70-page"), "Wind");
+assert.equal(await text("p70-label-0"), "AWS (kn)");
+await page.click("#p70");
 await delay(150);
-assert.equal(await text("wind-speed-label"), "AWS");
+assert.equal(await text("p70-page"), "Heading");
 assert.ok(
   await page.$eval(".instruments", (e) =>
     e.classList.contains("helm-instruments"),
@@ -116,7 +119,7 @@ await page.click("#retry");
 await delay(150);
 assert.match(await text("portValue"), /NEUTRAL/);
 assert.match(await text("penalties"), /CONTACTS 0/);
-assert.match(await text("rudder"), /0°/);
+assert.match(await rudderText(), /rudder 0 degrees/);
 await page.click("#camera");
 await delay(200);
 await page.screenshot({ path: "artifacts/chase.png" });
@@ -146,7 +149,7 @@ console.log(
       blurPauseClear: "pass",
       tuning: "pass",
       instruments:
-        "apparent/true selection, knots, wind-from conversion, larger helm layout and 1100x760 clearance passed",
+        "heading and wind pages (I key and click), knots, wind-from conversion, larger helm layout and 1100x760 clearance passed",
       retry: "pass",
       consoleErrors: errors,
     },

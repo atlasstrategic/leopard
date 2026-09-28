@@ -14,7 +14,7 @@ import { showMeAvailable } from "./demonstration";
 import { MooringUI, mooringMarkup } from "./mooring-ui";
 import { ServiceUI, serviceMarkup } from "./service-ui";
 import { DebriefUI, debriefMarkup } from "./debrief-ui";
-import { Instruments, instrumentsMarkup } from "./instruments";
+import { Instruments, instrumentsMarkup, paletteMarkup } from "./instruments";
 import { wrap } from "./instrument-data";
 import { LogUI, crewMarkup, logMarkup } from "./log-ui";
 import { objective } from "./objective";
@@ -87,7 +87,7 @@ export class UI {
         .join(
           "",
         )}</select></label><label class="stage-file">Load stage file…<input id="stage-file" type="file" accept=".json,application/json"></label><p class="stage-help">Switching stage restarts the game; export your voyage log first if you need it.</p><p id="stage-notice" role="status"></p></div></details>
-      <details class="panel handling-panel"><summary>Handling & weather <span>↗</span></summary><div class="tool-panel-body panel"><p>Experimental coefficients, not certified training.</p>
+      <details class="panel handling-panel"><summary>Handling & weather <span>↗</span></summary><div class="tool-panel-body panel"><p>Experimental coefficients, not certified training.</p>${paletteMarkup}
       <label>Wind strength <output id="windSpeedValue"></output><input id="windSpeed" type="range" min="0" max="24" step="0.5"></label>
       <label>Wind from (° true) <output id="windDirectionValue"></output><input id="windDirection" type="range" min="0" max="360" step="5"></label>
       <label>Engine thrust <output id="maxThrustValue"></output><input id="maxThrust" type="range" min="1500" max="5000" step="100"></label>
@@ -98,7 +98,7 @@ export class UI {
       <footer><section class="panel levers"><div class="lever" data-engine="port"><div class="eyebrow">PORT <span>Q / A</span></div><strong id="portValue"></strong><input id="port" aria-label="Port gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="port" data-value="-1">− REV</button><button data-engine="port" data-value="0">N</button><button data-engine="port" data-value="1">FWD +</button></div><small id="portActual"></small></div>
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
-      <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S or ↑/↓ both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · V radio · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
+      <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S or ↑/↓ both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · I instrument · V radio · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
       <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}${debriefMarkup()}`;
     for (const section of ["objective", "crew"] as const) {
       this.el(`${section}-tab`).onclick = () => {

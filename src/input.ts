@@ -7,6 +7,7 @@ export class Input {
     private actions: {
       camera: () => void;
       radio: () => void;
+      instrument: () => void;
       retry: () => void;
       pause: () => void;
     },
@@ -35,6 +36,7 @@ export class Input {
         "Space",
         "KeyC",
         "KeyV",
+        "KeyI",
         "KeyR",
         "KeyP",
       ];
@@ -55,6 +57,10 @@ export class Input {
       }
       if (e.code === "KeyV") {
         actions.radio();
+        return;
+      }
+      if (e.code === "KeyI") {
+        actions.instrument();
         return;
       }
       if (game.paused || this.readOnly()) return;

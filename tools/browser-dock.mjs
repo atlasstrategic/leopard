@@ -62,7 +62,11 @@ try {
         return;
       }
       const speed =
-        parseFloat(document.querySelector("#speed").textContent) / 1.943844;
+        parseFloat(
+          document
+            .querySelector("#p70-readout")
+            .textContent.match(/speed ([\d.]+) knots/)[1],
+        ) / 1.943844;
       if (t < last) last = t;
       y += speed * (t - last);
       last = t;

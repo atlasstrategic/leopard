@@ -43,6 +43,7 @@ Each new obstacle-contact episode above 0.08 m/s closing speed incurs **+5 secon
 | Space      | Both engines neutral (not an instant brake) |
 | C          | Chase → overhead → basic helm               |
 | V          | Open / fold the harbour radio               |
+| I          | Next instrument page (Heading, Wind)        |
 | P          | Pause / resume                              |
 | R          | Retry                                       |
 
@@ -207,15 +208,16 @@ The approach/secure/release exercise is playable; holding/clearance, actual refu
 
 ## Helm instruments
 
-Two clean **Raymarine-inspired** screens replace the numeric telemetry strip; they are not an exact model replica. Helm view enlarges them when space permits.
+One display after an autopilot control head (**Raymarine p70-style**), not an exact replica or an emulated autopilot. It sits top right; helm view enlarges it when space permits. **I** or a click steps through its pages, and **Handling & weather → Instrument display** switches between a **Night** palette (the default, dark to suit the HUD) and a **Day** palette (a light LCD like the real unit), remembered in this browser.
 
-- **Heading:** rotating compass card, fixed bow index, digital HDG and a port/starboard rudder bar. **STBY · MANUAL** is honest status: there is no autopilot.
-- **SOG / COG:** speed over ground in knots and course over ground in true degrees. COG follows travel, not the bow (including when reversing), and is blank below 0.15 m/s.
-- **◆ BRG 01:** cyan diamond and bearing/distance to the **active** approach or alongside target centre, explicitly a training overlay. Bearing is blank within 0.25 m of that point; the marker never steers the boat.
-- **Wind:** click **APPARENT / TRUE**. AWA/TWA is the wind's **from** angle relative to the bow (0° ahead, 180° astern; P/S identifies the side). AWS/TWS is in knots. Red/green sectors indicate port/starboard. **FROM / TRUE** is the selected wind's compass bearing referenced to true north, not magnetic north.
-- Apparent wind is air velocity minus boat velocity. True wind is air velocity minus water current (the water-relative/STW convention); with zero current it equals earth-referenced wind. At less than 0.05 m/s, direction/needle are blank rather than inventing a calm-wind direction.
+- **Rudder bar** across the top: 30° port to 30° starboard, with a green block at the wheel's angle.
+- **Standby** is honest status: there is no autopilot. The line below it is **COG**, course over ground in true degrees; it follows travel, not the bow (including when reversing), and is blank below 0.15 m/s.
+- **Heading page** (default): a heading-up compass card with the bow at the top and the heading in large digits. The orange **T** disc on the ring is the **true wind** direction; the pink diamond is the training **bearing** to the current target (the berth, or the step's zone or gate). Data boxes: **TWS**, **SOG** and **BRG** with the target's label, its bearing and its distance in metres. The bearing marker is blank within 0.25 m of the target and never steers the boat.
+- **Wind page:** a bow-up wind dial with red/green port and starboard close-hauled sectors, the **apparent wind** needle and the true-wind **T** disc. Data boxes: **AWS**, **TWS** and **AWA** (the apparent wind's angle from the bow, with P or S).
+- Apparent wind is air velocity minus boat velocity. True wind is air velocity minus water current (the water-relative/STW convention); with zero current it equals earth-referenced wind. At less than 0.05 m/s, direction markers are blank rather than inventing a calm-wind direction.
+- A plain-text reading of the whole display is provided for screen readers.
 
-Weather tuning now sets **Wind from (° true)** and **Wind strength in knots** (0–24 kn; default 3.9 kn = 2 m/s). The simulation and exports still store wind in SI m/s. Internally the physics still stores air travel direction, so the UI converts by 180° without changing the forces. Default wind is **from west (270° T)**. Instrument mode survives retry alongside the camera/settings. No sensor noise, magnetic variation, instrument damping, depth readings or autopilot controls are simulated yet.
+Weather tuning now sets **Wind from (° true)** and **Wind strength in knots** (0–24 kn; default 3.9 kn = 2 m/s). The simulation and exports still store wind in SI m/s. Internally the physics still stores air travel direction, so the UI converts by 180° without changing the forces. Default wind is **from west (270° T)**. The display page and palette survive retry alongside the camera/settings. No sensor noise, magnetic variation, instrument damping, depth readings or autopilot controls are simulated yet.
 
 ## Architecture
 
@@ -234,7 +236,7 @@ Weather tuning now sets **Wind from (° true)** and **Wind strength in knots** (
 - `src/rendering.ts`: procedural Three.js boat/environment, WebGL capability detection and cameras.
 - `src/ui.ts`, `src/style.css`: DOM HUD, levers, tuning and debrief; no React dependency.
 - `src/instrument-data.ts`: pure wind/navigation vector calculations and display deadbands.
-- `src/instruments.ts`, `src/instruments.css`: SVG compass/wind screens, readouts and reference selection.
+- `src/instruments.ts`, `src/instruments.css`: the p70-style SVG display, its Heading and Wind pages and the day/night palette.
 - `src/main.ts`: animation loop, module composition and browser lifecycle handling.
 - `tests/simulation.test.ts`, `tests/instruments.test.ts`, `tests/recorder.test.ts`, `tests/mooring.test.ts`, `tests/alongside-demo.test.ts`: deterministic simulation/objective/contact, instrument math, coverage/crew, episode/measurement, archive/export, mooring-force/stability/validation, and complete approach/secure/release tests.
 - `artifacts/`: actual local browser screenshots.
