@@ -378,20 +378,6 @@ footer {
   padding: 7px 2px;
   margin-bottom: 5px;
 }
-.bindings {
-  text-align: center;
-  font-size: 10px;
-  line-height: 1.8;
-  color: #e1f0ed;
-  background: #102d3acc;
-  margin: 8px 16px 0;
-  padding: 6px 10px;
-  border-radius: 7px;
-  pointer-events: auto;
-}
-.bindings b {
-  color: #9ee1d4;
-}
 #paused {
   z-index: 5;
   position: absolute;
@@ -458,9 +444,6 @@ footer {
   .levers {
     padding: 10px 12px;
   }
-  .bindings {
-    margin-top: 4px;
-  }
   details[open] {
     max-height: calc(100vh - 310px);
     overflow: auto;
@@ -493,11 +476,6 @@ footer {
   }
   .eyebrow {
     font-size: 9px;
-  }
-  .bindings {
-    font-size: 9px;
-    margin-left: 0;
-    margin-right: 0;
   }
 }
 .stage-panel summary b {
@@ -614,5 +592,140 @@ footer {
 @media (max-width: 760px) {
   .drawer-open .radio {
     left: 10px;
+  }
+}
+/* Hidden from the rail (Goal / O); a dot marks a new step meanwhile. */
+.objective[hidden] {
+  display: none;
+}
+.rail-button[aria-pressed="false"] {
+  opacity: 0.6;
+}
+.rail-button.news::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: #f1bd62;
+}
+.rail-button {
+  position: relative;
+}
+.rail-button[aria-controls="keys"][aria-expanded="true"] {
+  background: #9df6c9;
+  color: #102d3a;
+}
+/* The keys card: shown on first start, then on ? or the rail's Keys. */
+.keys-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(400px, calc(100vw - 90px));
+  padding: 16px 18px;
+  border-radius: 12px;
+  pointer-events: auto;
+  z-index: 4;
+  box-shadow: 0 20px 60px #051a2899;
+}
+.keys-card[hidden] {
+  display: none;
+}
+.keys-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 7px 14px;
+  margin: 0;
+  font-size: 12px;
+  align-items: center;
+}
+.keys-list dt {
+  white-space: nowrap;
+}
+.keys-list dd {
+  margin: 0;
+  color: #d6e6e6;
+}
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 6px;
+  border: 1px solid #769aa688;
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: #173d4c;
+  color: #e7f1ef;
+  font-family: inherit;
+  font-size: 11px;
+  text-align: center;
+}
+#keys-ok {
+  width: 100%;
+}
+/* Phones: the title line goes; the card and radio stack at the top right of
+   the rail, the instrument sits above the helm, which spans the bottom. */
+@media (max-width: 760px) {
+  header {
+    display: none;
+  }
+  .objective {
+    top: 10px;
+    left: 72px;
+    right: 10px;
+    width: auto;
+  }
+  .radio,
+  .drawer-open .radio {
+    top: auto;
+    bottom: 400px;
+    left: 72px;
+    right: 10px;
+    width: auto;
+    min-width: 0;
+  }
+  #ui .instruments {
+    top: auto;
+    bottom: 214px;
+    right: 10px;
+    width: 200px;
+  }
+  #ui .p70-hint {
+    display: none;
+  }
+  footer {
+    left: 72px;
+    right: 10px;
+    width: auto;
+    bottom: 8px;
+  }
+  .rail {
+    top: 8px;
+  }
+  .drawer {
+    top: 8px;
+    max-height: calc(100vh - 16px);
+  }
+  .levers {
+    grid-template-columns: 1fr 88px 1fr;
+    gap: 6px;
+    padding: 10px;
+  }
+  .lever .eyebrow span,
+  .wheel .eyebrow {
+    display: none;
+  }
+  .lever-buttons button,
+  .wheel button {
+    padding: 5px 1px;
+    font-size: 9px;
+  }
+  .lever-buttons button {
+    white-space: nowrap;
+  }
+  .lever small {
+    font-size: 8px;
   }
 }

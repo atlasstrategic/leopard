@@ -39,11 +39,53 @@ const drawerTitles: Record<Drawer, string> = {
   handling: "HANDLING & WEATHER",
 };
 let drawer: Drawer | null = null;
+// The objective card can be hidden from the rail (O); a dot on the rail
+// button then marks a new step. The keys card shows the first time the game
+// starts in this browser, then on ? or the rail's Keys button.
+const shown = { objective: true, seenStep: "", keys: firstVisit() };
+function firstVisit() {
+  try {
+    return localStorage.getItem("leopard.keysSeen") !== "1";
+  } catch {
+    return false;
+  }
+}
+export function toggleObjective() {
+  shown.objective = !shown.objective;
+}
+export function toggleKeys(open = !shown.keys) {
+  shown.keys = open;
+  if (!open)
+    try {
+      localStorage.setItem("leopard.keysSeen", "1");
+    } catch {
+      // Storage refused: the card simply shows again next time.
+    }
+}
+const key = (...keys: string[]) => keys.map((k) => `<kbd>${k}</kbd>`).join(" ");
+const keysMarkup = `<section id="keys" class="panel keys-card" role="dialog" aria-labelledby="keys-title" hidden><div class="drawer-head"><div class="eyebrow" id="keys-title">KEYS</div><button type="button" id="keys-close" aria-label="Close keys">Close ×</button></div><dl class="keys-list">
+<dt>${key("Q", "A")}</dt><dd>Port lever up / down, 20% steps</dd>
+<dt>${key("E", "D")}</dt><dd>Starboard lever up / down</dd>
+<dt>${key("W", "S")} ${key("↑", "↓")}</dt><dd>Both levers up / down</dd>
+<dt>${key("←", "→")}</dt><dd>Hold to turn the wheel (it stays put)</dd>
+<dt>${key("X")}</dt><dd>Centre the rudder</dd>
+<dt>${key("Space")}</dt><dd>Both engines neutral</dd>
+<dt>${key("C")}</dt><dd>Camera: chase, overhead, helm</dd>
+<dt>${key("I")}</dt><dd>Next instrument page</dd>
+<dt>${key("O")} ${key("V")}</dt><dd>Show or hide the objective · fold the radio</dd>
+<dt>${key("P")} ${key("R")}</dt><dd>Pause · retry</dd>
+<dt>${key("?")}</dt><dd>This card</dd></dl><p>Levers persist: set them and let go. Neutral is not a brake; use short bursts astern to stop.</p><button type="button" id="keys-ok">Got it</button></section>`;
 const icon = (paths: string) =>
   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 const railButton = (id: string, label: string, paths: string, attrs = "") =>
   `<button type="button" id="${id}" class="rail-button" ${attrs}>${icon(paths)}<span>${label}</span></button>`;
 const railMarkup = [
+  railButton(
+    "rail-objective",
+    "Goal",
+    '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+    'aria-controls="objective" aria-pressed="true" title="Show or hide the objective (O)"',
+  ),
   railButton(
     "rail-crew",
     "Crew",
@@ -67,6 +109,12 @@ const railMarkup = [
     "Log",
     '<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
     'title="Voyage log & export"',
+  ),
+  railButton(
+    "rail-keys",
+    "Keys",
+    '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h1M10 10h1M14 10h1M18 10h.5M7 14h10"/>',
+    'aria-controls="keys" aria-expanded="false" title="Keyboard keys (?)"',
   ),
   '<div class="rail-gap"></div>',
   `<button type="button" id="camera" class="rail-button" title="Change camera (C)">${icon('<rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 11l5-3v8l-5-3"/>')}<span id="camera-label">Chase</span></button>`,
@@ -158,7 +206,7 @@ export class UI {
   ) {
     this.root.innerHTML = `
       <header><h1 class="visually-hidden">Leopard / Handling Lab: a little power, a lot of patience</h1><div class="eyebrow">LEOPARD / HANDLING LAB · <span class="header-stage">${stage.name}</span></div></header>
-      <section class="panel objective" aria-label="Objective"><div class="objective-head"><div class="eyebrow" id="mission-phase"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div></div><h2 id="mission-title"></h2><p id="mission-hint"></p><button type="button" id="hint-toggle" class="hint-toggle" aria-controls="mission-hint" aria-expanded="true">Hide hint</button>
+      <section class="panel objective" id="objective" aria-label="Objective"><div class="objective-head"><div class="eyebrow" id="mission-phase"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div></div><h2 id="mission-title"></h2><p id="mission-hint"></p><button type="button" id="hint-toggle" class="hint-toggle" aria-controls="mission-hint" aria-expanded="true">Hide hint</button>
       <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div>${serviceMarkup()}</div>
       <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button>${checkpointMarkup("restart")}</section>
       <section class="panel radio" id="radio" hidden><div class="radio-head"><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><button id="radio-toggle" type="button" aria-controls="radio-message" aria-expanded="true">Fold · V</button></div><p id="radio-message" role="status" aria-live="polite"></p></section>
@@ -182,13 +230,27 @@ export class UI {
       <footer><section class="panel levers"><div class="lever" data-engine="port"><div class="eyebrow">PORT <span>Q / A</span></div><strong id="portValue"></strong><input id="port" aria-label="Port gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="port" data-value="-1">− REV</button><button data-engine="port" data-value="0">N</button><button data-engine="port" data-value="1">FWD +</button></div><small id="portActual"></small></div>
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
-      <div class="bindings"><b>Tap</b> Q/A port · E/D starboard · W/S or ↑/↓ both (20% steps) &nbsp; <b>Hold</b> ←/→ wheel<br>X centre · Space neutral · C camera · I instrument · V radio · P pause · R retry &nbsp; / &nbsp; Levers persist. Neutral is not a brake.</div></footer>
+</footer>
+      ${keysMarkup}
       <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}${debriefMarkup()}`;
     for (const id of drawers)
       this.el(`rail-${id}`).onclick = () =>
         this.openDrawer(drawer === id ? null : id);
     this.el("drawer-close").onclick = () => this.openDrawer(null);
     this.el("rail-log").onclick = () => this.el("open-log").click();
+    this.el("rail-objective").onclick = () => {
+      toggleObjective();
+      this.update();
+    };
+    this.el("rail-keys").onclick = () => {
+      toggleKeys();
+      this.update();
+    };
+    for (const id of ["keys-close", "keys-ok"])
+      this.el(id).onclick = () => {
+        toggleKeys(false);
+        this.update();
+      };
     // A stage notice (such as an unknown stage id) opens the Stage panel.
     this.openDrawer(actions.stageNotice ? "stage" : drawer);
     this.instruments = new Instruments(this.root);
@@ -391,6 +453,14 @@ export class UI {
       .forEach((el) => {
         el.disabled = this.actions.readOnly();
       });
+    const step = hintKey(g);
+    if (shown.objective) shown.seenStep = step;
+    this.el("objective").hidden = !shown.objective;
+    const goal = this.el("rail-objective");
+    goal.setAttribute("aria-pressed", String(shown.objective));
+    goal.classList.toggle("news", !shown.objective && shown.seenStep !== step);
+    this.el("keys").hidden = !shown.keys || this.lab.mode === "demo";
+    this.el("rail-keys").setAttribute("aria-expanded", String(shown.keys));
     const o = objective(g);
     this.el("mission-phase").textContent = o.eyebrow;
     this.el("mission-title").textContent = o.title;

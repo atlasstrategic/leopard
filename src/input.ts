@@ -8,6 +8,8 @@ export class Input {
       camera: () => void;
       radio: () => void;
       instrument: () => void;
+      objective: () => void;
+      keys: () => void;
       retry: () => void;
       pause: () => void;
     },
@@ -37,6 +39,8 @@ export class Input {
         "KeyC",
         "KeyV",
         "KeyI",
+        "KeyO",
+        "Slash",
         "KeyR",
         "KeyP",
       ];
@@ -61,6 +65,15 @@ export class Input {
       }
       if (e.code === "KeyI") {
         actions.instrument();
+        return;
+      }
+      if (e.code === "KeyO") {
+        actions.objective();
+        return;
+      }
+      // ? (Shift + / on most layouts) opens or closes the keys card.
+      if (e.code === "Slash") {
+        actions.keys();
         return;
       }
       if (game.paused || this.readOnly()) return;
