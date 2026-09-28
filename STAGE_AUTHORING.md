@@ -61,6 +61,7 @@ Write titles, hints and radio calls in terms of these:
 ### Berths
 
 - Every stage needs one berth (and so a quay with two bollards), named by `mission.berth`, even if the mission never moors (see [Limits](#limits)).
+- `approach` and `alongside` envelopes **may overlap structures and moored boats** (the hull cannot go there anyway); the validator only requires the boat to fit at their centre and at the berth pose clear of everything. Hold zones should stay clear of structures (a warning).
 - `approach` is the arrival target: the whole hull must be inside the rectangle, the boat's centre within `positionTolerance` of its centre, heading within `headingTolerance`, below `maxSpeed` and `maxYawRate`, for `dwell` seconds. Make it at least 10 × 17 m; the boat is 7 × 12.7 m. It does not have to touch the quay: on its own in open water it works as a "stop box" (the open-water stage ends with one).
 - `alongside` is the envelope the boat must settle in once the first line is on. Put it against the quay face, with the **starboard side to the quay**: a boat heading north lies against a quay to its east; heading south, against a quay to its west.
 - The quay **face** is worked out from where the alongside envelope sits relative to its quay. Lines attach only from that face, and fender posts are drawn along it.
@@ -104,7 +105,7 @@ One vessel with `length`, `beam` (it is drawn, and collides, as a modern plumb-b
 | `holdInZone` | the boat's centre has stayed in `zone` for `seconds` | `resetOnExit`, `releases` (vessel ids), radio `enter`, `reset`. Position only: it does not check speed, heading or gear. A small zone and a longer hold encourage stopping; for a real stop, use an `arriveAtBerth` stop box |
 | `waitForClear` | `vessel` has left the rectangle `zone` completely | |
 | `arriveAtBerth` | the berth's approach target is held | |
-| `secureAlongside` | both lines on, fenders out, neutral, in the envelope | must directly follow `arriveAtBerth`; `hintAlongside` once the first line is on |
+| `secureAlongside` | the berth's lines on (both lines alongside; both stern lines and the lazy line stern-to), fenders out (starboard; both sides stern-to), neutral, in the envelope, for 3 s | must directly follow `arriveAtBerth`; `hintAlongside` once the first line is on |
 | `checklist` | every item is done in order | `requiresSecured`, `notReady`, `unsecured`, `items` |
 | `exitThroughGate` | the boat crosses `gate` outward | `keepSide`, `sidePenalty` (seconds), radio `wrongSide` |
 
@@ -116,11 +117,28 @@ Checklist items, done in order (each has a `label`; all but `enginesOn` have a `
 - `confirm`: a single button.
 - `enginesOn`: always allowed once the engines are off (safety); completes the checklist when everything else is done.
 
-`mission.rules` apply across steps: `keepOut` (a `penalty` and `radio` call for each entry into a zone until the step named in `until` completes; `check` is the objective line shown meanwhile) and `protectedContact` (contact with the traffic vessel where no fender covers the hull fails the mission; moored boats are always protected and need no rule).
+`mission.rules` apply across steps: `keepOut` (a `penalty` and `radio` call for each entry into a zone until the step named in `until` completes; `check` is the objective line shown meanwhile; like `holdInZone` it tests the **boat's centre**, not any part of the hull, so draw keep-out zones about half a boat length, roughly 6 m, beyond what they protect) and `protectedContact` (contact with the traffic vessel where no fender covers the hull fails the mission; moored boats are always protected and need no rule).
 
 Texts may use `{placeholders}`: `{penalty}` in penalty calls, `{time}` and `{penalty}` in the completion call, `{total} {unit}` and `{amount} {unit}` in timed items. The schema's descriptions list which apply where.
 
-`mission.scoring` is optional. Anything left out uses the engine defaults: weights 40/25/20/15 for impact and clearance, position and speed control, preparation and procedure, and smoothness; the thresholds; the ratings; and the debrief tips (which can use placeholders such as `{count}`, `{gap}` and `{minutes}`).
+### Contacts, penalties and failure
+
+- A **contact** is one episode of touching one obstacle (a structure, a moored boat or the traffic vessel): it starts at the first touch and ends after 0.5 s apart. An episode whose peak speed exceeds 0.08 m/s costs **+5 s** once and counts as one **penalised contact**; slower touches are logged but not penalised. Fenders do not make a contact free: covered contact above that speed is still penalised.
+- Touching a **moored boat** (or the vessel of a `protectedContact` rule) where no fender covers the hull **fails the mission**. Fenders cover only the outer sides of the hulls, 0.8 m either side of three posts at the centre and 3 m fore and aft; there are **no bow or stern fenders**, so a bow or transom touching another boat always fails.
+- Gentle (below the envelope's `gentleSpeed`) fender contact with the berth's quay or a moored boat does not stop securing. Arriving stern-to accepts it too; arriving alongside needs the boat clear.
+
+### Scoring
+
+`mission.scoring` is optional, and anything left out uses these engine defaults (points out of 100 per category; the total is the weighted sum):
+
+| Category (weight) | Deductions |
+| --- | --- |
+| Impact and clearance (0.4) | `perContact` 25 per penalised contact; up to `trafficDeduction` 30 for coming closer than `trafficClearance` 3 m to the traffic vessel (proportionally) |
+| Position and speed control (0.25) | up to `arrivalDeduction` 50 for peak speed within `arrivalRadius` 12 m of the target between `arrivalGood` 0.3 and `arrivalPoor` 0.8 m/s; `perCountdownReset` 10; `perEarlyEntry` 25 per keep-out entry; `wrongSide` 30 |
+| Preparation and procedure (0.2) | `fendersLate` 30 if the berth's fenders were not out on arrival; `perChecklistRefusal` 10; `perLineRefusal` 5; `perReleaseUnderLoad` 10 |
+| Smoothness (0.15) | time: 100 up to `parTime` 300 s, falling to `slowTimeScore` 40 at `slowTime` 600 s; lever changes beyond `leverPar` 60; time counts for `timeShare` 0.6 of the category |
+
+Ratings default to Excellent (90), Good (75), Fair (60) and Needs practice. A failed mission is not scored. The debrief tips can be overridden one by one and use placeholders such as `{count}`, `{gap}` and `{minutes}` (the schema lists them). `src/stage/load.ts` (`defaultScoring`) is the source of these numbers.
 
 ## Worked example: West quay
 
