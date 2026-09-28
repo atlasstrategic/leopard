@@ -111,7 +111,7 @@ export function objective(g: Session): Objective {
     return {
       eyebrow: "MISSION FAILED",
       title: "Hull contact without a fender.",
-      hint: `${p.failure}. Fenders must cover the point of contact with another vessel. Retry (R) to start again.`,
+      hint: `${p.failure}. Fenders must cover the point of contact with another vessel: side fenders cover the hull sides, the roving fender the bow or quarter it is held at. Retry (R) to start again.`,
       checks: [],
       bar: 0,
       result: `Mission failed at ${p.elapsed.toFixed(1)} s · press Retry (R)`,

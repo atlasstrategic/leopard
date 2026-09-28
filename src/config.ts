@@ -72,6 +72,10 @@ export const fenderConfig = {
   damping: 3500,
   maxForce: 6000,
   crewSeconds: 3,
+  // The roving fender: seconds for the crew to move it, and how far from its
+  // hull corner (the end contact circle's centre) it covers.
+  rovingSeconds: 2,
+  rovingCoverage: 0.8,
 };
 // Where each line leaves the boat (x starboard, y forward, metres): the
 // starboard bow and stern fairleads used alongside, the stern cleats on each

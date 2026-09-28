@@ -13,6 +13,26 @@
   padding: 7px 3px;
   font-size: 10px;
 }
+.roving-eyebrow {
+  margin-top: 10px;
+}
+.roving-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 8px;
+}
+.roving-buttons #roving-stow {
+  grid-column: 1 / -1;
+}
+.crew-controls .roving-buttons button[aria-pressed="true"] {
+  color: #102d3a;
+  background: #f5ae63;
+}
+.roving-buttons button.moving {
+  outline: 1px dashed #f5ae63;
+}
+#roving-status,
 #crew-status {
   font-size: 10px;
   line-height: 1.5;

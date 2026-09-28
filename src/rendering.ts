@@ -9,7 +9,7 @@ import {
   stage,
 } from "./config";
 import { initialMooring, lineIds, lineGeometry, type Mooring } from "./mooring";
-import { initialFenders, type Fenders } from "./fenders";
+import { cornerPoint, initialFenders, type Fenders } from "./fenders";
 import type { State } from "./simulation";
 import { positioningTarget, type PositionTarget } from "./scenario";
 import { catamaranHullShare } from "./hulls";
@@ -31,6 +31,9 @@ export class View {
   gateMarkings = new Map<string, THREE.Group>();
   entranceLights: THREE.MeshStandardMaterial[] = [];
   fenderMeshes = { port: new THREE.Group(), starboard: new THREE.Group() };
+  // The roving fender, moved to its corner each frame (hidden when stowed or
+  // in the crew's hands).
+  rovingFender: THREE.Mesh;
   mooringMeshes = new Map<
     string,
     THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>
@@ -284,6 +287,13 @@ export class View {
       group.visible = false;
       this.vessel.add(group);
     }
+    this.rovingFender = new THREE.Mesh(
+      new THREE.CapsuleGeometry(fenderConfig.thickness / 2, 0.65, 4, 10),
+      mat(0xf5ae63),
+    );
+    this.rovingFender.castShadow = true;
+    this.rovingFender.visible = false;
+    this.vessel.add(this.rovingFender);
     this.scene.add(this.vessel);
     // Traffic monohull: an Oceanis 38.1 inside its collision capsule.
     const mono = trafficConfig.monohull;
@@ -562,6 +572,18 @@ export class View {
     }
     for (const side of ["port", "starboard"] as const)
       this.fenderMeshes[side].visible = fenders[side].deployed;
+    const held = fenders.roving.at;
+    this.rovingFender.visible = !!held;
+    if (held) {
+      // Just outside the corner, mostly fore or aft of it, at the hull's side.
+      const c = cornerPoint(held),
+        out = boat.hullRadius + fenderConfig.thickness / 2;
+      this.rovingFender.position.set(
+        c.x + Math.sign(c.x) * out * 0.45,
+        0.7,
+        -(c.y + Math.sign(c.y) * out * 0.9),
+      );
+    }
     this.waterTime.value = time;
     this.targetMaterial.opacity = 0.13 + dwell * 0.05;
     this.vessel.position.set(s.x, Math.sin(time * 1.3) * 0.025, -s.y);

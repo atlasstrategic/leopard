@@ -2,7 +2,7 @@
   "$schema": "../stage.schema.json",
   "schemaVersion": 1,
   "id": "between-boats",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "name": "Between two boats · Stern-to",
   "description": "Reverse into a free slot in a row of boats moored stern-to on the east quay, between a catamaran and a monohull, in a light crosswind; make fast both stern lines, then the lazy line.",
   "author": "Leopard (from an independent agent's first draft)",
@@ -279,7 +279,7 @@
       "tips": {
         "contacts": "You touched something {count}× (the quay or a neighbour). Back in slower, keep the stern a metre off the quay, and correct early for the crosswind.",
         "fendersLate": "Your fenders were not out on both sides when you arrived. Put them out in the stand-off area: the crew needs 3 seconds.",
-        "failed": "{failure}. Fenders only cover the sides of your hulls: keep your bow and stern clear of the neighbours, and have fenders out on both sides before you back in."
+        "failed": "{failure}. Side fenders only cover the sides of your hulls: have them out on both sides before you back in, and hold the roving fender at the quarter that is closest to a neighbour."
       }
     }
   }

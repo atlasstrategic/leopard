@@ -136,7 +136,7 @@ Texts may use `{placeholders}`: `{penalty}` in penalty calls, `{time}` and `{pen
 ### Contacts, penalties and failure
 
 - A **contact** is one episode of touching one obstacle (a structure, a moored boat or the traffic vessel): it starts at the first touch and ends after 0.5 s apart. An episode whose peak speed exceeds 0.08 m/s costs **+5 s** once and counts as one **penalised contact**; slower touches are logged but not penalised. Fenders do not make a contact free: covered contact above that speed is still penalised.
-- Touching a **moored boat** (or the vessel of a `protectedContact` rule) where no fender covers the hull **fails the mission**. Fenders cover only the outer sides of the hulls, 0.8 m either side of three posts at the centre and 3 m fore and aft; there are **no bow or stern fenders**, so a bow or transom touching another boat always fails.
+- Touching a **moored boat** (or the vessel of a `protectedContact` rule) where no fender covers the hull **fails the mission**. Fenders cover only the outer sides of the hulls, 0.8 m either side of three posts at the centre and 3 m fore and aft; there are no fixed bow or stern fenders. The crew's optional **roving fender** covers 0.8 m round whichever bow or quarter the player sends it to (2 s to move), from any direction; without it, a bow or transom touching another boat fails. A stage cannot require it; mention it in hints where a corner is at risk.
 - Gentle (below the envelope's `gentleSpeed`) fender contact with the berth's quay or a moored boat does not stop securing. Arriving stern-to accepts it too; arriving alongside needs the boat clear.
 
 ### Scoring

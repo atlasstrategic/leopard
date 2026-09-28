@@ -21,7 +21,13 @@ import {
   zoneShape,
 } from "./mission";
 import type { Step } from "./stage/load";
-import { initialFenders, type Fenders, type Side } from "./fenders";
+import {
+  cornerNames,
+  initialFenders,
+  type Corner,
+  type Fenders,
+  type Side,
+} from "./fenders";
 import {
   initialMooring,
   initialLine,
@@ -285,6 +291,37 @@ export class Session {
       accepted: true,
       message: `${side} fenders ${f.target ? "deploying" : "being retrieved"} — ${fenderConfig.crewSeconds} seconds of simulation time.`,
     };
+  }
+  // The roving fender: the crew lifts it at once and takes it to the new
+  // corner in fenderConfig.rovingSeconds; null stows it.
+  requestRoving(corner: Corner | null): { accepted: boolean; message: string } {
+    const reason =
+      this.failedReason() ||
+      (this.paused
+        ? "Paused — resume (P) before moving the roving fender."
+        : "");
+    if (reason) return { accepted: false, message: reason };
+    const r = this.fenders.roving;
+    if (corner !== null && (r.at === corner || r.target === corner))
+      return {
+        accepted: false,
+        message: `The roving fender is already ${r.at === corner ? "at" : "going to"} the ${cornerNames[corner].toLowerCase()}.`,
+      };
+    r.at = null;
+    r.target = corner;
+    r.remaining = corner ? fenderConfig.rovingSeconds : 0;
+    const message = corner
+      ? `Roving fender to the ${cornerNames[corner].toLowerCase()} — ${fenderConfig.rovingSeconds} seconds.`
+      : "Roving fender stowed.";
+    this.recorder.event(
+      this.progress.elapsed,
+      "fender.roving.command",
+      message,
+      {
+        corner,
+      },
+    );
+    return { accepted: true, message };
   }
   securingRequirements() {
     return {
@@ -687,6 +724,20 @@ export class Session {
       }
     }
     const vessel = this.traffic && vesselObstacle(this.traffic);
+    const roving = this.fenders.roving;
+    if (roving.remaining > 0) {
+      roving.remaining = Math.max(0, roving.remaining - STEP);
+      if (roving.remaining < 1e-8 && roving.target) {
+        roving.remaining = 0;
+        roving.at = roving.target;
+        this.recorder.event(
+          this.progress.elapsed + STEP,
+          "fender.roving.complete",
+          `Roving fender held at the ${cornerNames[roving.at].toLowerCase()}`,
+          { corner: roving.at },
+        );
+      }
+    }
     for (const side of ["port", "starboard"] as const) {
       const f = this.fenders[side];
       if (f.remaining > 0) {

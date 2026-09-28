@@ -156,7 +156,7 @@ export function resolveContacts(
           // Bottomed-out fenders still meet the hard hull; they cannot defeat walls.
           impulse = Math.max(0, -vn) / effective;
         } else if (cover && pass === 0) {
-          const fenderKey = `${cover.side}/${cover.index}`;
+          const fenderKey = cover.key;
           if (!cushioned.has(fenderKey)) {
             cushioned.add(fenderKey);
             const force = Math.min(

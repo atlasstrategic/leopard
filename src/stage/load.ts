@@ -246,7 +246,8 @@ export const defaultScoring = {
       "You made {count} lever changes. Fewer, earlier corrections are smoother and easier on the engines.",
     clean:
       "A clean run. Try it again with stronger wind in Handling & weather.",
-    failed: "{failure}. Deploy fenders before you get near other boats.",
+    failed:
+      "{failure}. Deploy fenders before you get near other boats, and hold the roving fender at a bow or quarter that may touch.",
   },
 };
 export type Scoring = typeof defaultScoring;

@@ -2,7 +2,7 @@
   "$schema": "../stage.schema.json",
   "schemaVersion": 1,
   "id": "town-quay",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Town quay · Stern-to",
   "description": "Wait outside the breakwater while a monohull leaves, come in through the entrance, turn in the basin and back into a free slot on the south town quay, bow north, with an onshore breeze pushing you onto the quay.",
   "author": "Leopard (independent stage author)",
@@ -184,7 +184,7 @@
         "hint": "Line up north of the slot with the bow pointing north and back down slowly. The onshore breeze carries you towards the quay: use less astern than you think and a touch ahead to stop. Straighten up in the mint box with the stern about a metre off the quay and hold still for 3 seconds.",
         "linesRefused": "Stop in the mint box first, then pass the stern lines",
         "radio": {
-          "start": "Dead slow astern into the slot. The wind is behind you going in: stop early, the transom has no fenders.",
+          "start": "Dead slow astern into the slot. The wind is behind you going in: stop early, and have the roving fender ready at a quarter: the transom has no fixed fenders.",
           "done": "Stopped in the slot. Stern lines to T11 and T12, then pick up the lazy line."
         }
       },
@@ -226,7 +226,7 @@
         "countdownResets": "You drifted out of a blue area {count}×. Hold position head to wind with small, early lever corrections.",
         "earlyEntries": "You entered the channel before the monohull was clear. Wait in the holding area for the radio call.",
         "fendersLate": "Your fenders were not out on both sides when you arrived. Put them out while you wait outside the breakwater: the crew needs 3 seconds.",
-        "failed": "{failure}. Fenders only cover the sides of your hulls: keep your bow and stern clear of the neighbours, keep well clear of the departing monohull, and have fenders out on both sides before you back in."
+        "failed": "{failure}. Side fenders only cover the sides of your hulls: have them out on both sides before you back in, hold the roving fender at the quarter closest to a neighbour, and keep well clear of the departing monohull."
       }
     }
   }
