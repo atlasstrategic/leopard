@@ -45,6 +45,37 @@ test("geometry mistakes are reported", () => {
   route.traffic[0].legs[1] = { gear: "ahead", x: 12, y: 30, stop: false };
   assert.match(errors(route), /route passes through a structure/);
 });
+test("stage logic mistakes the geometry cannot see are warned about", () => {
+  const warnings = (data: unknown) =>
+    checkStage(parseStage(data)).warnings.join("\n");
+  // The wait's zone no longer covers the monohull at its berth.
+  const empty = fuel();
+  Object.assign(empty.scene.zones[1].shape, { y: 60 });
+  assert.match(
+    warnings(empty),
+    /Step clearance: monohull starts outside zone fuel-berth, so the wait ends as soon as the step starts/,
+  );
+  // Keeping out of the very area the player is told to hold in.
+  const penalised = fuel();
+  const rule = penalised.mission.rules.find((r) => r.kind === "keepOut")!;
+  (rule as { zone: string }).zone = "holding";
+  assert.match(
+    warnings(penalised),
+    /keepOut holding: overlaps zone holding, where step \w+ holds before the rule ends/,
+  );
+  // The playtest names the penalty and the step it came in.
+  const played = playtest(parseStage(penalised));
+  const hold = played.steps.find((st) => st.kind === "holdInZone")!;
+  assert.match(hold.penalties.join(), /Entered the holding area/);
+  // The monohull leaves through the east (port) half of the entrance.
+  const portSide = fuel();
+  portSide.traffic[0].legs[2].x = -25;
+  portSide.traffic[0].legs[3].x = -25;
+  assert.match(
+    warnings(portSide),
+    /Traffic monohull: leaves through gate entrance on the port side/,
+  );
+});
 test("the playtest completes every step of good stages", () => {
   for (const data of [fuelDockFile, westQuay]) {
     const result = playtest(parseStage(data));
@@ -77,5 +108,13 @@ test("consecutive holds each take their full time", () => {
       Math.abs(report.seconds - hold.seconds!) < 0.05,
       `${hold.id}: ${report.seconds} s`,
     );
+  }
+});
+test("every bundled stage passes the geometry checks and the playtest", () => {
+  for (const stage of bundledStages()) {
+    assert.deepEqual(checkStage(stage), { errors: [], warnings: [] }, stage.id);
+    const result = playtest(stage);
+    assert.ok(result.ok, `${stage.id}: ${JSON.stringify(result.steps)}`);
+    assert.equal(result.penalty, 0, stage.id);
   }
 });

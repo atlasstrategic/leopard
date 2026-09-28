@@ -19,6 +19,8 @@ export type StepReport = {
   ok: boolean;
   seconds: number;
   note: string;
+  // Penalties incurred during the step, as logged.
+  penalties: string[];
 };
 export type PlaytestResult = {
   ok: boolean;
@@ -143,12 +145,24 @@ export function playtest(stage: Stage): PlaytestResult {
       }
     }
     if (g.progress.phase === "failed") note = g.progress.failure ?? "failed";
+    const penalties = g.recorder.events
+      .filter(
+        (e) =>
+          e.time >= from &&
+          (e.type === "penalty" ||
+            Number(
+              (e.data as { penaltySeconds?: number } | undefined)
+                ?.penaltySeconds,
+            ) > 0),
+      )
+      .map((e) => e.message);
     steps.push({
       step: st.id,
       kind: st.kind,
       ok: !note && done(),
       seconds: g.progress.elapsed - from,
       note,
+      penalties,
     });
     if (note) break;
   }

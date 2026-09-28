@@ -91,6 +91,12 @@ test("stern-to geometry mistakes are reported", () => {
   const lazyFar = copy();
   lazyFar.scene.berths[0].lazyLine = { x: -48, y: 0 };
   assert.match(errors(lazyFar), /beyond the 40 m the crew can pay out/);
+  const lazyAshore = copy();
+  lazyAshore.scene.berths[0].lazyLine = { x: -3, y: 7.64 };
+  assert.match(
+    errors(lazyAshore),
+    /the lazyLine lies inside Moored catamaran; put it in open water/,
+  );
   const farBollard = copy();
   farBollard.scene.bollards[0].y = -12;
   assert.match(errors(farBollard), /portQuarter line to Q1 cannot be attached/);

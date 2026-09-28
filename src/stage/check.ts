@@ -10,6 +10,7 @@ import {
   vesselObstacle,
 } from "../traffic";
 import type { Box, MooredBoat, Stage } from "./load";
+import { gateCrossing, vesselInZone, type ZoneShape } from "../mission";
 import { outlineDistance, outlineWorld, toLocal } from "../hulls";
 
 // Geometry checks for a stage that already passed the schema and reference
@@ -81,6 +82,24 @@ export function berthPose(stage: Stage): State {
     case "north":
       return pose(a.x, quay.y + quay.length / 2 + off, a.heading);
   }
+}
+// Whether two zone shapes overlap (both test the boat's centre).
+function overlap(a: ZoneShape, b: ZoneShape): boolean {
+  if (a.kind === "circle" && b.kind === "circle")
+    return Math.hypot(a.x - b.x, a.y - b.y) < a.radius + b.radius;
+  if (a.kind === "rect" && b.kind === "rect")
+    return (
+      Math.abs(a.x - b.x) < (a.width + b.width) / 2 &&
+      Math.abs(a.y - b.y) < (a.length + b.length) / 2
+    );
+  const [c, r] =
+    a.kind === "circle"
+      ? [a, b as Extract<ZoneShape, { kind: "rect" }>]
+      : [b as Extract<ZoneShape, { kind: "circle" }>, a];
+  if (c.kind !== "circle" || r.kind !== "rect") return false;
+  const dx = Math.max(Math.abs(c.x - r.x) - r.width / 2, 0),
+    dy = Math.max(Math.abs(c.y - r.y) - r.length / 2, 0);
+  return Math.hypot(dx, dy) < c.radius;
 }
 // Water the boat can reach from the start, on a 1 m grid.
 function reachable(stage: Stage) {
@@ -159,7 +178,9 @@ function trafficRoute(stage: Stage, found: CheckResult) {
     leg = v.leg;
     at = time;
   };
+  const wrongSide = new Set<string>();
   for (; time < 600 && v.status !== "gone"; time += STEP) {
+    const before = { ...v };
     const o = vesselObstacle(v);
     if (o)
       for (const p of outlineWorld(o, 0.5)) {
@@ -171,7 +192,20 @@ function trafficRoute(stage: Stage, found: CheckResult) {
         for (const m of stage.moored) near(distanceToBoat(m, p.x, p.y), m.name);
       }
     advanceVessel(v, away, boat, STEP);
+    for (const [id, gate] of Object.entries(stage.gates))
+      if (
+        gateCrossing(
+          gate,
+          before as unknown as State,
+          v as unknown as State,
+        ) === "port"
+      )
+        wrongSide.add(id);
   }
+  for (const id of wrongSide)
+    found.warnings.push(
+      `Traffic ${cfg.id}: leaves through gate ${id} on the port side of the channel (keep to starboard going out)`,
+    );
   const where = `${what}, on leg ${leg + 1} of ${cfg.legs.length} at ${at.toFixed(0)} s`;
   if (v.status !== "gone")
     found.errors.push(
@@ -260,7 +294,19 @@ export function checkStage(stage: Stage): CheckResult {
       const along =
         (lazy.anchor.x - alongside.x) * ahead.x +
         (lazy.anchor.y - alongside.y) * ahead.y;
-      if (along < boat.length / 2 + 2)
+      const inside = [
+        ...stage.obstacles
+          .filter((o) => distanceToBox(o, lazy.anchor.x, lazy.anchor.y) === 0)
+          .map((o) => o.name ?? o.id ?? o.kind),
+        ...stage.moored
+          .filter((m) => distanceToBoat(m, lazy.anchor.x, lazy.anchor.y) < 0)
+          .map((m) => m.name),
+      ];
+      if (inside.length)
+        found.errors.push(
+          `${what}: the lazyLine lies inside ${inside[0]}; put it in open water`,
+        );
+      else if (along < boat.length / 2 + 2)
         found.errors.push(
           `${what}: the lazyLine must lie ahead of the moored boat's bow, off the berth`,
         );
@@ -302,6 +348,34 @@ export function checkStage(stage: Stage): CheckResult {
       found.warnings.push(
         `Zone ${id}: the boat holds here, but it overlaps a structure`,
       );
+  }
+  // A wait for a vessel that is not in its zone when the wait starts ends at
+  // once. Traffic waits at its start until released, so check the start.
+  const steps = stage.file.mission.steps;
+  if (trafficConfig.monohull)
+    for (const st of steps) {
+      if (st.kind !== "waitForClear") continue;
+      const start = vesselObstacle(initialMonohull());
+      if (start && !vesselInZone(start, stage.zones[st.zone].shape))
+        found.warnings.push(
+          `Step ${st.id}: ${st.vessel} starts outside zone ${st.zone}, so the wait ends as soon as the step starts`,
+        );
+    }
+  // A keep-out zone overlapping a zone the player must hold in, while the
+  // rule applies, costs a penalty for doing what the stage asks.
+  for (const rule of stage.file.mission.rules) {
+    if (rule.kind !== "keepOut") continue;
+    const until = steps.findIndex((st) => st.id === rule.until);
+    steps.forEach((st, i) => {
+      if (
+        st.kind === "holdInZone" &&
+        i <= until &&
+        overlap(stage.zones[rule.zone].shape, stage.zones[st.zone].shape)
+      )
+        found.warnings.push(
+          `keepOut ${rule.zone}: overlaps zone ${st.zone}, where step ${st.id} holds before the rule ends at ${rule.until}`,
+        );
+    });
   }
   // Reachability from the start.
   const canReach = reachable(stage);

@@ -19,7 +19,7 @@ for (const stage of stages) {
   );
   for (const s of result.steps)
     console.log(
-      `  ${s.ok ? "✔" : "✖"} ${s.step} (${s.kind}) ${s.seconds.toFixed(1)} s${s.note ? ` — ${s.note}` : ""}`,
+      `  ${s.ok ? "✔" : "✖"} ${s.step} (${s.kind}) ${s.seconds.toFixed(1)} s${s.note ? ` — ${s.note}` : ""}${s.penalties.map((p) => `\n      penalty: ${p}`).join("")}`,
     );
   if (!result.ok) failed++;
 }
