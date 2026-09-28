@@ -1,8 +1,8 @@
 #demo-panel {
   position: absolute;
   top: 126px;
-  left: 335px;
-  right: 470px;
+  left: 444px;
+  right: 360px;
   max-width: 520px;
   padding: 16px;
   z-index: 6;
@@ -58,8 +58,8 @@
 }
 @media (max-width: 1200px) {
   #demo-panel {
-    left: 285px;
-    right: 425px;
+    left: 444px;
+    right: 310px;
     padding: 12px;
   }
   #demo-panel h2 {
@@ -71,7 +71,7 @@
 }
 @media (max-width: 1000px) {
   #demo-panel {
-    left: 275px;
+    left: 444px;
     right: 15px;
     top: auto;
     bottom: 245px;

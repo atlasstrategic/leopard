@@ -24,7 +24,7 @@ try {
   await page.bringToFront();
   await page.waitForSelector("#retry");
   await page.click("#retry");
-  await page.click("#crew-tab");
+  await page.click("#rail-crew");
   await page.evaluate(() => {
     // Capture exactly the Blob handed to the browser download, not game internals.
     const create = URL.createObjectURL.bind(URL);

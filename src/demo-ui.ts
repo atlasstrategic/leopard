@@ -65,11 +65,12 @@ export class DemoUI {
         this.root
           .querySelectorAll(selector)
           .forEach((e) => e.classList.add("lesson-focus"));
-        this.el(
-          step.focus === "fenders" || step.focus === "lines"
-            ? "crew-tab"
-            : "objective-tab",
-        ).click();
+        // Fender and line lessons open Crew & lines; the others close the
+        // drawer so the objective shows.
+        const crew = step.focus === "fenders" || step.focus === "lines",
+          rail = this.el("rail-crew");
+        if ((rail.getAttribute("aria-expanded") === "true") !== crew)
+          this.el(crew ? "rail-crew" : "drawer-close").click();
       }
     }
   }

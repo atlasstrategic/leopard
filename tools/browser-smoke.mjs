@@ -85,7 +85,7 @@ await delay(100);
 const afterResume = await rudderText();
 await delay(400);
 assert.equal(await rudderText(), afterResume);
-await page.click("summary");
+await page.click("#rail-handling");
 await page.$eval("#windSpeed", (e) => {
   e.value = "6";
   e.dispatchEvent(new Event("input", { bubbles: true }));
@@ -96,7 +96,7 @@ await page.$eval("#windDirection", (e) => {
   e.value = "45";
   e.dispatchEvent(new Event("input", { bubbles: true }));
 });
-await page.click("summary");
+await page.click("#rail-handling");
 assert.match(await text("p70-readout"), /true wind 6.0 knots from 045° T/);
 assert.equal(await text("p70-page"), "Heading");
 assert.equal(await text("p70-label-0"), "TWS (kn)");
@@ -112,9 +112,9 @@ assert.ok(
     e.classList.contains("helm-instruments"),
   ),
 );
-await page.click("summary");
+await page.click("#rail-handling");
 await page.click("#defaults");
-await page.click("summary");
+await page.click("#rail-handling");
 await page.click("#retry");
 await delay(150);
 assert.match(await text("portValue"), /NEUTRAL/);

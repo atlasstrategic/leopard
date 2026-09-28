@@ -21,7 +21,7 @@ try {
   await page.bringToFront();
   await page.waitForSelector("#retry");
   await page.click("#retry");
-  await page.click("#crew-tab");
+  await page.click("#rail-crew");
   for (const side of ["port", "starboard"]) {
     await page.click(`#fender-${side}`, { delay: 250 });
     assert.match(

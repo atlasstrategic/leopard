@@ -24,7 +24,7 @@ try {
   await page.bringToFront();
   await page.waitForSelector("#retry");
   await page.click("#retry");
-  await page.click("#crew-tab");
+  await page.click("#rail-crew");
   await page.click("#line-bow");
   assert.match(
     await page.$eval("#line-feedback", (e) => e.textContent),
@@ -155,7 +155,7 @@ try {
   assert.ok(archived.events.some((e) => e.type === "line.attach"));
   await page.click("#close-log");
   await page.click("#resume");
-  await page.click("#objective-tab");
+  await page.click("#drawer-close");
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify(

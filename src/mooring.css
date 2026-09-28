@@ -1,19 +1,4 @@
-.objective-tabs {
-  display: flex;
-  gap: 6px;
-  margin: 10px 0 12px;
-}
-.objective-tabs button {
-  flex: 1;
-  padding: 7px 4px;
-  font-size: 11px;
-}
-.objective-tabs button[aria-pressed="true"] {
-  color: #102d3a;
-  background: #a8ddcd;
-}
-#objective-page[hidden],
-#crew-page[hidden] {
+#objective-page[hidden] {
   display: none;
 }
 .mooring-controls {

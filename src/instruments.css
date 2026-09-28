@@ -2,7 +2,7 @@
 .instruments {
   position: absolute;
   right: 26px;
-  top: 126px;
+  top: 16px;
   width: 320px;
   display: flex;
   flex-direction: column;
@@ -183,7 +183,7 @@
   .instruments {
     width: 280px;
     right: 18px;
-    top: 120px;
+    top: 16px;
   }
   .helm-instruments {
     width: 340px;
@@ -194,6 +194,6 @@
   .helm-instruments {
     width: 240px;
     right: 10px;
-    top: 126px;
+    top: 16px;
   }
 }

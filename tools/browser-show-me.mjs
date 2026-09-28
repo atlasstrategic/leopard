@@ -33,12 +33,12 @@ try {
       return create(b);
     };
   });
-  await page.click("summary");
+  await page.click("#rail-handling");
   await page.$eval("#windSpeed", (e) => {
     e.value = "6";
     e.dispatchEvent(new Event("input"));
   });
-  await page.click("summary");
+  await page.click("#rail-handling");
   await page.keyboard.press("KeyQ");
   await page.keyboard.press("KeyX");
   await page.click("#pause");
