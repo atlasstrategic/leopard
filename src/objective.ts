@@ -97,7 +97,9 @@ const securedText = (g: Session) => {
 };
 const dwellText = (g: Session) => {
   const p = g.progress;
-  return `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / 3.0 s`;
+  const total =
+    p.phase === "approach" ? scenario.target.dwell : mooringConfig.securedDwell;
+  return `${p.phase === "approach" ? "Arrival hold" : "Securing hold"}: ${p.dwell.toFixed(1)} / ${total.toFixed(1)} s`;
 };
 const dwellBar = (g: Session) =>
   g.progress.dwell /

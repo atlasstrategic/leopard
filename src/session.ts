@@ -373,7 +373,7 @@ export class Session {
         reason =
           this.step?.linesRefused ?? "Follow the current objective first";
       else if (this.progress.phase === "approach")
-        reason = "First hold the marked berth for 3 seconds";
+        reason = `First hold the marked berth for ${scenario.target.dwell} ${scenario.target.dwell === 1 ? "second" : "seconds"}`;
       else if (!this.securingRequirements().fenders)
         reason = sternTo()
           ? "Deploy fenders on both sides and wait for crew completion"

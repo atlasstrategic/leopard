@@ -2,7 +2,7 @@
   "$schema": "../stage.schema.json",
   "schemaVersion": 1,
   "id": "fuel-dock",
-  "version": "7.2.0",
+  "version": "7.3.0",
   "name": "Fuel dock · North quay",
   "description": "Wait for a monohull to leave the fuel berth, come alongside the east quay, refuel and leave through the harbour entrance.",
   "author": "Leopard / Handling Lab",
@@ -36,7 +36,7 @@
           "x": 0, "y": 16, "width": 10, "length": 17,
           "heading": 0, "headingTolerance": 8,
           "maxSpeed": 0.18, "maxYawRate": 0.025,
-          "positionTolerance": 1.2, "dwell": 3
+          "positionTolerance": 1.2, "dwell": 1
         },
         "alongside": {
           "x": 2, "y": 16, "width": 10, "length": 20,
@@ -153,7 +153,7 @@
         "label": "APPROACH",
         "checkpoint": "Approach",
         "title": "Approach North quay.",
-        "hint": "Enter the mint berth, bow north. Hold for 3 seconds, then attach lines from Crew & lines.",
+        "hint": "Enter the mint berth, bow north. Hold still for a second, then attach lines from Crew & lines.",
         "radio": {
           "done": "Arrival confirmed. Deploy starboard fenders and make fast bow and stern lines."
         }
