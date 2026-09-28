@@ -36,6 +36,7 @@ if (!hasWebGL2()) {
       Object.assign(window, { __leopard: { lab, view } });
     let ui!: UI;
     let practiceCamera: CameraMode = view.mode;
+    let retryAsked = -Infinity;
     const modes: CameraMode[] = ["chase", "overhead", "helm"];
     const actions = {
       camera: () => {
@@ -44,6 +45,22 @@ if (!hasWebGL2()) {
       radio: () => {
         toggleRadio(lab.active);
         ui.update();
+      },
+      // R is next to E and D, so during a run it asks for a second press;
+      // after the mission ends (or fails) one press retries.
+      retryKey: () => {
+        const g = lab.active,
+          over =
+            g.progress.phase === "complete" || g.progress.phase === "failed",
+          now = performance.now();
+        if (over || lab.mode === "demo" || now - retryAsked < 2500) {
+          retryAsked = -Infinity;
+          ui.toast("");
+          actions.retry();
+        } else {
+          retryAsked = now;
+          ui.toast("Press R again to retry");
+        }
       },
       instrument: () => {
         nextPage();

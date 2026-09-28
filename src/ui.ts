@@ -69,12 +69,12 @@ const keysMarkup = `<section id="keys" class="panel keys-card" role="dialog" ari
 <dt>${key("W", "S")} ${key("↑", "↓")}</dt><dd>Both levers up / down</dd>
 <dt>${key("←", "→")}</dt><dd>Hold to turn the wheel (it stays put)</dd>
 <dt>${key("X")}</dt><dd>Centre the rudder</dd>
-<dt>${key("Space")}</dt><dd>Both engines neutral</dd>
+<dt>${key("Space")}</dt><dd>Both engines neutral (even while paused)</dd>
 <dt>${key("C")}</dt><dd>Camera: chase, overhead, helm</dd>
 <dt>${key("I")}</dt><dd>Next instrument page</dd>
 <dt>${key("O")} ${key("V")}</dt><dd>Show or hide the objective · fold the radio</dd>
-<dt>${key("P")} ${key("R")}</dt><dd>Pause · retry</dd>
-<dt>${key("?")}</dt><dd>This card</dd></dl><p>Levers persist: set them and let go. Neutral is not a brake; use short bursts astern to stop.</p><button type="button" id="keys-ok">Got it</button></section>`;
+<dt>${key("P")} ${key("R")}</dt><dd>Pause · retry (R twice while sailing)</dd>
+<dt>${key("?")}</dt><dd>This card</dd></dl><div class="eyebrow numpad-title">NUMPAD · PORT · BOTH · STARBOARD</div><div class="numpad" role="table" aria-label="Numpad levers"><div role="row"><span role="cell">${key("7")} ahead</span><span role="cell">${key("8")} ahead</span><span role="cell">${key("9")} ahead</span></div><div role="row"><span role="cell">${key("4")} neutral</span><span role="cell">${key("5")} neutral</span><span role="cell">${key("6")} neutral</span></div><div role="row"><span role="cell">${key("1")} astern</span><span role="cell">${key("2")} astern</span><span role="cell">${key("3")} astern</span></div></div><p>Levers persist: set them and let go. Neutral is not a brake; use short bursts astern to stop.</p><button type="button" id="keys-ok">Got it</button></section>`;
 const icon = (paths: string) =>
   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 const railButton = (id: string, label: string, paths: string, attrs = "") =>
@@ -231,7 +231,7 @@ export class UI {
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
 </footer>
-      ${keysMarkup}
+      ${keysMarkup}<div id="toast" class="panel toast" role="status" aria-live="polite" hidden></div>
       <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}${debriefMarkup()}`;
     for (const id of drawers)
       this.el(`rail-${id}`).onclick = () =>
@@ -343,6 +343,16 @@ export class UI {
       this.syncTuning();
     };
     this.syncTuning();
+  }
+  // A short message in the middle of the view; an empty one clears it.
+  private toastTimer = 0;
+  toast(message: string) {
+    const el = this.el("toast");
+    clearTimeout(this.toastTimer);
+    el.textContent = message;
+    el.hidden = !message;
+    if (message)
+      this.toastTimer = window.setTimeout(() => (el.hidden = true), 2500);
   }
   // One drawer beside the rail shows one panel at a time; null closes it.
   openDrawer(id: Drawer | null) {

@@ -42,16 +42,18 @@ Each new obstacle-contact episode above 0.08 m/s closing speed incurs **+5 secon
 | W / S, ↑ / ↓ | Both levers up / down in 20% steps        |
 | Hold ← / → | Turn persistent rudder to port / starboard  |
 | X          | Centre rudder                               |
-| Space      | Both engines neutral (not an instant brake) |
+| Space      | Both engines neutral (not an instant brake); works even while paused |
+| Numpad 7 / 1, 8 / 2, 9 / 3 | Port, both, starboard levers up / down in 20% steps |
+| Numpad 4, 5, 6 | Port, both, starboard neutral (always works, even paused or with a button focused) |
 | C          | Chase → overhead → basic helm               |
 | V          | Open / fold the harbour radio               |
 | I          | Next instrument page (Heading, Wind)        |
 | O          | Show / hide the objective card              |
 | ?          | Show / hide the keys card                   |
 | P          | Pause / resume                              |
-| R          | Retry                                       |
+| R          | Retry: press twice while sailing (once after the mission ends) |
 
-Levers go from reverse through neutral to forward. On-screen sliders and −REV/N/FWD+ buttons work independently; ± buttons change one step rather than commanding full power. The HUD distinguishes commanded lever setting from delayed delivered thrust. Mouse wheel/rudder slider is also available. Input widgets retain ordinary keyboard accessibility; click the scene to return keyboard focus from a slider. The **keys card** lists these; it shows the first time the game starts in a browser, then on **?** or **Keys** on the rail. Remapping is deferred.
+Levers go from reverse through neutral to forward. On-screen sliders and −REV/N/FWD+ buttons work independently; ± buttons change one step rather than commanding full power. The HUD distinguishes commanded lever setting from delayed delivered thrust. Mouse wheel/rudder slider is also available. Input widgets retain ordinary keyboard accessibility; click the scene to return keyboard focus from a slider. The numpad works whatever has focus (except a text field), and works with Num Lock off. A button or slider clicked with the mouse hands the keyboard back to the game, so Space and the letters keep working after using the panels. The **keys card** lists these; it shows the first time the game starts in a browser, then on **?** or **Keys** on the rail. Remapping is deferred.
 
 Blur/tab hiding **pauses and clears held keys**, without silently moving persistent levers or the rudder. Explicit resume is required. Retry clears position, velocity, rotation, actual/commanded engines, wheel, interpolation, timer, dwell, success, contact history and penalties; it deliberately **keeps chosen weather/tuning and camera** for repeatable practice. Restore tuning defaults is separate. To skip parts you have already done, use a [restart checkpoint](#restart-checkpoints).
 
