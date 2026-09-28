@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Twin hulls: a catamaran from above, bows up, in flat Bauhaus shapes -
+       two black hulls and a red bridgedeck on cream (and an H for Handling). -->
+  <defs><clipPath id="c"><rect width="64" height="64" rx="10"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="64" height="64" fill="#efe8d8"/>
+    <polygon points="14,54 14,22 20,10 26,22 26,54" fill="#16181a"/>
+    <polygon points="38,54 38,22 44,10 50,22 50,54" fill="#16181a"/>
+    <rect x="8" y="30" width="48" height="12" fill="#d0352b"/>
+  </g>
+</svg>
