@@ -42,7 +42,16 @@ let drawer: Drawer | null = null;
 // The objective card can be hidden from the rail (O); a dot on the rail
 // button then marks a new step. The keys card shows the first time the game
 // starts in this browser, then on ? or the rail's Keys button.
-const shown = { objective: true, seenStep: "", keys: firstVisit() };
+const shown = {
+  objective: true,
+  seenStep: "",
+  keys: firstVisit(),
+  // Focus mode (H): only one-line strips over the view.
+  focus: false,
+};
+export function toggleFocus() {
+  shown.focus = !shown.focus;
+}
 function firstVisit() {
   try {
     return localStorage.getItem("leopard.keysSeen") !== "1";
@@ -74,6 +83,7 @@ const keysMarkup = `<section id="keys" class="panel keys-card" role="dialog" ari
 <dt>${key("I")}</dt><dd>Next instrument page</dd>
 <dt>${key("O")} ${key("V")}</dt><dd>Show or hide the objective · fold the radio</dd>
 <dt>${key("P")} ${key("R")}</dt><dd>Pause · retry (R twice while sailing)</dd>
+<dt>${key("H")}</dt><dd>Focus mode: minimal overlay</dd>
 <dt>${key("?")}</dt><dd>This card</dd></dl><div class="eyebrow numpad-title">NUMPAD · PORT · BOTH · STARBOARD</div><div class="numpad" role="table" aria-label="Numpad levers"><div role="row"><span role="cell">${key("7")} ahead</span><span role="cell">${key("8")} ahead</span><span role="cell">${key("9")} ahead</span></div><div role="row"><span role="cell">${key("4")} neutral</span><span role="cell">${key("5")} neutral</span><span role="cell">${key("6")} neutral</span></div><div role="row"><span role="cell">${key("1")} astern</span><span role="cell">${key("2")} astern</span><span role="cell">${key("3")} astern</span></div></div><p>Levers persist: set them and let go. Neutral is not a brake; use short bursts astern to stop.</p><button type="button" id="keys-ok">Got it</button></section>`;
 const icon = (paths: string) =>
   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
@@ -109,6 +119,12 @@ const railMarkup = [
     "Log",
     '<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
     'title="Voyage log & export"',
+  ),
+  railButton(
+    "rail-focus",
+    "Focus",
+    '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+    'title="Focus mode: a minimal overlay (H)"',
   ),
   railButton(
     "rail-keys",
@@ -231,6 +247,7 @@ export class UI {
       <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
 </footer>
+      <div id="focus-hud" hidden><div class="panel focus-strip" id="focus-objective"></div><div class="panel focus-strip" id="focus-instruments"></div><div class="panel focus-strip" id="focus-helm"></div><button type="button" id="focus-exit" class="focus-exit">Exit focus · H</button></div>
       ${keysMarkup}<div id="toast" class="panel toast" role="status" aria-live="polite" hidden></div>
       <div id="paused" hidden><div class="panel"><div class="eyebrow">SIMULATION PAUSED</div><h2>Take your time.</h2><p>Held inputs cleared. Lever and wheel settings preserved.</p><button id="resume">Resume · P</button><button id="paused-show-me">Show me (calm example)</button></div></div>${logMarkup}${demoMarkup}${debriefMarkup()}`;
     for (const id of drawers)
@@ -242,6 +259,11 @@ export class UI {
       toggleObjective();
       this.update();
     };
+    for (const id of ["rail-focus", "focus-exit"])
+      this.el(id).onclick = () => {
+        toggleFocus();
+        this.update();
+      };
     this.el("rail-keys").onclick = () => {
       toggleKeys();
       this.update();
@@ -463,6 +485,8 @@ export class UI {
       .forEach((el) => {
         el.disabled = this.actions.readOnly();
       });
+    this.root.classList.toggle("focus-mode", shown.focus);
+    this.el("focus-hud").hidden = !shown.focus;
     const step = hintKey(g);
     if (shown.objective) shown.seenStep = step;
     this.el("objective").hidden = !shown.objective;
@@ -502,6 +526,22 @@ export class UI {
       toggle.setAttribute("aria-expanded", String(open));
     }
     this.el("time").textContent = `TIME ${p.elapsed.toFixed(1)} s`;
+    if (shown.focus) {
+      const lever = (k: "port" | "starboard") => {
+        const v = g.controls[k];
+        return p.service.enginesOff
+          ? "OFF"
+          : Math.abs(v) < 0.01
+            ? "N"
+            : `${v > 0 ? "AHEAD" : "ASTERN"} ${Math.round(Math.abs(v) * 100)}%`;
+      };
+      const rudder = degrees(g.controls.rudder);
+      this.el("focus-objective").textContent =
+        `${o.eyebrow} · ${o.title} · ${Math.round(Math.max(0, Math.min(1, o.bar)) * 100)}% · ${p.elapsed.toFixed(1)} s · +${p.penalty} s`;
+      this.el("focus-instruments").textContent = this.instruments.summary;
+      this.el("focus-helm").textContent =
+        `P ${lever("port")} · RUDDER ${Math.abs(rudder).toFixed(0)}°${rudder < -0.5 ? " P" : rudder > 0.5 ? " S" : ""} · S ${lever("starboard")}`;
+    }
     this.el("penalties").textContent =
       `CONTACTS ${p.collisions} / +${p.penalty} s`;
     for (const k of ["port", "starboard"] as const) {

@@ -763,3 +763,70 @@ kbd {
   background: #173d4c88;
   color: #d6e6e6;
 }
+/* Focus mode (H): the panels give way to one-line strips. */
+.focus-mode .rail,
+.focus-mode .drawer,
+.focus-mode .objective,
+.focus-mode .instruments,
+.focus-mode footer,
+.focus-mode header {
+  display: none !important;
+}
+#focus-hud[hidden] {
+  display: none;
+}
+.focus-strip {
+  position: absolute;
+  padding: 7px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  max-width: calc(50vw - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #102d3acc;
+}
+#focus-objective {
+  left: 16px;
+  top: 16px;
+}
+#focus-instruments {
+  right: 16px;
+  top: 16px;
+}
+#focus-helm {
+  right: 16px;
+  bottom: 16px;
+}
+.focus-exit {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  pointer-events: auto;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: #102d3acc;
+}
+.focus-mode .radio,
+.focus-mode.drawer-open .radio {
+  top: 58px;
+  left: 16px;
+  right: auto;
+  width: min(520px, calc(100vw - 32px));
+}
+@media (max-width: 760px) {
+  .focus-strip {
+    max-width: calc(100vw - 32px);
+  }
+  #focus-instruments {
+    top: 100px;
+    right: auto;
+    left: 16px;
+  }
+  .focus-mode .radio,
+  .focus-mode.drawer-open .radio {
+    top: 142px;
+    bottom: auto;
+  }
+}

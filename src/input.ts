@@ -26,6 +26,7 @@ export class Input {
       instrument: () => void;
       objective: () => void;
       keys: () => void;
+      focus: () => void;
       retryKey: () => void;
       pause: () => void;
     },
@@ -75,6 +76,7 @@ export class Input {
         "KeyI",
         "KeyO",
         "Slash",
+        "KeyH",
         "KeyR",
         "KeyP",
       ];
@@ -108,6 +110,10 @@ export class Input {
       // ? (Shift + / on most layouts) opens or closes the keys card.
       if (e.code === "Slash") {
         actions.keys();
+        return;
+      }
+      if (e.code === "KeyH") {
+        actions.focus();
         return;
       }
       if (this.readOnly()) return;

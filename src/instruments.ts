@@ -168,6 +168,8 @@ const side = (relative: number) =>
       : " S";
 export class Instruments {
   private elements = new Map<string, Element>();
+  // A one-line reading for focus mode, refreshed by update().
+  summary = "";
   constructor(private root: HTMLElement) {
     // A mouse click hands focus back, so Space still means both neutral.
     this.el("p70").addEventListener("click", (e) => {
@@ -298,6 +300,7 @@ export class Instruments {
         rotate(degrees(water.relative ?? 0)),
       );
     }
+    this.summary = `HDG ${bearingText(data.heading).replace(" T", "")} · SOG ${data.speed.toFixed(2)} kn · TWS ${water.speed.toFixed(1)} kn${water.from === null ? "" : ` from ${bearingText(water.from).replace(" T", "")}`} · BRG ${label} ${data.bearing === null ? "—" : bearingText(data.bearing).replace(" T", "")} ${data.distance.toFixed(1)} m`;
     // A plain-text reading for screen readers.
     this.text(
       "p70-readout",

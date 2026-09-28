@@ -4,7 +4,13 @@ import { chooseStage } from "./stage/select";
 import { View, hasWebGL2, type CameraMode } from "./rendering";
 import { PracticeLab, showMeAvailable } from "./demonstration";
 import { Input } from "./input";
-import { toggleKeys, toggleObjective, toggleRadio, UI } from "./ui";
+import {
+  toggleFocus,
+  toggleKeys,
+  toggleObjective,
+  toggleRadio,
+  UI,
+} from "./ui";
 import { nextPage } from "./instruments";
 import type { CheckpointId } from "./session";
 const canvas = document.querySelector<HTMLCanvasElement>("#scene")!;
@@ -72,6 +78,10 @@ if (!hasWebGL2()) {
       },
       keys: () => {
         toggleKeys();
+        ui.update();
+      },
+      focus: () => {
+        toggleFocus();
         ui.update();
       },
       retry: () => {
