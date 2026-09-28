@@ -3,8 +3,9 @@ import { missionSteps, phaseFor } from "./mission";
 import type { State } from "./simulation";
 import { hullPoints, type ContactSample } from "./contacts";
 export type PositionTarget = "approach" | "alongside";
-// Gentle contact on a fender with the berth's quay, or with a moored boat
-// (neighbours lie against your fenders stern-to), does not stop securing.
+// Gentle contact on a fender with the berth's quay (or a quay beside it), or
+// with a moored boat (neighbours lie against your fenders stern-to), does not
+// stop securing.
 export function contactAcceptable(s: State, samples: ContactSample[]) {
   if (!s.contact) return true;
   return (
@@ -12,6 +13,7 @@ export function contactAcceptable(s: State, samples: ContactSample[]) {
     samples.every(
       (c) =>
         (c.obstacleId === scenario.alongside.obstacleId ||
+          scenario.alongside.besides.includes(c.obstacleId) ||
           stage.moored.some((m) => m.id === c.obstacleId)) &&
         c.covered &&
         !c.hullContact &&

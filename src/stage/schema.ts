@@ -65,6 +65,12 @@ const berth = z
       .optional()
       .describe("Alongside berths: the side against the quay (starboard only)"),
     structure: id.describe("Quay the boat lies against"),
+    besides: z
+      .array(id)
+      .optional()
+      .describe(
+        "Other quays the boat may lie against on its fenders while securing, e.g. the quay beside a slot in a corner",
+      ),
     lines: z
       .object({
         bow: z.string().optional(),

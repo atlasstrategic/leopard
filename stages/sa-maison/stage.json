@@ -1,0 +1,147 @@
+{
+  "$schema": "../stage.schema.json",
+  "schemaVersion": 1,
+  "id": "sa-maison",
+  "version": "1.0.0",
+  "name": "Sa Maison corner · Stern-to",
+  "description": "Come down the fairway between two pontoons and back into the last slot on the west pontoon, bow east, with the Sa Maison quay a fender's width off your starboard side and its sharp corner at the end of the fairway, in a north-westerly majjistral.",
+  "author": "Leopard",
+  "area": "Pietà Creek, Malta (after the berth by the Sa Maison ferry terminal)",
+  "buoyage": "IALA-A",
+  "scene": {
+    "start": { "x": 32, "y": 52, "heading": 180 },
+    "structures": [
+      { "id": "west-pontoon", "name": "West pontoon", "kind": "quay", "x": -2, "y": 28.85, "width": 4, "length": 66.3 },
+      { "id": "sa-maison-quay", "name": "Sa Maison quay", "kind": "quay", "x": 15, "y": -12.15, "width": 38, "length": 15.7 },
+      { "id": "sa-maison-corner", "name": "Sa Maison quay corner", "kind": "quay", "x": 37, "y": -10.25, "width": 6, "length": 19.5 },
+      { "id": "ferry-steps", "name": "Ferry terminal steps", "kind": "quay", "x": 45, "y": -13, "width": 10, "length": 14 },
+      { "id": "terminal-quay", "name": "Ferry terminal quay", "kind": "quay", "x": 56, "y": -16, "width": 12, "length": 8 },
+      { "id": "east-pontoon", "name": "East pontoon", "kind": "quay", "x": 64, "y": 22, "width": 4, "length": 84 },
+      { "id": "north-limit", "name": "North training barrier", "kind": "barrier", "x": 31, "y": 63, "width": 70, "length": 2 }
+    ],
+    "bollards": [
+      { "id": "B21", "structure": "west-pontoon", "x": -0.7, "y": 3.3 },
+      { "id": "B22", "structure": "west-pontoon", "x": -0.7, "y": -3.3 }
+    ],
+    "berths": [
+      {
+        "id": "corner-slot",
+        "name": "Corner slot",
+        "label": "B22",
+        "style": "sternTo",
+        "structure": "west-pontoon",
+        "besides": ["sa-maison-quay"],
+        "lines": { "portQuarter": "B21", "starboardQuarter": "B22" },
+        "lazyLine": { "x": 24, "y": 0 },
+        "approach": {
+          "x": 8, "y": 0, "width": 14, "length": 8.5,
+          "heading": 90, "headingTolerance": 8,
+          "maxSpeed": 0.18, "maxYawRate": 0.025,
+          "positionTolerance": 1.5, "dwell": 3
+        },
+        "alongside": {
+          "x": 9, "y": 0, "width": 16, "length": 8.5,
+          "heading": 90, "headingTolerance": 10,
+          "maxSpeed": 0.18, "maxYawRate": 0.025,
+          "gentleSpeed": 0.08, "boundaryAllowance": 0.02
+        }
+      }
+    ],
+    "zones": [
+      {
+        "id": "fairway",
+        "name": "Fairway",
+        "label": "PREPARE",
+        "shape": { "kind": "circle", "x": 32, "y": 30, "radius": 6 }
+      }
+    ],
+    "gates": [],
+    "labels": [
+      { "text": "SA MAISON QUAY", "x": 12, "y": -12, "height": 3, "width": 14 },
+      { "text": "SHARP CORNER", "x": 37, "y": -4, "height": 2.6, "width": 9 },
+      { "text": "WEST PONTOON", "x": -2, "y": 44, "height": 3, "width": 12 },
+      { "text": "EAST PONTOON", "x": 64, "y": 44, "height": 3, "width": 12 },
+      { "text": "PIETÀ CREEK · MALTA", "x": 32, "y": 58, "height": 2, "width": 18 }
+    ],
+    "moored": [
+      { "id": "north-neighbour", "name": "North neighbour (monohull)", "kind": "monohull", "x": 8.5, "y": 6.52, "heading": 90, "length": 15, "beam": 4.5 },
+      { "id": "west-2", "name": "Moored catamaran", "kind": "catamaran", "x": 7.335, "y": 13.09, "heading": 90, "length": 12.67, "beam": 7.04 },
+      { "id": "west-3", "name": "Moored monohull", "kind": "monohull", "x": 6.75, "y": 19.405, "heading": 90, "length": 11.5, "beam": 3.99 },
+      { "id": "west-4", "name": "Moored monohull", "kind": "monohull", "x": 8, "y": 24.35, "heading": 90, "length": 14, "beam": 4.3 },
+      { "id": "west-5", "name": "Moored catamaran", "kind": "catamaran", "x": 7.335, "y": 30.82, "heading": 90, "length": 12.67, "beam": 7.04 },
+      { "id": "east-1", "name": "Moored monohull", "kind": "monohull", "x": 55.25, "y": 2, "heading": 270, "length": 11.5, "beam": 3.99 },
+      { "id": "east-2", "name": "Moored catamaran", "kind": "catamaran", "x": 54.665, "y": 8.32, "heading": 270, "length": 12.67, "beam": 7.04 },
+      { "id": "east-3", "name": "Moored monohull", "kind": "monohull", "x": 55.25, "y": 14.63, "heading": 270, "length": 11.5, "beam": 3.99 },
+      { "id": "east-4", "name": "Moored catamaran", "kind": "catamaran", "x": 54.665, "y": 20.95, "heading": 270, "length": 12.67, "beam": 7.04 },
+      { "id": "east-5", "name": "Moored monohull", "kind": "monohull", "x": 55.25, "y": 27.26, "heading": 270, "length": 11.5, "beam": 3.99 },
+      { "id": "east-6", "name": "Moored catamaran", "kind": "catamaran", "x": 54.665, "y": 33.58, "heading": 270, "length": 12.67, "beam": 7.04 }
+    ]
+  },
+  "conditions": {
+    "wind": { "speed": 2.5, "from": 315 },
+    "current": { "x": 0, "y": 0 }
+  },
+  "traffic": [],
+  "mission": {
+    "berth": "corner-slot",
+    "steps": [
+      {
+        "id": "prepare",
+        "kind": "holdInZone",
+        "label": "PREPARE",
+        "title": "Prepare in the fairway.",
+        "hint": "Keep your boat's centre in the blue circle for 10 seconds and put the fenders out on both sides (Crew & lines): your berth is the last slot on the west pontoon, with a moored yacht to port and the Sa Maison quay close on your starboard side. Look south: the quay's sharp corner sticks out at the end of the fairway.",
+        "zone": "fairway",
+        "seconds": 10,
+        "resetOnExit": true,
+        "releases": [],
+        "show": ["fairway"],
+        "bearing": { "label": "PREP", "zone": "fairway" },
+        "linesRefused": "Not yet: prepare in the fairway first",
+        "radio": {
+          "start": "Leopard, marina office. This is a game, not certified training. Your berth is the last slot on the west pontoon, in the corner by the Sa Maison quay: stern-to, lazy line provided. Prepare in the fairway first, fenders out on both sides.",
+          "enter": "In the fairway. Fenders out port and starboard. The majjistral is north-westerly: it sets you south-east, onto the quay and towards the corner.",
+          "reset": "You drifted out of the blue circle. Come back in; the count restarts.",
+          "done": "The corner slot is yours. Turn short of the corner, stern to the west pontoon, and back in slowly, bow east."
+        }
+      },
+      {
+        "id": "approach",
+        "kind": "arriveAtBerth",
+        "label": "INTO THE SLOT",
+        "checkpoint": "Approach",
+        "title": "Back into the corner slot.",
+        "hint": "Make your turn north of the slot, well clear of the sharp corner, so that you end up bow east with your stern towards the pontoon, a little upwind (north) of the slot's centre line. Go astern gently; the wind will carry you south towards the quay, so keep the starboard side a fender's width off it. Straighten up in the mint box with the stern about a metre off the pontoon and hold still for 3 seconds.",
+        "linesRefused": "Stop in the mint box first, then pass the stern lines",
+        "radio": {
+          "start": "Dead slow astern into the corner slot, bow east. Watch the corner off your bow as you turn, and the quay on your starboard side.",
+          "done": "Stopped in the slot. Stern lines to B21 and B22, then pick up the lazy line."
+        }
+      },
+      {
+        "id": "secure",
+        "kind": "secureAlongside",
+        "label": "SECURE",
+        "title": "Stern lines, then the lazy line.",
+        "hint": "Make fast the port quarter line to B21 and the starboard quarter line to B22 from Crew & lines, in neutral. Then pick up the lazy line at the pontoon and lead it to the bow.",
+        "hintAlongside": "Amber area: pick up the lazy line once a stern line is on, then Take in until it holds the bow up to windward and the stern off the pontoon. Lying gently on your starboard fenders against the quay is fine. Keep both levers in neutral.",
+        "radio": {
+          "done": "Secured stern-to in the corner slot. Merħba, welcome to Malta."
+        }
+      }
+    ],
+    "rules": [],
+    "complete": {
+      "title": "Berthed in the corner.",
+      "hint": "Moored with +{penalty} s penalties. Open the debrief for your score and one thing to try; Retry (R) to go again.",
+      "radio": "Secured stern-to in {time} s with +{penalty} s penalties. A game, not certified training: practise this with an instructor on the water."
+    },
+    "scoring": {
+      "tips": {
+        "contacts": "You touched something {count}× (the quay, its corner, the pontoon or a neighbour). Turn north of the slot, clear of the corner, then back in slower and let the wind lay you gently on the starboard fenders.",
+        "fendersLate": "Your fenders were not out on both sides when you arrived. Put them out in the fairway: the crew needs 3 seconds.",
+        "failed": "{failure}. Side fenders only cover the sides of your hulls: have them out on both sides before you back in, and hold the roving fender at the port quarter, closest to the moored yacht."
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@ Examples: the fuel dock (`stages/fuel-dock/stage.json`) uses every part of the f
 
 ## Workflow
 
-1. **Start from an example.** Copy `stages/fuel-dock/stage.json` (everything, alongside), `stages/between-boats/stage.json` (stern-to between moored boats) or `stages/town-quay/stage.json` (stern-to with an entrance, traffic and a wait) into `stages/<your-id>/stage.json`, or type the small worked example below (it is `tests/fixtures/west-quay.stage.json`). Set `"id"` to the folder name.
+1. **Start from an example.** Copy `stages/fuel-dock/stage.json` (everything, alongside), `stages/between-boats/stage.json` (stern-to between moored boats) `stages/town-quay/stage.json` (stern-to with an entrance, traffic and a wait) or `stages/sa-maison/stage.json` (stern-to in a corner, with a second quay alongside the slot) into `stages/<your-id>/stage.json`, or type the small worked example below (it is `tests/fixtures/west-quay.stage.json`). Set `"id"` to the folder name.
 2. **Keep the schema reference.** With `"$schema": "../stage.schema.json"` at the top, editors that understand JSON Schema autocomplete fields and show descriptions and units.
 3. **Validate** until it is clean:
    ```sh
@@ -49,7 +49,7 @@ Write titles, hints and radio calls in terms of these:
 | `scene.start` | The boat's starting pose `{ x, y, heading }` |
 | `scene.structures` | Solid axis-aligned rectangles `{ id, name, kind, x, y, width, length }`: `width` is east–west, `length` north–south. `kind` is `quay` (you can moor to it), `breakwater` or `barrier` (the edge of the play area). **Enclose the play area with barriers.** |
 | `scene.bollards` | `{ id, structure, x, y }` on a quay. The id is the label shown, e.g. `B01` |
-| `scene.berths` | A berth against a quay: its `style` (`alongside`, the default, or `sternTo`), `lines` (bollard ids), for stern-to a `lazyLine` ground point, an `approach` target and an `alongside` envelope (see below) and an optional short `label` for the instruments' bearing caption (a berth number or bollard id) |
+| `scene.berths` | A berth against a quay: its `style` (`alongside`, the default, or `sternTo`), `lines` (bollard ids), for stern-to a `lazyLine` ground point, an `approach` target and an `alongside` envelope (see below), optionally `besides` (other quays it lies against, see below) and an optional short `label` for the instruments' bearing caption (a berth number or bollard id) |
 | `scene.zones` | Named `circle` or `rect` areas that steps and rules refer to, with an optional floating `label`. A zone is drawn only during steps that list it in `show`, including a `keepOut` rule's zone |
 | `scene.gates` | Harbour entrances: centre, `width` between the two lights and the `outward` direction when leaving (`north`, `east`, `south`, `west`). The lights are placed at the ends; the buoyage decides which is red: under `IALA-A` red is at the end on your starboard side going **out** (port side coming in), so `outward: "north"` puts red at the east end and `"south"` at the west end; `IALA-B` is the reverse |
 | `scene.labels` | Floating signs `{ text, x, y, height, width }` |
@@ -87,6 +87,8 @@ Write titles, hints and radio calls in terms of these:
   (7.3 m is 1 m plus half the boat's 12.67 m.) The quarter cleats are 6 m aft of the centre and 3.3 m either side, so the bollards go about 0.7 m inside the face, 3.3 m either side of `c`.
 - Fenders on **both** sides before any line goes on; gentle fender contact with a moored neighbour, like with the quay, does not stop securing. The boat has no fenders on its transom, so the stern must not touch the quay.
 - A slot about 1.2 m wider than the boat (7.04 m) leaves 0.6 m each side for fenders; the reachability check needs the slot's centre line clear by half the beam plus 0.3 m.
+
+**A slot in a corner.** When one side of the slot is another quay rather than a moored boat (a stern-to slot on a pontoon whose last berth runs up to a quay, like `stages/sa-maison/stage.json`), list that quay in the berth's `besides`: gentle fender contact with it then counts like contact with the berth's own quay. Leave the same fender gap (0.6–0.8 m) between the hull and that quay's face. Without `besides`, touching another structure stops securing.
 
 Arriving stern-to accepts gentle fender contact with a neighbour or the quay (in a crosswind the boat settles on the downwind neighbour's fenders before the lines go on); arriving alongside still needs the boat clear. Make the envelopes as wide (north–south for an east or west quay) as the gap between the neighbours' hulls, so a boat lying on its fenders still fits, and let the berth envelope reach 2–3 m further from the quay than the arrival target: taking in the lazy line pulls the stern off the quay. `stages/between-boats/stage.json` is a worked stern-to stage.
 
@@ -137,7 +139,7 @@ Texts may use `{placeholders}`: `{penalty}` in penalty calls, `{time}` and `{pen
 
 - A **contact** is one episode of touching one obstacle (a structure, a moored boat or the traffic vessel): it starts at the first touch and ends after 0.5 s apart. An episode whose peak speed exceeds 0.08 m/s costs **+5 s** once and counts as one **penalised contact**; slower touches are logged but not penalised. Fenders do not make a contact free: covered contact above that speed is still penalised.
 - Touching a **moored boat** (or the vessel of a `protectedContact` rule) where no fender covers the hull **fails the mission**. Fenders cover only the outer sides of the hulls, 0.8 m either side of three posts at the centre and 3 m fore and aft; there are no fixed bow or stern fenders. The crew's optional **roving fender** covers 0.8 m round whichever bow or quarter the player sends it to (2 s to move), from any direction; without it, a bow or transom touching another boat fails. A stage cannot require it; mention it in hints where a corner is at risk.
-- Gentle (below the envelope's `gentleSpeed`) fender contact with the berth's quay or a moored boat does not stop securing. Arriving stern-to accepts it too; arriving alongside needs the boat clear.
+- Gentle (below the envelope's `gentleSpeed`) fender contact with the berth's quay, a quay in its `besides` or a moored boat does not stop securing. Arriving stern-to accepts it too; arriving alongside needs the boat clear.
 
 ### Scoring
 
@@ -242,7 +244,7 @@ Stage "west-quay" is invalid:
 `stage:validate` (and loading a file in the game) checks:
 
 - **Schema:** fields, types, units and allowed values, with the path of each problem.
-- **References:** bollards on quays, berths' bollards on their quay, zones, gates and vessels named by steps and rules, `secureAlongside` directly after `arriveAtBerth`, a `requiresSecured` checklist after securing, one correct option per choice, rectangle zones for `waitForClear`, unique ids.
+- **References:** bollards on quays, berths' bollards on their quay, a berth's `besides` naming other quays, zones, gates and vessels named by steps and rules, `secureAlongside` directly after `arriveAtBerth`, a `requiresSecured` checklist after securing, one correct option per choice, rectangle zones for `waitForClear`, unique ids.
 - **Geometry** (`stage:validate` only):
   - moored boats clear of structures and of each other;
   - the start pose clear of structures and moored boats;

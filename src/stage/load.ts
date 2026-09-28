@@ -122,6 +122,11 @@ function problems(s: StageFile) {
           `Berth ${berth.id}: ${end} bollard ${bollard.id} is not on ${berth.structure}`,
         );
     }
+    for (const other of berth.besides ?? [])
+      if (!quays.has(other) || other === berth.structure)
+        found.push(
+          `Berth ${berth.id}: besides "${other}" is not another quay`,
+        );
     if (sternTo && !berth.lazyLine)
       found.push(`Berth ${berth.id}: a stern-to berth needs a lazyLine`);
     if (!sternTo && berth.lazyLine)
@@ -370,6 +375,7 @@ function toStage(s: StageFile) {
         maxSpeed: berth.alongside.maxSpeed,
         maxYaw: berth.alongside.maxYawRate,
         obstacleId: berth.structure,
+        besides: berth.besides ?? [],
         gentleSpeed: berth.alongside.gentleSpeed,
         boundaryAllowance: berth.alongside.boundaryAllowance,
       },

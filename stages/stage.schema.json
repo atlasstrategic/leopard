@@ -192,6 +192,15 @@
                 "pattern": "^[a-z0-9][a-z0-9-]*$",
                 "description": "Quay the boat lies against"
               },
+              "besides": {
+                "description": "Other quays the boat may lie against on its fenders while securing, e.g. the quay beside a slot in a corner",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9-]*$",
+                  "description": "Lower-case id, unique within its list; letters, digits, hyphens"
+                }
+              },
               "lines": {
                 "type": "object",
                 "properties": {
