@@ -171,14 +171,6 @@
   color: #102d3a;
   background: #a8ddcd;
 }
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
 @media (max-width: 1200px), (max-height: 800px) {
   .instruments {
     width: 280px;

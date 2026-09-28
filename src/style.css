@@ -29,7 +29,7 @@ body {
 }
 header {
   position: absolute;
-  top: 25px;
+  top: 18px;
   left: 96px;
   text-shadow: 0 2px 12px #12394780;
 }
@@ -64,11 +64,33 @@ p {
   padding: 18px;
   pointer-events: auto;
 }
+/* The objective card: step, time and contacts on one line, then the
+   title, checks and progress; the long hint folds away (see ui.ts). */
 .objective {
   position: absolute;
   left: 96px;
-  top: 126px;
-  width: 285px;
+  top: 42px;
+  width: 330px;
+  padding: 12px 16px !important;
+}
+.objective-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.objective h2 {
+  font-size: 16px;
+  margin: 6px 0;
+}
+.objective #mission-hint[hidden],
+.hint-toggle[hidden] {
+  display: none;
+}
+.hint-toggle {
+  font-size: 10px;
+  padding: 3px 8px;
+  margin-bottom: 4px;
 }
 .check {
   font-size: 11px;
@@ -100,13 +122,11 @@ p {
 }
 .stats {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   font-size: 9px;
-  letter-spacing: 0.8px;
-  border-top: 1px solid #72929b40;
-  padding-top: 12px;
-  margin-top: 14px;
+  letter-spacing: 0.6px;
   color: #b7cfd0;
+  white-space: nowrap;
 }
 .debrief-launch {
   margin-top: 8px;
@@ -208,12 +228,14 @@ p {
   font-size: 11px;
   margin: 8px 0 0;
 }
+/* Between the objective card and the instrument display (or the drawer,
+   while one is open). */
 .radio {
   position: absolute;
-  top: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(460px, calc(100vw - 840px));
+  top: 16px;
+  left: 442px;
+  right: 362px;
+  max-width: 460px;
   min-width: 240px;
   padding: 11px 15px;
   border-left: 3px solid #f1bd62;
@@ -297,18 +319,19 @@ input[type="range"] {
   margin: 12px 0 6px;
   display: block;
 }
+/* The helm sits in the bottom-right corner, clear of the boat and berth. */
 footer {
   position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 660px;
+  bottom: 16px;
+  right: 16px;
+  width: 440px;
 }
 .levers {
   display: grid;
-  grid-template-columns: 1fr 170px 1fr;
-  gap: 22px;
-  padding: 18px 22px;
+  grid-template-columns: 1fr 118px 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
 }
 .lever .eyebrow {
   display: flex;
@@ -320,10 +343,10 @@ footer {
 }
 .lever strong {
   display: block;
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.5px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 .lever small {
   color: #92b2bd;
@@ -343,7 +366,7 @@ footer {
   text-align: center;
   border-left: 1px solid #5a7e8844;
   border-right: 1px solid #5a7e8844;
-  padding: 0 12px;
+  padding: 0 8px;
 }
 .wheel .eyebrow {
   font-size: 9px;
@@ -405,24 +428,23 @@ footer {
     font-size: 19px;
   }
   .objective {
-    width: 250px;
+    width: 310px;
     left: 88px;
-    top: 120px;
   }
   header {
     left: 88px;
   }
+  .radio {
+    left: 414px;
+    right: 314px;
+  }
   footer {
-    width: 620px;
+    width: 420px;
   }
 }
 @media (max-height: 760px) {
-  .objective {
-    top: 108px;
-    padding: 13px;
-  }
   .objective h2 {
-    font-size: 16px;
+    font-size: 15px;
   }
   .objective p {
     font-size: 11px;
@@ -434,7 +456,7 @@ footer {
     bottom: 8px;
   }
   .levers {
-    padding: 12px 18px;
+    padding: 10px 12px;
   }
   .bindings {
     margin-top: 4px;
@@ -445,9 +467,6 @@ footer {
   }
 }
 @media (max-width: 760px) {
-  header p {
-    display: none;
-  }
   .radio {
     top: 96px;
     left: 10px;
@@ -455,19 +474,17 @@ footer {
     width: auto;
     transform: none;
   }
-  header h1 {
-    font-size: 16px;
-  }
   .objective {
     top: 148px;
     left: 72px;
     width: 220px;
   }
   footer {
+    right: 10px;
     width: calc(100% - 20px);
   }
   .levers {
-    grid-template-columns: 1fr 130px 1fr;
+    grid-template-columns: 1fr 110px 1fr;
     gap: 8px;
     padding: 12px;
   }
@@ -581,5 +598,21 @@ footer {
     top: 90px;
     width: calc(100% - 80px);
     max-height: calc(100vh - 100px);
+  }
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.drawer-open .radio {
+  left: 444px;
+}
+@media (max-width: 760px) {
+  .drawer-open .radio {
+    left: 10px;
   }
 }

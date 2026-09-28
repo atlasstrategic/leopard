@@ -111,6 +111,30 @@ export function toggleRadio(g: Session) {
     radioFold.folded = g.radio.length;
   } else radioFold.pinned = true;
 }
+// The step's long hint: shown in full for a while when a step starts (or the
+// mission ends), then folded behind a button so the card stays small. The
+// button opens it (it stays open) or folds it again.
+const hintFold = { pinned: false, key: "", since: 0, folded: "" },
+  hintFresh = 10;
+const hintKey = (g: Session) =>
+  `${g.recorder.attempt}/${g.progress.step}/${g.progress.phase === "failed" || g.progress.phase === "complete" ? g.progress.phase : ""}`;
+function hintOpen(g: Session) {
+  const key = hintKey(g);
+  if (key !== hintFold.key) {
+    hintFold.key = key;
+    hintFold.since = g.progress.elapsed;
+  }
+  return (
+    hintFold.pinned ||
+    (g.progress.elapsed - hintFold.since < hintFresh && hintFold.folded !== key)
+  );
+}
+function toggleHint(g: Session) {
+  if (hintOpen(g)) {
+    hintFold.pinned = false;
+    hintFold.folded = hintKey(g);
+  } else hintFold.pinned = true;
+}
 export class UI {
   root = document.querySelector<HTMLDivElement>("#ui")!;
   instruments: Instruments;
@@ -133,10 +157,10 @@ export class UI {
     private lab: PracticeLab,
   ) {
     this.root.innerHTML = `
-      <header><div class="eyebrow">LEOPARD / HANDLING LAB</div><h1>A little power. A lot of patience.</h1><p>42-foot twin-hull · ${stage.area} · ${stage.name}</p></header>
-      <section class="panel objective"><div class="eyebrow" id="mission-phase"></div><h2 id="mission-title"></h2><p id="mission-hint"></p>
+      <header><h1 class="visually-hidden">Leopard / Handling Lab: a little power, a lot of patience</h1><div class="eyebrow">LEOPARD / HANDLING LAB · <span class="header-stage">${stage.name}</span></div></header>
+      <section class="panel objective" aria-label="Objective"><div class="objective-head"><div class="eyebrow" id="mission-phase"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div></div><h2 id="mission-title"></h2><p id="mission-hint"></p><button type="button" id="hint-toggle" class="hint-toggle" aria-controls="mission-hint" aria-expanded="true">Hide hint</button>
       <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div>${serviceMarkup()}</div>
-      <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button>${checkpointMarkup("restart")}<div class="stats"><span id="time"></span><span id="penalties"></span></div></section>
+      <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button>${checkpointMarkup("restart")}</section>
       <section class="panel radio" id="radio" hidden><div class="radio-head"><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><button id="radio-toggle" type="button" aria-controls="radio-message" aria-expanded="true">Fold · V</button></div><p id="radio-message" role="status" aria-live="polite"></p></section>
       ${instrumentsMarkup}
       <nav class="rail panel" aria-label="Panels and actions">${railMarkup}</nav>
@@ -184,6 +208,10 @@ export class UI {
     this.el("resume").onclick = actions.pause;
     this.el("paused-show-me").onclick = actions.showDemo;
     this.el("camera").onclick = actions.camera;
+    this.el("hint-toggle").onclick = () => {
+      toggleHint(game);
+      this.update();
+    };
     this.el("radio-toggle").onclick = () => {
       toggleRadio(game);
       this.update();
@@ -258,6 +286,8 @@ export class UI {
   openDrawer(id: Drawer | null) {
     drawer = id;
     this.el("drawer").hidden = !id;
+    // The radio moves over to make room for an open drawer.
+    this.root.classList.toggle("drawer-open", !!id);
     for (const d of drawers) {
       this.el(`drawer-${d}`).hidden = d !== id;
       this.el(`rail-${d}`).setAttribute("aria-expanded", String(d === id));
@@ -365,6 +395,12 @@ export class UI {
     this.el("mission-phase").textContent = o.eyebrow;
     this.el("mission-title").textContent = o.title;
     this.el("mission-hint").textContent = o.hint;
+    const hint = hintOpen(g) && !!o.hint;
+    this.el("mission-hint").hidden = !hint;
+    const hintButton = this.el("hint-toggle");
+    hintButton.hidden = !o.hint;
+    hintButton.textContent = hint ? "Hide hint" : "Show hint";
+    hintButton.setAttribute("aria-expanded", String(hint));
     this.el("requirements").innerHTML = o.checks
       .map(
         ([ok, text]) =>
