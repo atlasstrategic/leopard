@@ -154,7 +154,7 @@ const screen = `<svg viewBox="0 0 ${W} ${H}" class="p70-screen" aria-hidden="tru
     ${boat}
   </g>
 </svg>`;
-export const instrumentsMarkup = `<section class="instruments" aria-label="Helm instrument"><button type="button" id="p70" class="p70" aria-describedby="p70-readout">${screen}</button><p id="p70-readout" class="visually-hidden" aria-live="off"></p><small class="p70-hint">I or click: next page</small></section>`;
+export const instrumentsMarkup = `<section class="instruments" aria-label="Helm instrument"><button type="button" id="p70" class="p70" aria-describedby="p70-readout">${screen}</button><p id="p70-readout" class="visually-hidden" aria-live="off"></p><small class="p70-hint">I or click: next page</small><button type="button" id="p70-strip" class="p70-strip" aria-controls="p70" aria-expanded="false" title="Show the instrument display"></button></section>`;
 // The palette choice, for the Handling & weather panel.
 export const paletteMarkup = `<div class="palette-row" role="group" aria-label="Instrument palette"><span>Instrument display</span><button type="button" id="palette-night">Night</button><button type="button" id="palette-day">Day</button></div>`;
 
@@ -168,8 +168,10 @@ const side = (relative: number) =>
       : " S";
 export class Instruments {
   private elements = new Map<string, Element>();
-  // A one-line reading for focus mode, refreshed by update().
+  // One-line readings for focus mode, refreshed by update(); the short one
+  // is for phones.
   summary = "";
+  short = "";
   constructor(private root: HTMLElement) {
     // A mouse click hands focus back, so Space still means both neutral.
     this.el("p70").addEventListener("click", (e) => {
@@ -180,6 +182,13 @@ export class Instruments {
       this.root
         .querySelector(`#palette-${palette}`)
         ?.addEventListener("click", () => setPalette(palette));
+    // Phones show a one-line strip; tapping it opens the display above.
+    this.el("p70-strip").addEventListener("click", () => {
+      const open = this.root
+        .querySelector(".instruments")!
+        .classList.toggle("open");
+      this.el("p70-strip").setAttribute("aria-expanded", String(open));
+    });
   }
   private el(id: string) {
     if (!this.elements.has(id))
@@ -301,6 +310,8 @@ export class Instruments {
       );
     }
     this.summary = `HDG ${bearingText(data.heading).replace(" T", "")} · SOG ${data.speed.toFixed(2)} kn · TWS ${water.speed.toFixed(1)} kn${water.from === null ? "" : ` from ${bearingText(water.from).replace(" T", "")}`} · BRG ${label} ${data.bearing === null ? "—" : bearingText(data.bearing).replace(" T", "")} ${data.distance.toFixed(1)} m`;
+    this.short = `HDG ${bearingText(data.heading).replace(" T", "")} · SOG ${data.speed.toFixed(1)} kn · TWS ${water.speed.toFixed(1)} · ${label} ${data.bearing === null ? "—" : bearingText(data.bearing).replace(" T", "")} ${data.distance.toFixed(0)} m`;
+    this.text("p70-strip", this.short);
     // A plain-text reading for screen readers.
     this.text(
       "p70-readout",

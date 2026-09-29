@@ -38,6 +38,8 @@ const drawerTitles: Record<Drawer, string> = {
   stage: "STAGE",
   handling: "HANDLING & WEATHER",
 };
+// Phones get the stacked layout in style.css and shorter strip texts.
+const phone = matchMedia("(max-width: 760px)");
 let drawer: Drawer | null = null;
 // The objective card can be hidden from the rail (O); a dot on the rail
 // button then marks a new step. The keys card shows the first time the game
@@ -244,7 +246,7 @@ export class UI {
       <label>Yaw damping <output id="yawDragValue"></output><input id="yawDrag" type="range" min="40000" max="220000" step="10000"></label>
       <button id="defaults">Restore tuning defaults</button></section></aside>
       <footer><section class="panel levers"><div class="lever" data-engine="port"><div class="eyebrow">PORT <span>Q / A</span></div><strong id="portValue"></strong><input id="port" aria-label="Port gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="port" data-value="-1">− REV</button><button data-engine="port" data-value="0">N</button><button data-engine="port" data-value="1">FWD +</button></div><small id="portActual"></small></div>
-      <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><button id="neutral">Both neutral · SPACE</button></div>
+      <div class="wheel"><div class="eyebrow">PERSISTENT WHEEL</div><input id="wheel" aria-label="Rudder angle" type="range" min="-30" max="30" step="1"><button id="center">Centre rudder · X</button><div class="eyebrow both-title">BOTH <span>W / S</span></div><div class="lever-buttons both-buttons"><button data-engine="both" data-value="-1" aria-label="Both levers astern a step (S)">− REV</button><button id="neutral" aria-label="Both levers neutral (Space)">N</button><button data-engine="both" data-value="1" aria-label="Both levers ahead a step (W)">FWD +</button></div></div>
       <div class="lever" data-engine="starboard"><div class="eyebrow">STARBOARD <span>E / D</span></div><strong id="starboardValue"></strong><input id="starboard" aria-label="Starboard gear and throttle" type="range" min="-100" max="100" step="20"><div class="lever-buttons"><button data-engine="starboard" data-value="-1">− REV</button><button data-engine="starboard" data-value="0">N</button><button data-engine="starboard" data-value="1">FWD +</button></div><small id="starboardActual"></small></div></section>
 </footer>
       <div id="focus-hud" hidden><div class="panel focus-strip" id="focus-objective"></div><div class="panel focus-strip" id="focus-instruments"></div><div class="panel focus-strip" id="focus-helm"></div><button type="button" id="focus-exit" class="focus-exit">Exit focus · H</button></div>
@@ -322,10 +324,13 @@ export class UI {
       (b) =>
         (b.onclick = () => {
           if (!allowed()) return;
-          const key = b.dataset.engine as "port" | "starboard",
+          const engine = b.dataset.engine as "port" | "starboard" | "both",
             v = Number(b.dataset.value);
-          game.controls[key] =
-            v === 0 ? 0 : clamp(game.controls[key] + v * 0.2, -1, 1);
+          for (const key of engine === "both"
+            ? (["port", "starboard"] as const)
+            : [engine])
+            game.controls[key] =
+              v === 0 ? 0 : clamp(game.controls[key] + v * 0.2, -1, 1);
           game.observe();
         }),
     );
@@ -538,7 +543,9 @@ export class UI {
       const rudder = degrees(g.controls.rudder);
       this.el("focus-objective").textContent =
         `${o.eyebrow} · ${o.title} · ${Math.round(Math.max(0, Math.min(1, o.bar)) * 100)}% · ${p.elapsed.toFixed(1)} s · +${p.penalty} s`;
-      this.el("focus-instruments").textContent = this.instruments.summary;
+      this.el("focus-instruments").textContent = phone.matches
+        ? this.instruments.short
+        : this.instruments.summary;
       this.el("focus-helm").textContent =
         `P ${lever("port")} · RUDDER ${Math.abs(rudder).toFixed(0)}°${rudder < -0.5 ? " P" : rudder > 0.5 ? " S" : ""} · S ${lever("starboard")}`;
     }
