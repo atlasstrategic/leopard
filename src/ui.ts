@@ -39,7 +39,7 @@ const drawerTitles: Record<Drawer, string> = {
   handling: "HANDLING & WEATHER",
 };
 // Phones get the stacked layout in style.css and shorter strip texts.
-const phone = matchMedia("(max-width: 760px)");
+const phone = matchMedia("(max-width: 760px), (max-height: 500px)");
 let drawer: Drawer | null = null;
 // The objective card can be hidden from the rail (O); a dot on the rail
 // button then marks a new step. The keys card shows the first time the game
