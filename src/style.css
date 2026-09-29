@@ -10,8 +10,18 @@
   font-synthesis: none;
   font-size: 14px;
 }
+/* Touch: no double-tap zoom (a quick second tap on FWD + is a second step,
+   not a zoom); scrolling panels and pinch zoom still work. */
 * {
   box-sizing: border-box;
+  touch-action: manipulation;
+}
+/* A long press on a control neither selects its text nor flashes grey. */
+button,
+input[type="range"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 body {
   margin: 0;
