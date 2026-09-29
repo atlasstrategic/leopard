@@ -870,19 +870,22 @@ kbd {
     grid-area: helm;
   }
   /* The helm, tight: no thrust lines or key hints, smaller buttons. */
+  #ui > footer {
+    justify-self: center;
+  }
   .levers {
-    grid-template-columns: minmax(0, 1fr) 70px minmax(0, 1fr);
-    gap: 6px;
+    grid-template-columns: auto 58px auto;
+    gap: 6px 10px;
     padding: 6px 8px;
     row-gap: 4px;
     --throttle: 66px;
   }
   .lever {
-    grid-template-columns: minmax(0, 1fr) 22px;
+    grid-template-columns: 58px 22px;
     column-gap: 4px;
   }
   .lever[data-engine="starboard"] {
-    grid-template-columns: 22px minmax(0, 1fr);
+    grid-template-columns: 22px 58px;
   }
   input[type="range"].throttle {
     width: 22px;
@@ -1178,33 +1181,33 @@ kbd {
     box-shadow: 0 8px 30px #07252b22;
     backdrop-filter: blur(14px);
   }
+  /* Each lever card is as narrow as its buttons, in its corner; the middle
+     keeps only a small rudder strip (both thumbs are on the levers, so the
+     BOTH buttons go; W, S and Space still work). */
   #ui .lever[data-engine="port"] {
     grid-column: 2;
+    justify-self: start;
+    grid-template-columns: 64px 24px;
+  }
+  #ui .lever[data-engine="starboard"] {
+    grid-column: 4;
+    justify-self: end;
+    grid-template-columns: 24px 64px;
   }
   #ui .wheel {
     grid-column: 3;
     justify-self: center;
-    width: 160px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  #ui .lever[data-engine="starboard"] {
-    grid-column: 4;
+    width: min(220px, 100%);
+    display: block;
+    padding: 5px 8px;
   }
   .rudder {
-    order: -1;
     padding: 0;
     border: 0;
     gap: 6px;
   }
   .both {
-    padding: 0;
-    border: 0;
-  }
-  .both .lever-head {
-    min-height: 0;
-    margin-bottom: 3px;
+    display: none;
   }
   .rudder .eyebrow,
   .lever-head .eyebrow span,
@@ -1270,5 +1273,26 @@ kbd {
   .keys-card {
     max-height: calc(100vh - 12px);
     overflow-y: auto;
+  }
+}
+/* Very short screens (a phone on its side with the browser's bars): the
+   rail's buttons shrink so they all fit; it scrolls without a bar if not. */
+@media (max-height: 500px) {
+  #ui > .rail {
+    scrollbar-width: none;
+  }
+}
+@media (max-height: 340px) {
+  #ui > .rail {
+    gap: 0;
+    padding: 3px 2px;
+  }
+  .rail-button {
+    min-height: 21px;
+    padding: 0;
+  }
+  .rail-button svg {
+    width: 18px;
+    height: 18px;
   }
 }
