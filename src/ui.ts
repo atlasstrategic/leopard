@@ -242,10 +242,10 @@ export class UI {
   ) {
     this.root.innerHTML = `
       <header><h1 class="visually-hidden">Leopard / Handling Lab: a little power, a lot of patience</h1><div class="eyebrow">LEOPARD / HANDLING LAB · <span class="header-stage">${stage.name}</span></div></header>
-      <section class="panel objective" id="objective" aria-label="Objective"><div class="objective-head"><div class="eyebrow" id="mission-phase"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div></div><h2 id="mission-title"></h2><p id="mission-hint"></p><button type="button" id="hint-toggle" class="hint-toggle" aria-controls="mission-hint" aria-expanded="true">Hide hint</button>
+      <section class="panel objective" id="objective" aria-label="Objective"><div class="objective-head"><div class="eyebrow" id="mission-phase"></div><div class="stats"><span id="time"></span><span id="penalties"></span></div><button id="objective-hide" type="button" class="panel-hide" aria-label="Hide the objective (O)" title="Hide the objective (O); Goal on the rail shows it again">Hide ×</button></div><h2 id="mission-title"></h2><p id="mission-hint"></p><button type="button" id="hint-toggle" class="hint-toggle" aria-controls="mission-hint" aria-expanded="true">Hide hint</button>
       <div id="objective-page"><div id="requirements"></div><div class="progress"><div id="dwell"></div></div>${serviceMarkup()}</div>
       <div id="result" aria-live="polite"></div><button id="show-debrief" class="debrief-launch" hidden>Debrief</button>${checkpointMarkup("restart")}</section>
-      <section class="panel radio" id="radio" hidden><div class="radio-head"><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><button id="radio-toggle" type="button" aria-controls="radio-message" aria-expanded="true">Fold · V</button></div><p id="radio-message" role="status" aria-live="polite"></p></section>
+      <section class="panel radio" id="radio" hidden><div class="radio-head"><div class="eyebrow">HARBOUR RADIO · <span id="radio-time"></span></div><div class="panel-buttons"><button id="radio-toggle" type="button" aria-controls="radio-message" aria-expanded="true">Fold · V</button><button id="radio-hide" type="button" class="panel-hide" aria-label="Hide the radio (M)" title="Hide the radio (M); Radio on the rail shows it again">Hide ×</button></div></div><p id="radio-message" role="status" aria-live="polite"></p></section>
       ${instrumentsMarkup}
       <nav class="rail panel" aria-label="Panels and actions">${railMarkup}</nav>
       <aside id="drawer" class="panel drawer" aria-labelledby="drawer-title" hidden><div class="drawer-head"><div class="eyebrow" id="drawer-title"></div><button type="button" id="drawer-close" aria-label="Close panel">Close ×</button></div>
@@ -282,6 +282,21 @@ export class UI {
     this.el("rail-radio").onclick = () => {
       toggleRadioShown();
       this.update();
+    };
+    // Hiding from the panel itself says where it comes back from.
+    this.el("objective-hide").onclick = () => {
+      toggleObjective();
+      this.hidden(
+        "rail-objective",
+        "Objective hidden · tap Goal on the rail (or press O) to show it again",
+      );
+    };
+    this.el("radio-hide").onclick = () => {
+      toggleRadioShown();
+      this.hidden(
+        "rail-radio",
+        "Radio hidden · tap Radio on the rail (or press M) to show it again",
+      );
     };
     for (const id of ["rail-focus", "focus-exit"])
       this.el(id).onclick = () => {
@@ -395,6 +410,15 @@ export class UI {
   }
   // A short message in the middle of the view; an empty one clears it.
   private toastTimer = 0;
+  // After hiding a panel: a toast naming the rail button, which pulses.
+  private hidden(railId: string, message: string) {
+    this.update();
+    this.toast(message);
+    const button = this.el(railId);
+    button.classList.remove("pulse");
+    void button.offsetWidth;
+    button.classList.add("pulse");
+  }
   toast(message: string) {
     const el = this.el("toast");
     clearTimeout(this.toastTimer);

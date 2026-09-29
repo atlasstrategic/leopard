@@ -251,6 +251,30 @@ p {
   align-items: center;
   gap: 10px;
 }
+.panel-buttons {
+  display: flex;
+  gap: 5px;
+}
+.panel-hide {
+  padding: 2px 8px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.objective-head .panel-hide {
+  align-self: center;
+}
+@keyframes rail-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 #f1bd6200;
+  }
+  30% {
+    box-shadow: 0 0 0 4px #f1bd62cc;
+  }
+}
+.rail-button.pulse {
+  animation: rail-pulse 0.8s ease-in-out 3;
+}
 .radio-head button {
   padding: 2px 8px;
   font-size: 10px;
@@ -1062,7 +1086,10 @@ kbd {
   }
   #ui {
     display: grid;
-    grid-template-columns: 40px min(250px, 30vw) minmax(150px, 1fr) min(250px, 30vw);
+    grid-template-columns: 40px min(250px, 30vw) minmax(150px, 1fr) min(
+        250px,
+        30vw
+      );
     grid-template-rows: auto minmax(0, 1fr) auto;
     gap: 6px;
     padding: 6px;
