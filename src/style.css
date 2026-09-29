@@ -319,7 +319,11 @@ input[type="range"] {
   margin: 12px 0 6px;
   display: block;
 }
-/* The helm sits in the bottom-right corner, clear of the boat and berth. */
+/* The helm sits in the bottom-right corner, clear of the boat and berth.
+   Each lever is a vertical throttle, ahead at the top, neutral in the middle
+   and astern at the bottom, with its buttons in the same order beside it;
+   the two throttles sit on the inside like a binnacle's, the BOTH buttons
+   between them, and the rudder runs across the bottom. */
 footer {
   position: absolute;
   bottom: 16px;
@@ -328,16 +332,43 @@ footer {
 }
 .levers {
   display: grid;
-  grid-template-columns: 1fr 118px 1fr;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr);
+  grid-template-areas:
+    "port both starboard"
+    "rudder rudder rudder";
+  gap: 10px 12px;
   padding: 12px 14px;
   border-radius: 12px;
 }
-.lever .eyebrow {
+.lever {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 26px;
+  grid-template-areas:
+    "head head"
+    "buttons throttle"
+    "thrust thrust";
+  column-gap: 8px;
+}
+.lever[data-engine="port"] {
+  grid-area: port;
+}
+.lever[data-engine="starboard"] {
+  grid-area: starboard;
+  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-areas:
+    "head head"
+    "throttle buttons"
+    "thrust thrust";
+}
+.lever-head {
+  grid-area: head;
+  min-height: 38px;
+}
+.lever-head .eyebrow {
   display: flex;
   justify-content: space-between;
 }
-.lever .eyebrow span {
+.lever-head .eyebrow span {
   color: #91acb6;
   letter-spacing: 0;
 }
@@ -346,54 +377,77 @@ footer {
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.5px;
-  margin-top: 6px;
+  margin-top: 5px;
+  white-space: nowrap;
 }
 .lever small {
+  grid-area: thrust;
+  margin-top: 6px;
   color: #92b2bd;
   font-size: 10px;
 }
+.levers {
+  --throttle: 96px;
+}
 .lever-buttons {
+  grid-area: buttons;
   display: flex;
+  flex-direction: column;
   gap: 5px;
-  margin: 4px 0 8px;
+  height: var(--throttle);
 }
 .lever-buttons button {
   flex: 1;
-  padding: 6px 3px;
+  padding: 0 3px;
   font-size: 10px;
+  white-space: nowrap;
+}
+/* A vertical range: the maximum (full ahead) at the top. */
+input[type="range"].throttle {
+  grid-area: throttle;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 26px;
+  height: auto;
+  margin: 0;
+  justify-self: center;
+  /* As tall as the buttons beside it, so neutral is level with N. */
+  height: var(--throttle);
 }
 .wheel {
-  text-align: center;
+  display: contents;
+}
+.both {
+  grid-area: both;
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
   border-left: 1px solid #5a7e8844;
   border-right: 1px solid #5a7e8844;
-  padding: 0 8px;
 }
-.wheel .eyebrow {
-  font-size: 9px;
-  letter-spacing: 1px;
-}
-.wheel button {
-  width: 100%;
-  font-size: 10px;
-  padding: 7px 2px;
-  margin-bottom: 5px;
-}
-.wheel .both-title {
+.rudder {
+  grid-area: rudder;
   display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #5a7e8844;
 }
-.wheel .both-title span {
+.rudder .eyebrow {
+  white-space: nowrap;
+}
+.rudder .eyebrow span {
   color: #91acb6;
   letter-spacing: 0;
+  margin-left: 6px;
 }
-.wheel .both-buttons {
-  gap: 3px;
-  margin: 3px 0 0;
-}
-.wheel .both-buttons button {
+.rudder input[type="range"] {
+  flex: 1;
   margin: 0;
-  padding: 6px 1px;
+}
+.rudder button {
+  font-size: 10px;
+  padding: 6px 8px;
   white-space: nowrap;
 }
 #paused {
@@ -483,14 +537,6 @@ footer {
   footer {
     right: 10px;
     width: calc(100% - 20px);
-  }
-  .levers {
-    grid-template-columns: 1fr 110px 1fr;
-    gap: 8px;
-    padding: 12px;
-  }
-  .lever strong {
-    font-size: 13px;
   }
   .eyebrow {
     font-size: 9px;
@@ -783,52 +829,56 @@ kbd {
   #ui > footer {
     grid-area: helm;
   }
-  /* The helm, tight: no thrust line or key hints. */
+  /* The helm, tight: no thrust lines or key hints, smaller buttons. */
   .levers {
-    grid-template-columns: 1fr 96px 1fr;
+    grid-template-columns: minmax(0, 1fr) 70px minmax(0, 1fr);
     gap: 6px;
     padding: 7px 8px;
+    --throttle: 78px;
   }
-  .lever .eyebrow {
+  .lever {
+    grid-template-columns: minmax(0, 1fr) 22px;
+    column-gap: 4px;
+  }
+  .lever[data-engine="starboard"] {
+    grid-template-columns: 22px minmax(0, 1fr);
+  }
+  input[type="range"].throttle {
+    width: 22px;
+  }
+  .lever-head {
+    min-height: 28px;
+  }
+  .lever-head .eyebrow {
     font-size: 8px;
     letter-spacing: 1px;
   }
   .lever strong {
     margin: 1px 0 0;
     font-size: 11px;
-    white-space: nowrap;
   }
-  .lever input[type="range"],
-  .wheel input[type="range"] {
-    margin: 6px 0 4px;
-  }
-  .lever .eyebrow span,
-  .wheel > .eyebrow:first-child,
-  .wheel .both-title span,
+  .lever-head .eyebrow span,
+  .rudder .eyebrow,
   .lever small {
     display: none;
   }
-  .wheel {
+  .both {
     padding: 0 5px;
   }
-  .wheel .both-title {
-    display: none;
-  }
   .lever-buttons {
-    margin: 2px 0 0;
     gap: 3px;
   }
-  .lever-buttons button,
-  .wheel button {
-    padding: 7px 1px;
+  .lever-buttons button {
+    padding: 0 1px;
     font-size: 9px;
-    white-space: nowrap;
   }
-  .wheel > button {
-    margin-bottom: 0;
+  .rudder button {
+    padding: 6px 4px;
+    font-size: 9px;
   }
-  .wheel .both-buttons button {
-    padding: 7px 0;
+  .rudder {
+    padding-top: 5px;
+    gap: 6px;
   }
 }
 .toast {
@@ -1000,7 +1050,7 @@ kbd {
   }
   .rail-button {
     width: 34px;
-    min-height: 28px;
+    min-height: 26px;
     padding: 2px 0;
   }
   .rail-button > span {
@@ -1075,7 +1125,7 @@ kbd {
     min-height: 0;
     padding: 10px 12px;
   }
-  /* The levers and the wheel become separate cards. */
+  /* The levers and the middle (rudder above BOTH) become separate cards. */
   #ui .lever,
   #ui .wheel {
     grid-row: 3;
@@ -1093,49 +1143,60 @@ kbd {
   #ui .wheel {
     grid-column: 3;
     justify-self: center;
-    width: 150px;
+    width: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
   }
   #ui .lever[data-engine="starboard"] {
     grid-column: 4;
   }
-  .lever .eyebrow {
+  .rudder {
+    order: -1;
+    padding: 0;
+    border: 0;
+    gap: 6px;
+  }
+  .both {
+    padding: 0;
+    border: 0;
+  }
+  .both .lever-head {
+    min-height: 0;
+    margin-bottom: 3px;
+  }
+  .rudder .eyebrow,
+  .lever-head .eyebrow span,
+  .lever small {
+    display: none;
+  }
+  .lever-head {
+    min-height: 30px;
+  }
+  .lever-head .eyebrow {
     font-size: 8px;
   }
   .lever strong {
     margin: 1px 0 0;
     font-size: 12px;
   }
-  .lever input[type="range"],
-  .wheel input[type="range"] {
-    margin: 6px 0 4px;
-  }
-  .lever .eyebrow span,
-  .wheel > .eyebrow:first-child,
-  .wheel .both-title span,
-  .lever small {
-    display: none;
-  }
   .lever-buttons {
-    margin: 2px 0 0;
     gap: 4px;
   }
-  .lever-buttons button,
-  .wheel button {
-    padding: 8px 2px;
+  #ui .levers {
+    --throttle: 84px;
+  }
+  .lever-buttons button {
+    padding: 0 2px;
     font-size: 10px;
-    white-space: nowrap;
   }
-  .wheel > button {
-    margin-bottom: 0;
-  }
-  .wheel .both-title {
-    margin-top: 4px;
-    font-size: 8px;
+  .rudder button {
+    padding: 6px 4px;
+    font-size: 10px;
   }
   /* Focus mode keeps the levers; its strips sit at the top. */
-  .focus-mode .lever,
-  .focus-mode .wheel {
-    display: block;
+  .focus-mode .lever {
+    display: grid;
   }
   #focus-helm {
     display: none;
