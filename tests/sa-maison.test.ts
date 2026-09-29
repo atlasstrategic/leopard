@@ -47,7 +47,9 @@ test("besides must name other quays", () => {
 test("Sa Maison: backing in with the levers alone and securing works in the majjistral", () => {
   // The lever-only autopilot from the between-boats test, mirrored for a
   // slot on a west pontoon: if it can back in beside the quay, arrive and
-  // secure without touching anything, a player can.
+  // secure without touching anything, a player can. The corner leaves no
+  // room to line up on the slot's centre line in the fairway, so it starts
+  // where the turn ends: north of the slot, bow swung north-east.
   const stage = parseStage(copy());
   useStage(stage);
   const g = new Session({
@@ -64,7 +66,7 @@ test("Sa Maison: backing in with the levers alone and securing works in the majj
   g.requestFenders("starboard");
   const east = 0.5 * Math.PI,
     stop = stage.berth.approach.x;
-  Object.assign(g.state, { x: 24, y: 1, heading: east });
+  Object.assign(g.state, { x: 21, y: 4, heading: east - Math.PI / 6 });
   g.previous = { ...g.state };
   const clamp = (v: number, a: number) => Math.max(-a, Math.min(a, v));
   for (let t = 0; t < 240 && g.progress.phase === "approach"; t += STEP) {
@@ -72,7 +74,7 @@ test("Sa Maison: backing in with the levers alone and securing works in the majj
       togo = s.x - stop,
       astern = -(s.vx * Math.sin(s.heading) + s.vy * Math.cos(s.heading));
     const heading =
-      east - (togo < 5 ? 0 : clamp(0.12 * s.y + 0.25 * s.vy, 0.25));
+      east - (togo < 4 ? 0 : clamp(0.12 * s.y + 0.25 * s.vy, 0.25));
     const turn = clamp(
       1.2 *
         Math.atan2(
@@ -82,7 +84,7 @@ test("Sa Maison: backing in with the levers alone and securing works in the majj
         3 * s.yaw,
       0.6,
     );
-    const thrust = clamp(-(clamp(togo * 0.06, 0.3) - astern) * 2.5, 0.8);
+    const thrust = clamp(-(clamp(togo * 0.04, 0.2) - astern) * 2.5, 0.8);
     g.controls.port = clamp(thrust + turn / 2, 1);
     g.controls.starboard = clamp(thrust - turn / 2, 1);
     g.tick();

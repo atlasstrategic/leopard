@@ -2,26 +2,96 @@
   "$schema": "../stage.schema.json",
   "schemaVersion": 1,
   "id": "sa-maison",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Sa Maison corner · Stern-to",
-  "description": "Come down the fairway between two pontoons and back into the last slot on the west pontoon, bow east, with the Sa Maison quay a fender's width off your starboard side and its sharp corner at the end of the fairway, in a north-westerly majjistral.",
+  "description": "Come down a narrow fairway between two pontoons and back into the last slot on the west pontoon, bow east, with the Sa Maison quay a fender's width off your starboard side and its sharp corner at the end of the fairway, in a north-westerly majjistral.",
   "author": "Leopard",
   "area": "Pietà Creek, Malta (after the berth by the Sa Maison ferry terminal)",
   "buoyage": "IALA-A",
   "scene": {
-    "start": { "x": 32, "y": 52, "heading": 180 },
+    "start": {
+      "x": 23,
+      "y": 55,
+      "heading": 180
+    },
     "structures": [
-      { "id": "west-pontoon", "name": "West pontoon", "kind": "quay", "x": -2, "y": 28.85, "width": 4, "length": 66.3 },
-      { "id": "sa-maison-quay", "name": "Sa Maison quay", "kind": "quay", "x": 15, "y": -12.15, "width": 38, "length": 15.7 },
-      { "id": "sa-maison-corner", "name": "Sa Maison quay corner", "kind": "quay", "x": 37, "y": -10.25, "width": 6, "length": 19.5 },
-      { "id": "ferry-steps", "name": "Ferry terminal steps", "kind": "quay", "x": 45, "y": -13, "width": 10, "length": 14 },
-      { "id": "terminal-quay", "name": "Ferry terminal quay", "kind": "quay", "x": 56, "y": -16, "width": 12, "length": 8 },
-      { "id": "east-pontoon", "name": "East pontoon", "kind": "quay", "x": 64, "y": 22, "width": 4, "length": 84 },
-      { "id": "north-limit", "name": "North training barrier", "kind": "barrier", "x": 31, "y": 63, "width": 70, "length": 2 }
+      {
+        "id": "west-pontoon",
+        "name": "West pontoon",
+        "kind": "quay",
+        "x": -2,
+        "y": 28.85,
+        "width": 4,
+        "length": 66.3
+      },
+      {
+        "id": "sa-maison-quay",
+        "name": "Sa Maison quay",
+        "kind": "quay",
+        "x": 10,
+        "y": -12.15,
+        "width": 28,
+        "length": 15.7
+      },
+      {
+        "id": "sa-maison-corner",
+        "name": "Sa Maison quay corner",
+        "kind": "quay",
+        "x": 27,
+        "y": -10.75,
+        "width": 6,
+        "length": 18.5
+      },
+      {
+        "id": "ferry-steps",
+        "name": "Ferry terminal steps",
+        "kind": "quay",
+        "x": 35,
+        "y": -12,
+        "width": 10,
+        "length": 16
+      },
+      {
+        "id": "terminal-quay",
+        "name": "Ferry terminal quay",
+        "kind": "quay",
+        "x": 43.5,
+        "y": -14,
+        "width": 7,
+        "length": 12
+      },
+      {
+        "id": "east-pontoon",
+        "name": "East pontoon",
+        "kind": "quay",
+        "x": 49,
+        "y": 21,
+        "width": 4,
+        "length": 82
+      },
+      {
+        "id": "north-limit",
+        "name": "North training barrier",
+        "kind": "barrier",
+        "x": 23.5,
+        "y": 63,
+        "width": 57,
+        "length": 2
+      }
     ],
     "bollards": [
-      { "id": "B21", "structure": "west-pontoon", "x": -0.7, "y": 3.3 },
-      { "id": "B22", "structure": "west-pontoon", "x": -0.7, "y": -3.3 }
+      {
+        "id": "B21",
+        "structure": "west-pontoon",
+        "x": -0.7,
+        "y": 3.3
+      },
+      {
+        "id": "B22",
+        "structure": "west-pontoon",
+        "x": -0.7,
+        "y": -3.3
+      }
     ],
     "berths": [
       {
@@ -30,20 +100,40 @@
         "label": "B22",
         "style": "sternTo",
         "structure": "west-pontoon",
-        "besides": ["sa-maison-quay"],
-        "lines": { "portQuarter": "B21", "starboardQuarter": "B22" },
-        "lazyLine": { "x": 24, "y": 0 },
+        "besides": [
+          "sa-maison-quay"
+        ],
+        "lines": {
+          "portQuarter": "B21",
+          "starboardQuarter": "B22"
+        },
+        "lazyLine": {
+          "x": 20,
+          "y": 0
+        },
         "approach": {
-          "x": 8, "y": 0, "width": 14, "length": 8.5,
-          "heading": 90, "headingTolerance": 8,
-          "maxSpeed": 0.18, "maxYawRate": 0.025,
-          "positionTolerance": 1.5, "dwell": 3
+          "x": 8,
+          "y": 0,
+          "width": 14,
+          "length": 8.5,
+          "heading": 90,
+          "headingTolerance": 8,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "positionTolerance": 1.5,
+          "dwell": 3
         },
         "alongside": {
-          "x": 9, "y": 0, "width": 16, "length": 8.5,
-          "heading": 90, "headingTolerance": 10,
-          "maxSpeed": 0.18, "maxYawRate": 0.025,
-          "gentleSpeed": 0.08, "boundaryAllowance": 0.02
+          "x": 9,
+          "y": 0,
+          "width": 16,
+          "length": 8.5,
+          "heading": 90,
+          "headingTolerance": 10,
+          "maxSpeed": 0.18,
+          "maxYawRate": 0.025,
+          "gentleSpeed": 0.08,
+          "boundaryAllowance": 0.02
         }
       }
     ],
@@ -52,34 +142,234 @@
         "id": "fairway",
         "name": "Fairway",
         "label": "PREPARE",
-        "shape": { "kind": "circle", "x": 32, "y": 30, "radius": 6 }
+        "shape": {
+          "kind": "circle",
+          "x": 23,
+          "y": 34,
+          "radius": 4
+        }
       }
     ],
     "gates": [],
     "labels": [
-      { "text": "SA MAISON QUAY", "x": 12, "y": -12, "height": 3, "width": 14 },
-      { "text": "SHARP CORNER", "x": 37, "y": -4, "height": 2.6, "width": 9 },
-      { "text": "WEST PONTOON", "x": -2, "y": 44, "height": 3, "width": 12 },
-      { "text": "EAST PONTOON", "x": 64, "y": 44, "height": 3, "width": 12 },
-      { "text": "PIETÀ CREEK · MALTA", "x": 32, "y": 58, "height": 2, "width": 18 }
+      {
+        "text": "SA MAISON QUAY",
+        "x": 8,
+        "y": -12,
+        "height": 3,
+        "width": 14
+      },
+      {
+        "text": "SHARP CORNER",
+        "x": 27,
+        "y": -4,
+        "height": 2.6,
+        "width": 9
+      },
+      {
+        "text": "WEST PONTOON",
+        "x": -2,
+        "y": 58,
+        "height": 3,
+        "width": 12
+      },
+      {
+        "text": "EAST PONTOON",
+        "x": 49,
+        "y": 58,
+        "height": 3,
+        "width": 12
+      },
+      {
+        "text": "PIETÀ CREEK · MALTA",
+        "x": 23,
+        "y": 60,
+        "height": 2,
+        "width": 18
+      }
     ],
     "moored": [
-      { "id": "north-neighbour", "name": "North neighbour (monohull)", "kind": "monohull", "x": 8.5, "y": 6.52, "heading": 90, "length": 15, "beam": 4.5 },
-      { "id": "west-2", "name": "Moored catamaran", "kind": "catamaran", "x": 7.335, "y": 13.09, "heading": 90, "length": 12.67, "beam": 7.04 },
-      { "id": "west-3", "name": "Moored monohull", "kind": "monohull", "x": 6.75, "y": 19.405, "heading": 90, "length": 11.5, "beam": 3.99 },
-      { "id": "west-4", "name": "Moored monohull", "kind": "monohull", "x": 8, "y": 24.35, "heading": 90, "length": 14, "beam": 4.3 },
-      { "id": "west-5", "name": "Moored catamaran", "kind": "catamaran", "x": 7.335, "y": 30.82, "heading": 90, "length": 12.67, "beam": 7.04 },
-      { "id": "east-1", "name": "Moored monohull", "kind": "monohull", "x": 55.25, "y": 2, "heading": 270, "length": 11.5, "beam": 3.99 },
-      { "id": "east-2", "name": "Moored catamaran", "kind": "catamaran", "x": 54.665, "y": 8.32, "heading": 270, "length": 12.67, "beam": 7.04 },
-      { "id": "east-3", "name": "Moored monohull", "kind": "monohull", "x": 55.25, "y": 14.63, "heading": 270, "length": 11.5, "beam": 3.99 },
-      { "id": "east-4", "name": "Moored catamaran", "kind": "catamaran", "x": 54.665, "y": 20.95, "heading": 270, "length": 12.67, "beam": 7.04 },
-      { "id": "east-5", "name": "Moored monohull", "kind": "monohull", "x": 55.25, "y": 27.26, "heading": 270, "length": 11.5, "beam": 3.99 },
-      { "id": "east-6", "name": "Moored catamaran", "kind": "catamaran", "x": 54.665, "y": 33.58, "heading": 270, "length": 12.67, "beam": 7.04 }
+      {
+        "id": "north-neighbour",
+        "name": "North neighbour (monohull)",
+        "kind": "monohull",
+        "x": 7.0,
+        "y": 6.27,
+        "heading": 90,
+        "length": 12,
+        "beam": 4
+      },
+      {
+        "id": "west-2",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": 7.335,
+        "y": 12.59,
+        "heading": 90,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "west-3",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 6.75,
+        "y": 18.905,
+        "heading": 90,
+        "length": 11.5,
+        "beam": 3.99
+      },
+      {
+        "id": "west-4",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 7.25,
+        "y": 23.8,
+        "heading": 90,
+        "length": 12.5,
+        "beam": 4.2
+      },
+      {
+        "id": "west-5",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": 7.335,
+        "y": 30.22,
+        "heading": 90,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "west-6",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 6.75,
+        "y": 36.535,
+        "heading": 90,
+        "length": 11.5,
+        "beam": 3.99
+      },
+      {
+        "id": "west-7",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": 7.335,
+        "y": 42.85,
+        "heading": 90,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "west-8",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 7.0,
+        "y": 49.17,
+        "heading": 90,
+        "length": 12,
+        "beam": 4
+      },
+      {
+        "id": "east-1",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 40.25,
+        "y": -1.005,
+        "heading": 270,
+        "length": 11.5,
+        "beam": 3.99
+      },
+      {
+        "id": "east-2",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": 39.665,
+        "y": 5.31,
+        "heading": 270,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "east-3",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 40.25,
+        "y": 11.625,
+        "heading": 270,
+        "length": 11.5,
+        "beam": 3.99
+      },
+      {
+        "id": "east-4",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": 39.665,
+        "y": 17.94,
+        "heading": 270,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "east-5",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 39.75,
+        "y": 24.36,
+        "heading": 270,
+        "length": 12.5,
+        "beam": 4.2
+      },
+      {
+        "id": "east-6",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": 39.665,
+        "y": 30.78,
+        "heading": 270,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "east-7",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 40.25,
+        "y": 37.095,
+        "heading": 270,
+        "length": 11.5,
+        "beam": 3.99
+      },
+      {
+        "id": "east-8",
+        "name": "Moored catamaran",
+        "kind": "catamaran",
+        "x": 39.665,
+        "y": 43.41,
+        "heading": 270,
+        "length": 12.67,
+        "beam": 7.04
+      },
+      {
+        "id": "east-9",
+        "name": "Moored monohull",
+        "kind": "monohull",
+        "x": 40.25,
+        "y": 49.725,
+        "heading": 270,
+        "length": 11.5,
+        "beam": 3.99
+      }
     ]
   },
   "conditions": {
-    "wind": { "speed": 2.5, "from": 315 },
-    "current": { "x": 0, "y": 0 }
+    "wind": {
+      "speed": 2.5,
+      "from": 315
+    },
+    "current": {
+      "x": 0,
+      "y": 0
+    }
   },
   "traffic": [],
   "mission": {
@@ -95,8 +385,13 @@
         "seconds": 10,
         "resetOnExit": true,
         "releases": [],
-        "show": ["fairway"],
-        "bearing": { "label": "PREP", "zone": "fairway" },
+        "show": [
+          "fairway"
+        ],
+        "bearing": {
+          "label": "PREP",
+          "zone": "fairway"
+        },
         "linesRefused": "Not yet: prepare in the fairway first",
         "radio": {
           "start": "Leopard, marina office. This is a game, not certified training. Your berth is the last slot on the west pontoon, in the corner by the Sa Maison quay: stern-to, lazy line provided. Prepare in the fairway first, fenders out on both sides.",
@@ -111,7 +406,7 @@
         "label": "INTO THE SLOT",
         "checkpoint": "Approach",
         "title": "Back into the corner slot.",
-        "hint": "Make your turn north of the slot, well clear of the sharp corner, so that you end up bow east with your stern towards the pontoon, a little upwind (north) of the slot's centre line. Go astern gently; the wind will carry you south towards the quay, so keep the starboard side a fender's width off it. Straighten up in the mint box with the stern about a metre off the pontoon and hold still for 3 seconds.",
+        "hint": "The fairway is barely two boat lengths wide and the corner leaves no room to line up straight: make your turn north of the slot, just off your neighbour's bow, and back in on a curve, bow swung up to the north-east, straightening as the stern passes between the neighbour and the quay. The wind carries you south towards the corner and the quay: keep the starboard side a fender's width off it. Straighten up in the mint box with the stern about a metre off the pontoon and hold still for 3 seconds.",
         "linesRefused": "Stop in the mint box first, then pass the stern lines",
         "radio": {
           "start": "Dead slow astern into the corner slot, bow east. Watch the corner off your bow as you turn, and the quay on your starboard side.",
