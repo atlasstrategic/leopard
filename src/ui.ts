@@ -88,7 +88,6 @@ const keysMarkup = `<section id="keys" class="panel keys-card" role="dialog" ari
 <dt>${key("Space")}</dt><dd>Both engines neutral (even while paused)</dd>
 <dt>${key("C")}</dt><dd>Camera: chase, overhead, helm</dd>
 <dt>${key("I")}</dt><dd>Next instrument page</dd>
-<dt>${key("M")}</dt><dd>Show or hide the harbour radio</dd>
 <dt>${key("O")} ${key("M")}</dt><dd>Show or hide the objective · the radio</dd>
 <dt>${key("V")}</dt><dd>Fold or open the radio</dd>
 <dt>${key("P")} ${key("R")}</dt><dd>Pause · retry (R twice while sailing)</dd>
