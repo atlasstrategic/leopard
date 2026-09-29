@@ -25,6 +25,7 @@ export class Input {
       radio: () => void;
       instrument: () => void;
       objective: () => void;
+      radioShown: () => void;
       keys: () => void;
       focus: () => void;
       retryKey: () => void;
@@ -75,6 +76,7 @@ export class Input {
         "KeyV",
         "KeyI",
         "KeyO",
+        "KeyM",
         "Slash",
         "KeyH",
         "KeyR",
@@ -105,6 +107,10 @@ export class Input {
       }
       if (e.code === "KeyO") {
         actions.objective();
+        return;
+      }
+      if (e.code === "KeyM") {
+        actions.radioShown();
         return;
       }
       // ? (Shift + / on most layouts) opens or closes the keys card.

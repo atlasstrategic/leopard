@@ -60,7 +60,7 @@ Blur/tab hiding **pauses and clears held keys**, without silently moving persist
 
 ## Harbour traffic (milestone C, in progress)
 
-The fuel mission ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) now starts with **holding and clearance**, announced step by step on the **Harbour radio** panel at the top of the screen (also logged as `radio` events). A new call shows in full for 8 seconds, then folds to one line so it does not cover the view; **V** or the panel's button opens it (it stays open) or folds it again:
+The fuel mission ([issue #1](https://github.com/atlasstrategic/leopard/issues/1)) now starts with **holding and clearance**, announced step by step on the **Harbour radio** panel at the top of the screen (also logged as `radio` events). A new call shows in full for 8 seconds, then folds to one line so it does not cover the view; **V** or the panel's button opens it (it stays open) or folds it again, and **M** or the rail's **Radio** button hides it altogether (a dot on the button then marks a new call):
 
 1. **Briefing:** the fuel berth is occupied; proceed to the holding area.
 2. **Holding:** a circle of 8 m radius centred at (20, −22), south-east of the quay and clear of the monohull's exit. The boat's **centre** must be inside. A fixed **5-second countdown** runs while inside and **resets** if the centre leaves.

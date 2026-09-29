@@ -41,12 +41,14 @@ const drawerTitles: Record<Drawer, string> = {
 // Phones get the stacked layout in style.css and shorter strip texts.
 const phone = matchMedia("(max-width: 760px), (max-height: 500px)");
 let drawer: Drawer | null = null;
-// The objective card can be hidden from the rail (O); a dot on the rail
-// button then marks a new step. The keys card shows the first time the game
+// The objective card (O) and the harbour radio (M) can be hidden from the
+// rail; a dot on the rail button then marks a new step or a new call. The keys card shows the first time the game
 // starts in this browser, then on ? or the rail's Keys button.
 const shown = {
   objective: true,
   seenStep: "",
+  radio: true,
+  seenCalls: 0,
   keys: firstVisit(),
   // Focus mode (H): only one-line strips over the view.
   focus: false,
@@ -63,6 +65,9 @@ function firstVisit() {
 }
 export function toggleObjective() {
   shown.objective = !shown.objective;
+}
+export function toggleRadioShown() {
+  shown.radio = !shown.radio;
 }
 export function toggleKeys(open = !shown.keys) {
   shown.keys = open;
@@ -83,7 +88,9 @@ const keysMarkup = `<section id="keys" class="panel keys-card" role="dialog" ari
 <dt>${key("Space")}</dt><dd>Both engines neutral (even while paused)</dd>
 <dt>${key("C")}</dt><dd>Camera: chase, overhead, helm</dd>
 <dt>${key("I")}</dt><dd>Next instrument page</dd>
-<dt>${key("O")} ${key("V")}</dt><dd>Show or hide the objective · fold the radio</dd>
+<dt>${key("M")}</dt><dd>Show or hide the harbour radio</dd>
+<dt>${key("O")} ${key("M")}</dt><dd>Show or hide the objective · the radio</dd>
+<dt>${key("V")}</dt><dd>Fold or open the radio</dd>
 <dt>${key("P")} ${key("R")}</dt><dd>Pause · retry (R twice while sailing)</dd>
 <dt>${key("H")}</dt><dd>Focus mode: minimal overlay</dd>
 <dt>${key("?")}</dt><dd>This card</dd></dl><div class="eyebrow numpad-title">NUMPAD · PORT · BOTH · STARBOARD</div><div class="numpad" role="table" aria-label="Numpad levers"><div role="row"><span role="cell">${key("7")} ahead</span><span role="cell">${key("8")} ahead</span><span role="cell">${key("9")} ahead</span></div><div role="row"><span role="cell">${key("4")} neutral</span><span role="cell">${key("5")} neutral</span><span role="cell">${key("6")} neutral</span></div><div role="row"><span role="cell">${key("1")} astern</span><span role="cell">${key("2")} astern</span><span role="cell">${key("3")} astern</span></div></div><p>Levers persist: set them and let go. Neutral is not a brake; use short bursts astern to stop.</p><button type="button" id="keys-ok">Got it</button></section>`;
@@ -97,6 +104,12 @@ const railMarkup = [
     "Goal",
     '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
     'aria-controls="objective" aria-pressed="true" title="Show or hide the objective (O)"',
+  ),
+  railButton(
+    "rail-radio",
+    "Radio",
+    '<path d="M5 9a9 9 0 0 1 14 0M8 12a5 5 0 0 1 8 0"/><circle cx="12" cy="15.5" r="1.5"/><path d="M12 17v4"/>',
+    'aria-controls="radio" aria-pressed="true" title="Show or hide the harbour radio (M)"',
   ),
   railButton(
     "rail-crew",
@@ -172,6 +185,12 @@ function radioOpen(g: Session) {
 }
 export function toggleRadio(g: Session) {
   if (!g.radio.length) return;
+  // V on a hidden radio brings it back, open.
+  if (!shown.radio) {
+    shown.radio = true;
+    radioFold.pinned = true;
+    return;
+  }
   if (radioOpen(g)) {
     radioFold.pinned = false;
     radioFold.folded = g.radio.length;
@@ -259,6 +278,10 @@ export class UI {
     this.el("rail-log").onclick = () => this.el("open-log").click();
     this.el("rail-objective").onclick = () => {
       toggleObjective();
+      this.update();
+    };
+    this.el("rail-radio").onclick = () => {
+      toggleRadioShown();
       this.update();
     };
     for (const id of ["rail-focus", "focus-exit"])
@@ -519,7 +542,13 @@ export class UI {
     this.el("dwell").style.width = `${Math.max(0, Math.min(1, o.bar)) * 100}%`;
     this.el("result").textContent = o.result;
     const latest = g.radio.at(-1);
-    this.el("radio").hidden = !latest;
+    // A retry starts the calls again.
+    if (shown.radio || g.radio.length < shown.seenCalls)
+      shown.seenCalls = g.radio.length;
+    this.el("radio").hidden = !latest || !shown.radio;
+    const radio = this.el("rail-radio");
+    radio.setAttribute("aria-pressed", String(shown.radio));
+    radio.classList.toggle("news", g.radio.length > shown.seenCalls);
     if (latest) {
       this.el("radio-time").textContent = `${latest.time.toFixed(1)} s`;
       this.el("radio-message").textContent = latest.message;

@@ -9,6 +9,7 @@ import {
   toggleKeys,
   toggleObjective,
   toggleRadio,
+  toggleRadioShown,
   UI,
 } from "./ui";
 import { nextPage } from "./instruments";
@@ -74,6 +75,10 @@ if (!hasWebGL2()) {
       },
       objective: () => {
         toggleObjective();
+        ui.update();
+      },
+      radioShown: () => {
+        toggleRadioShown();
         ui.update();
       },
       keys: () => {
